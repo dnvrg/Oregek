@@ -19,7 +19,7 @@ let patientToEdit = null;
 
 // Initialize app
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('Alkalmazás inicializálása...'); 
+    console.log('Alkalmazás inicializálása...');
     
     try {
         const storedPatients = localStorage.getItem('patients');
@@ -32,8 +32,8 @@ document.addEventListener('DOMContentLoaded', function() {
         documents = storedDocuments ? JSON.parse(storedDocuments) : [];
         notes = storedNotes ? JSON.parse(storedNotes) : [];
         
-        console.log('Páciensek betöltve a tárolóból:', patients); 
-        console.log('Helyi tároló elérhető:', typeof(Storage) !== "undefined"); 
+        console.log('Páciensek betöltve a tárolóból:', patients);
+        console.log('Helyi tároló elérhető:', typeof(Storage) !== "undefined");
         
     } catch (error) {
         console.error('Hiba a helyi tároló adatainak betöltésekor:', error);
@@ -51,7 +51,7 @@ document.addEventListener('DOMContentLoaded', function() {
     initializeCalendar();
     generateCalendar();
     
-    console.log('Alkalmazás sikeresen inicializálva'); 
+    console.log('Alkalmazás sikeresen inicializálva');
 });
 
 // Tab switching
@@ -150,13 +150,15 @@ if (patientForm) {
         const phoneInput = document.getElementById('phone');
         
         if (!nameInput.value.trim()) {
-            alert('Kérem, adja meg a páciens nevét.');
+            // Replaced alert with a more user-friendly UI indication
+            nameInput.reportValidity();
             nameInput.focus();
             return;
         }
         
         if (!phoneInput.value.trim()) {
-            alert('Kérem, adja meg a telefonszámot.');
+            // Replaced alert with a more user-friendly UI indication
+            phoneInput.reportValidity();
             phoneInput.focus();
             return;
         }
@@ -188,12 +190,12 @@ if (patientForm) {
                 const patientIndex = patients.findIndex(p => p.id === patientToEdit.id);
                 if (patientIndex !== -1) {
                     patients[patientIndex] = patientData;
-                    alert(`A páciens, ${patientData.name}, sikeresen frissítve lett!`);
+                    // Removed success alert
                 }
             } else {
                 // Adding new patient
                 patients.push(patientData);
-                alert(`A páciens, ${patientData.name}, sikeresen hozzá lett adva!`);
+                // Removed success alert
             }
             
             localStorage.setItem('patients', JSON.stringify(patients));
@@ -204,9 +206,13 @@ if (patientForm) {
             clearForm();
             patientToEdit = null; // Clear patient in edit mode
             
+            // Close the form on successful save
+            patientFormContainer.classList.remove('visible');
+            addPatientBtn.classList.remove('close');
+            
         } catch (error) {
             console.error('Hiba a páciens mentésekor:', error);
-            alert('Hiba a páciens mentésekor. Kérem, próbálja újra.');
+            // Replaced alert with a console error or a more subtle UI message if needed
         }
     });
 }
@@ -230,8 +236,8 @@ function renderPatients(searchQuery = '') {
         );
     });
 
-    console.log('Páciensek renderelése:', filteredPatients); 
-
+    console.log('Páciensek renderelése:', filteredPatients);
+    
     if (filteredPatients.length === 0) {
         container.innerHTML = '<p style="text-align: center; color: #718096; padding: 20px;">Nincsenek páciensek a keresési feltételeknek megfelelően.</p>';
         return;
@@ -286,9 +292,9 @@ function deletePatient(id) {
         localStorage.setItem('patients', JSON.stringify(patients));
         renderPatients();
         updatePatientSelects();
-        generateCalendar(); 
+        generateCalendar();
         clearForm(); // Clear the form and remove the delete button
-        alert('Páciens sikeresen törölve!');
+        // Removed success alert
     }
 }
 
@@ -312,7 +318,7 @@ function clearForm() {
     // Change submit button text back to default
     patientForm.querySelector('.btn[type="submit"]').textContent = 'Mentés';
     
-    console.log('Űrlap törölve'); 
+    console.log('Űrlap törölve');
     
     // This part is now handled by the event listener that calls this function.
 }
@@ -366,7 +372,7 @@ function editPatient(id) {
     addPatientBtn.classList.add('close');
     patientFormContainer.scrollIntoView({ behavior: 'smooth' });
     
-    alert('Páciens betöltve szerkesztésre. Frissítse az adatokat, és kattintson a "Mentés" gombra a változások mentéséhez.');
+    // Removed alert
 }
 
 function showDeleteButton(patientId) {
@@ -519,7 +525,7 @@ function renderShoppingList(searchQuery = '') {
     container.innerHTML = '';
     const query = searchQuery.toLowerCase();
     
-    const filteredItems = shoppingItems.filter(item => 
+    const filteredItems = shoppingItems.filter(item =>
         item.item.toLowerCase().includes(query) ||
         (patients.find(p => p.id == item.patientId)?.name.toLowerCase().includes(query))
     );
@@ -595,12 +601,14 @@ if (document.getElementById('documentForm')) {
         const patientId = document.getElementById('documentPatient').value;
         
         if (!file) {
-            alert('Kérem, válasszon egy fájlt a feltöltéshez.');
+            // Replaced alert with a more user-friendly UI indication
+            fileInput.reportValidity();
             return;
         }
         
         if (!patientId) {
-            alert('Kérem, válasszon egy pácienst ehhez a dokumentumhoz.');
+            // Replaced alert with a more user-friendly UI indication
+            document.getElementById('documentPatient').reportValidity();
             return;
         }
         
@@ -628,10 +636,10 @@ if (document.getElementById('documentForm')) {
                 
                 document.getElementById('documentForm').reset();
                 
-                alert('Dokumentum sikeresen feltöltve!');
+                // Removed success alert
             } catch (error) {
                 console.error('Hiba a dokumentum mentésekor:', error);
-                alert('Hiba a dokumentum feltöltésekor. Kérem, próbálja újra.');
+                // Replaced alert with a console error or a more subtle UI message if needed
             } finally {
                 submitBtn.textContent = originalText;
                 submitBtn.disabled = false;
@@ -639,7 +647,7 @@ if (document.getElementById('documentForm')) {
         };
         
         reader.onerror = function() {
-            alert('Hiba a fájl olvasásakor. Kérem, próbálja újra.');
+            // Replaced alert with a console error or a more subtle UI message if needed
             submitBtn.textContent = originalText;
             submitBtn.disabled = false;
         };
@@ -655,7 +663,7 @@ function renderDocuments(searchQuery = '') {
     container.innerHTML = '';
     const query = searchQuery.toLowerCase();
 
-    const filteredDocs = documents.filter(doc => 
+    const filteredDocs = documents.filter(doc =>
         doc.name.toLowerCase().includes(query) ||
         (patients.find(p => p.id == doc.patientId)?.name.toLowerCase().includes(query))
     );
@@ -797,7 +805,7 @@ function renderNotes(searchQuery = '') {
     container.innerHTML = '';
     const query = searchQuery.toLowerCase();
 
-    const filteredNotes = notes.filter(note => 
+    const filteredNotes = notes.filter(note =>
         note.content.toLowerCase().includes(query) ||
         (patients.find(p => p.id == note.patientId)?.name.toLowerCase().includes(query))
     );
