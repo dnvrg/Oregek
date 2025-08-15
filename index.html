@@ -316,11 +316,11 @@
         </div>
 
         <div class="nav-tabs">
-            <button class="nav-tab active" onclick="showTab('patients')">Patients</button>
-            <button class="nav-tab" onclick="showTab('calendar')">Calendar</button>
-            <button class="nav-tab" onclick="showTab('shopping')">Shopping List</button>
-            <button class="nav-tab" onclick="showTab('documents')">Documents</button>
-            <button class="nav-tab" onclick="showTab('notes')">Notes</button>
+            <button class="nav-tab active" onclick="showTab('patients')">Öregek</button>
+            <button class="nav-tab" onclick="showTab('calendar')">Naptár</button>
+            <button class="nav-tab" onclick="showTab('shopping')">Bevásárló Lista</button>
+            <button class="nav-tab" onclick="showTab('documents')">Dokumentumok</button>
+            <button class="nav-tab" onclick="showTab('notes')">Jegyzet</button>
         </div>
 
         <!-- Patients Tab -->
@@ -330,38 +330,38 @@
             <form id="patientForm">
                 <div class="form-row">
                     <div class="form-group">
-                        <label for="name">Name *</label>
+                        <label for="name">Név *</label>
                         <input type="text" id="name" required>
                     </div>
                     <div class="form-group">
-                        <label for="phone">Phone Number *</label>
+                        <label for="phone">Telefonszám *</label>
                         <input type="tel" id="phone" required>
                     </div>
                 </div>
 
                 <div class="form-group">
-                    <label for="address">Address</label>
+                    <label for="address">Lakcím</label>
                     <input type="text" id="address">
                 </div>
 
                 <div class="form-row">
                     <div class="form-group">
-                        <label for="intercom">Intercom Code</label>
+                        <label for="intercom">Kapukód</label>
                         <input type="text" id="intercom">
                     </div>
                     <div class="form-group">
-                        <label for="taj">TAJ Number</label>
+                        <label for="taj">TAJ Szám</label>
                         <input type="text" id="taj">
                     </div>
                 </div>
 
                 <div class="form-row">
                     <div class="form-group">
-                        <label for="emergencyContact">Emergency Contact</label>
+                        <label for="emergencyContact">Értesítendő</label>
                         <input type="text" id="emergencyContact">
                     </div>
                     <div class="form-group">
-                        <label for="emergencyPhone">Emergency Contact Phone</label>
+                        <label for="emergencyPhone">Értesítendő Telefonszáma</label>
                         <input type="tel" id="emergencyPhone">
                     </div>
                 </div>
@@ -372,7 +372,7 @@
                 </div>
 
                 <div class="form-group">
-                    <label for="patientColor">Calendar Color</label>
+                    <label for="patientColor">Naptár Szín</label>
                     <input type="color" id="patientColor" class="color-picker" value="#667eea">
                 </div>
 
@@ -381,37 +381,29 @@
                     <div class="visit-days">
                         <div class="day-checkbox">
                             <input type="checkbox" id="monday" value="1">
-                            <label for="monday">Monday</label>
+                            <label for="monday">Hétfő</label>
                         </div>
                         <div class="day-checkbox">
                             <input type="checkbox" id="tuesday" value="2">
-                            <label for="tuesday">Tuesday</label>
+                            <label for="tuesday">Kedd</label>
                         </div>
                         <div class="day-checkbox">
                             <input type="checkbox" id="wednesday" value="3">
-                            <label for="wednesday">Wednesday</label>
+                            <label for="wednesday">Szerda</label>
                         </div>
                         <div class="day-checkbox">
                             <input type="checkbox" id="thursday" value="4">
-                            <label for="thursday">Thursday</label>
+                            <label for="thursday">Csütörtök</label>
                         </div>
                         <div class="day-checkbox">
                             <input type="checkbox" id="friday" value="5">
-                            <label for="friday">Friday</label>
-                        </div>
-                        <div class="day-checkbox">
-                            <input type="checkbox" id="saturday" value="6">
-                            <label for="saturday">Saturday</label>
-                        </div>
-                        <div class="day-checkbox">
-                            <input type="checkbox" id="sunday" value="0">
-                            <label for="sunday">Sunday</label>
+                            <label for="friday">Péntek</label>
                         </div>
                     </div>
                 </div>
 
-                <button type="submit" class="btn">Add Patient</button>
-                <button type="button" class="btn" onclick="clearForm()">Clear Form</button>
+                <button type="submit" class="btn">Mentés</button>
+                <button type="button" class="btn" onclick="clearForm()">Töröl</button>
             </form>
 
             <div id="patientsList" class="patient-list"></div>
