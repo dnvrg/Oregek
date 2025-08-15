@@ -4,6 +4,11 @@ let shoppingItems = JSON.parse(localStorage.getItem('shoppingItems')) || [];
 let documents = JSON.parse(localStorage.getItem('documents')) || [];
 let notes = JSON.parse(localStorage.getItem('notes')) || [];
 
+// UI element references
+const addPatientBtn = document.getElementById('addPatientBtn');
+const patientFormContainer = document.getElementById('patientFormContainer');
+const patientsTab = document.getElementById('patients');
+
 // Initialize app
 document.addEventListener('DOMContentLoaded', function() {
     console.log('Alkalmazás inicializálása...'); 
@@ -53,10 +58,34 @@ function showTab(tabName) {
     document.getElementById(tabName).classList.add('active');
     event.target.classList.add('active');
 
+    // Show/hide floating button based on the active tab
+    if (tabName === 'patients') {
+        addPatientBtn.style.display = 'block';
+    } else {
+        addPatientBtn.style.display = 'none';
+        // Hide the form if a different tab is selected
+        patientFormContainer.classList.remove('visible');
+        addPatientBtn.classList.remove('close');
+    }
+
     if (tabName === 'calendar') {
         generateCalendar();
     }
 }
+
+// Show/hide patient form
+addPatientBtn.addEventListener('click', () => {
+    // Only toggle the form if the 'patients' tab is the active one
+    if (patientsTab.classList.contains('active')) {
+        patientFormContainer.classList.toggle('visible');
+        addPatientBtn.classList.toggle('close');
+        
+        // Scroll to the form if it's visible
+        if (patientFormContainer.classList.contains('visible')) {
+             patientFormContainer.scrollIntoView({ behavior: 'smooth' });
+        }
+    }
+});
 
 // Patient management
 document.getElementById('patientForm').addEventListener('submit', function(e) {
@@ -190,6 +219,10 @@ function clearForm() {
     document.getElementById('patientColor').value = '#667eea';
     
     console.log('Űrlap törölve'); 
+    
+    // Hide the form after clearing
+    patientFormContainer.classList.remove('visible');
+    addPatientBtn.classList.remove('close');
 }
 
 function editPatient(id) {
