@@ -14,6 +14,8 @@ const documentsSearchInput = document.getElementById('documentsSearchInput');
 const notesSearchInput = document.getElementById('notesSearchInput');
 const patientForm = document.getElementById('patientForm');
 const uploadFile = document.getElementById('uploadFile');
+const settingsBtn = document.getElementById('settingsBtn');
+const settingsDropdown = document.getElementById('settingsDropdown');
 
 // Keep track of the patient being edited
 let patientToEdit = null;
@@ -57,6 +59,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // Tab switching
 function showTab(tabName) {
+    // Elrejtjük a legördülő menüt, amikor egy másik fülre kattintunk
+    closeSettingsDropdown();
+    
     document.querySelectorAll('.tab-content').forEach(tab => {
         tab.classList.remove('active');
     });
@@ -92,6 +97,22 @@ function showTab(tabName) {
     }
 }
 
+// Új függvény a beállítások legördülő menüjének kezelésére
+function toggleSettingsDropdown() {
+    settingsDropdown.classList.toggle('visible');
+}
+
+function closeSettingsDropdown() {
+    settingsDropdown.classList.remove('visible');
+}
+
+// Klick esemény figyelője a menün kívüli területekre
+document.addEventListener('click', function(event) {
+    const isClickInside = settingsBtn.contains(event.target) || settingsDropdown.contains(event.target);
+    if (!isClickInside) {
+        closeSettingsDropdown();
+    }
+});
 
 // New/Refactored Form Show/Hide Logic
 function openForm() {
@@ -960,4 +981,3 @@ if ('serviceWorker' in navigator) {
         console.log('A Service Worker regisztrációja sikertelen volt:', err);
     });
 }
-
