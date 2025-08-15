@@ -1,4 +1,4 @@
-/* CSS Változtatások a legördülő menühöz és az általános stílusokhoz */
+/* A CSS-t a könnyebb kezelhetőség és karbantarthatóság érdekében a styles.css fájlba helyeztük át. */
 
 * {
     margin: 0;
@@ -58,7 +58,6 @@ body {
     color: white;
 }
 
-/* Új konténer a beállítások gombhoz és a legördülő menühöz */
 .settings-btn-container {
     position: relative;
 }
@@ -85,7 +84,6 @@ body {
     color: white;
 }
 
-/* Új stílus a legördülő menühöz */
 .settings-dropdown-menu {
     position: absolute;
     top: calc(100% + 10px);
@@ -96,7 +94,7 @@ body {
     padding: 20px;
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
     z-index: 100;
-    display: flex; /* Flexbox elrendezés a gombokhoz */
+    display: flex;
     flex-direction: column;
     gap: 15px;
     width: 250px;
@@ -413,11 +411,47 @@ textarea {
 }
 
 .color-picker {
-    width: 50px !important;
-    height: 40px;
-    border-radius: 8px;
-    border: 2px solid #e2e8f0;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    background-color: transparent;
+    width: 50px;
+    height: 50px;
+    border: none;
     cursor: pointer;
+    padding: 0;
+    border-radius: 50%;
+}
+
+.form-group .color-picker::-webkit-color-swatch-wrapper {
+    padding: 0;
+}
+
+.form-group .color-picker::-webkit-color-swatch {
+    border: none;
+    border-radius: 50%;
+}
+
+
+.form-group .color-picker::-moz-color-swatch {
+    border: none;
+    border-radius: 50%;
+}
+
+.form-group .color-picker {
+    position: relative;
+    overflow: hidden;
+}
+
+.form-group .color-picker::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    border-radius: 50%;
 }
 
 .floating-btn {
@@ -528,48 +562,4 @@ textarea {
     background: linear-gradient(135deg, #4299e1, #3182ce);
     width: 100%;
     padding: 15px 0;
-}
-
-.form-group .color-picker {
-    -webkit-appearance: none;
-    -moz-appearance: none;
-    appearance: none;
-    background-color: transparent;
-    width: 50px;
-    height: 50px;
-    border: none;
-    cursor: pointer;
-    padding: 0;
-    border-radius: 50%;
-}
-
-.form-group .color-picker::-webkit-color-swatch-wrapper {
-    padding: 0;
-}
-
-.form-group .color-picker::-webkit-color-swatch {
-    border: none;
-    border-radius: 50%;
-}
-
-
-.form-group .color-picker::-moz-color-swatch {
-    border: none;
-    border-radius: 50%;
-}
-
-.form-group .color-picker {
-    position: relative;
-    overflow: hidden;
-}
-
-.form-group .color-picker::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    pointer-events: none;
-    border-radius: 50%;
 }
