@@ -278,6 +278,11 @@ function renderPatients(searchQuery = '') {
         
         const visitDaysText = getVisitDaysText(patient.visitDays || []);
         
+        // Hívható telefonszám létrehozása az "Értesítendő telefonszáma" mezőhöz
+        const emergencyPhoneLink = patient.emergencyPhone
+            ? `<a href="tel:${patient.emergencyPhone}" style="color: #667eea; text-decoration: underline;">${patient.emergencyPhone}</a>`
+            : 'Nincs megadva';
+
         card.innerHTML = `
             <div class="patient-card-header">
                 <div class="patient-name">${patient.name}</div>
@@ -292,7 +297,7 @@ function renderPatients(searchQuery = '') {
             <p><strong>Kapukód:</strong> ${patient.intercom || 'Nincs megadva'}</p>
             <p><strong>TAJ:</strong> ${patient.taj || 'Nincs megadva'}</p>
             <p><strong>Értesítendő:</strong> ${patient.emergencyContact || 'Nincs megadva'}</p>
-            <p><strong>Értesítendő telefonszáma:</strong> ${patient.emergencyPhone || 'Nincs megadva'}</p>
+            <p><strong>Értesítendő telefonszáma:</strong> ${emergencyPhoneLink}</p>
             <p><strong>Feladatok:</strong> ${patient.tasks || 'Nincs megadva'}</p>
             <p><strong>Látogatási napok:</strong> ${visitDaysText}</p>
             <div class="call-btn-container">
