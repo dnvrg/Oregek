@@ -264,6 +264,28 @@ textarea {
     gap: 20px;
 }
 
+.patient-search-container {
+    margin-bottom: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.patient-search-container input {
+    font-size: 16px;
+    padding: 10px 15px;
+    border-radius: 12px;
+    border: 2px solid #e2e8f0;
+    transition: all 0.3s ease;
+    width: 100%;
+}
+
+.patient-search-container input:focus {
+    outline: none;
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
 @media (max-width: 768px) {
     .form-row {
         grid-template-columns: 1fr;
@@ -347,15 +369,14 @@ textarea {
     opacity: 0;
     pointer-events: none;
     z-index: 999;
-    
-    display: none; /* Add this line to hide it by default */
+    display: none;
 }
 
 .patient-form-container.visible {
     transform: scale(1);
     opacity: 1;
     pointer-events: auto;
-    display: block; /* Add this line to show it when the class is added */
+    display: block;
 }
 
 /* Add media query for smaller screens */
