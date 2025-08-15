@@ -13,6 +13,7 @@ const shoppingSearchInput = document.getElementById('shoppingSearchInput');
 const documentsSearchInput = document.getElementById('documentsSearchInput');
 const notesSearchInput = document.getElementById('notesSearchInput');
 const patientForm = document.getElementById('patientForm');
+const uploadFile = document.getElementById('uploadFile');
 
 // Keep track of the patient being edited
 let patientToEdit = null;
@@ -64,22 +65,22 @@ function showTab(tabName) {
     });
     
     document.getElementById(tabName).classList.add('active');
-    event.target.classList.add('active');
+    
+    let activeNavTab = document.querySelector(`.nav-tab[onclick*='${tabName}']`);
+    if (activeNavTab) {
+        activeNavTab.classList.add('active');
+    }
 
-    // Show/hide floating button based on the active tab
     if (tabName === 'patients') {
         addPatientBtn.style.display = 'block';
     } else {
         addPatientBtn.style.display = 'none';
-        // Hide the form if a different tab is selected
-        patientFormContainer.classList.remove('visible');
-        addPatientBtn.classList.remove('close');
+        closeForm();
     }
 
     if (tabName === 'calendar') {
         generateCalendar();
     }
-    // Re-render lists with search queries when switching back to their tabs
     if (tabName === 'shopping') {
         renderShoppingList(shoppingSearchInput.value);
     }
@@ -91,22 +92,40 @@ function showTab(tabName) {
     }
 }
 
-// Show/hide patient form
+
+// New/Refactored Form Show/Hide Logic
+function openForm() {
+    patientToEdit = null;
+    clearForm();
+    patientFormContainer.classList.add('visible');
+    addPatientBtn.classList.add('close');
+    patientFormContainer.scrollIntoView({ behavior: 'smooth' });
+}
+
+function closeForm() {
+    patientFormContainer.classList.remove('visible');
+    addPatientBtn.classList.remove('close');
+    clearForm();
+    patientToEdit = null;
+}
+
+// Event listeners for form control
 if (addPatientBtn) {
     addPatientBtn.addEventListener('click', () => {
         if (patientsTab.classList.contains('active')) {
-            // If form is visible, close it. Otherwise, open it.
             if (patientFormContainer.classList.contains('visible')) {
-                patientFormContainer.classList.remove('visible');
-                addPatientBtn.classList.remove('close');
-                clearForm(); // Reset fields, remove buttons
+                closeForm();
             } else {
-                patientToEdit = null;
-                clearForm(); // Reset fields, ensure default buttons
-                patientFormContainer.classList.add('visible');
-                addPatientBtn.classList.add('close');
-                patientFormContainer.scrollIntoView({ behavior: 'smooth' });
+                openForm();
             }
+        }
+    });
+}
+
+if (patientFormContainer) {
+    patientFormContainer.addEventListener('pointerdown', (e) => {
+        if (e.target.id === 'patientFormContainer') {
+            closeForm();
         }
     });
 }
@@ -150,14 +169,12 @@ if (patientForm) {
         const phoneInput = document.getElementById('phone');
         
         if (!nameInput.value.trim()) {
-            // Replaced alert with a more user-friendly UI indication
             nameInput.reportValidity();
             nameInput.focus();
             return;
         }
         
         if (!phoneInput.value.trim()) {
-            // Replaced alert with a more user-friendly UI indication
             phoneInput.reportValidity();
             phoneInput.focus();
             return;
@@ -186,16 +203,12 @@ if (patientForm) {
         
         try {
             if (patientToEdit) {
-                // Editing existing patient
                 const patientIndex = patients.findIndex(p => p.id === patientToEdit.id);
                 if (patientIndex !== -1) {
                     patients[patientIndex] = patientData;
-                    // Removed success alert
                 }
             } else {
-                // Adding new patient
                 patients.push(patientData);
-                // Removed success alert
             }
             
             localStorage.setItem('patients', JSON.stringify(patients));
@@ -203,16 +216,10 @@ if (patientForm) {
             renderPatients();
             updatePatientSelects();
             generateCalendar();
-            clearForm();
-            patientToEdit = null; // Clear patient in edit mode
-            
-            // Close the form on successful save
-            patientFormContainer.classList.remove('visible');
-            addPatientBtn.classList.remove('close');
+            closeForm();
             
         } catch (error) {
             console.error('Hiba a páciens mentésekor:', error);
-            // Replaced alert with a console error or a more subtle UI message if needed
         }
     });
 }
@@ -223,10 +230,8 @@ function renderPatients(searchQuery = '') {
     if (!container) return;
     container.innerHTML = '';
     
-    // Sort patients alphabetically by name
     const sortedPatients = [...patients].sort((a, b) => a.name.localeCompare(b.name, 'hu'));
     
-    // Filter patients based on search query
     const filteredPatients = sortedPatients.filter(patient => {
         const query = searchQuery.toLowerCase();
         return (
@@ -287,14 +292,28 @@ function callPatient(phone) {
 
 function deletePatient(id) {
     const patient = patients.find(p => p.id === id);
-    if (confirm(`Biztosan törölni szeretné ${patient ? patient.name : 'ezt a pácienst'}?`)) {
+    if (confirm(`Biztosan törölni szeretné ${patient ? patient.name : 'ezt a pácienst'}? Ez az akció visszavonhatatlan és minden hozzá kapcsolódó adatot töröl.`)) {
+        
+        // Filter out the patient
         patients = patients.filter(p => p.id !== id);
+        
+        // Filter out associated data, ensuring type consistency
+        shoppingItems = shoppingItems.filter(item => parseInt(item.patientId) !== id);
+        documents = documents.filter(doc => parseInt(doc.patientId) !== id);
+        notes = notes.filter(note => parseInt(note.patientId) !== id);
+        
         localStorage.setItem('patients', JSON.stringify(patients));
+        localStorage.setItem('shoppingItems', JSON.stringify(shoppingItems));
+        localStorage.setItem('documents', JSON.stringify(documents));
+        localStorage.setItem('notes', JSON.stringify(notes));
+        
         renderPatients();
         updatePatientSelects();
+        renderShoppingList();
+        renderDocuments();
+        renderNotes();
         generateCalendar();
-        clearForm(); // Clear the form and remove the delete button
-        // Removed success alert
+        closeForm();
     }
 }
 
@@ -319,18 +338,14 @@ function clearForm() {
     patientForm.querySelector('.btn[type="submit"]').textContent = 'Mentés';
     
     console.log('Űrlap törölve');
-    
-    // This part is now handled by the event listener that calls this function.
 }
 
 function editPatient(id) {
     patientToEdit = patients.find(p => p.id === id);
     if (!patientToEdit) return;
     
-    // Reset the form to clear any previous state
     clearForm();
 
-    // Populate the form with patient data
     document.getElementById('name').value = patientToEdit.name;
     document.getElementById('phone').value = patientToEdit.phone;
     document.getElementById('address').value = patientToEdit.address || '';
@@ -345,11 +360,9 @@ function editPatient(id) {
         checkbox.checked = patientToEdit.visitDays && patientToEdit.visitDays.includes(parseInt(checkbox.value));
     });
     
-    // Change the form buttons for editing
     const submitBtn = patientForm.querySelector('.btn[type="submit"]');
     submitBtn.textContent = 'Frissítés';
     
-    // Create and add the "Mégse" button
     const existingCancelBtn = patientForm.querySelector('.btn-cancel');
     if (existingCancelBtn) existingCancelBtn.remove();
 
@@ -358,11 +371,7 @@ function editPatient(id) {
     cancelBtn.textContent = 'Mégse';
     cancelBtn.type = 'button';
     cancelBtn.onclick = () => {
-        // This is a crucial fix: it now explicitly hides the form
-        patientFormContainer.classList.remove('visible');
-        addPatientBtn.classList.remove('close');
-        clearForm();
-        patientToEdit = null;
+        closeForm();
     };
     submitBtn.insertAdjacentElement('afterend', cancelBtn);
     
@@ -371,8 +380,6 @@ function editPatient(id) {
     patientFormContainer.classList.add('visible');
     addPatientBtn.classList.add('close');
     patientFormContainer.scrollIntoView({ behavior: 'smooth' });
-    
-    // Removed alert
 }
 
 function showDeleteButton(patientId) {
@@ -507,7 +514,7 @@ if (document.getElementById('shoppingForm')) {
         const item = {
             id: Date.now(),
             item: document.getElementById('shoppingItem').value,
-            patientId: document.getElementById('shoppingPatient').value,
+            patientId: parseInt(document.getElementById('shoppingPatient').value),
             completed: false
         };
         
@@ -527,11 +534,11 @@ function renderShoppingList(searchQuery = '') {
     
     const filteredItems = shoppingItems.filter(item =>
         item.item.toLowerCase().includes(query) ||
-        (patients.find(p => p.id == item.patientId)?.name.toLowerCase().includes(query))
+        (patients.find(p => p.id === item.patientId)?.name.toLowerCase().includes(query))
     );
     
     const groupedItems = filteredItems.reduce((acc, item) => {
-        const patient = patients.find(p => p.id == item.patientId);
+        const patient = patients.find(p => p.id === item.patientId);
         const patientName = patient ? patient.name : 'Általános';
         const patientColor = patient ? patient.color : '#667eea';
         const patientId = patient ? patient.id : 'general';
@@ -601,13 +608,11 @@ if (document.getElementById('documentForm')) {
         const patientId = document.getElementById('documentPatient').value;
         
         if (!file) {
-            // Replaced alert with a more user-friendly UI indication
             fileInput.reportValidity();
             return;
         }
         
         if (!patientId) {
-            // Replaced alert with a more user-friendly UI indication
             document.getElementById('documentPatient').reportValidity();
             return;
         }
@@ -635,11 +640,8 @@ if (document.getElementById('documentForm')) {
                 renderDocuments();
                 
                 document.getElementById('documentForm').reset();
-                
-                // Removed success alert
             } catch (error) {
                 console.error('Hiba a dokumentum mentésekor:', error);
-                // Replaced alert with a console error or a more subtle UI message if needed
             } finally {
                 submitBtn.textContent = originalText;
                 submitBtn.disabled = false;
@@ -647,7 +649,6 @@ if (document.getElementById('documentForm')) {
         };
         
         reader.onerror = function() {
-            // Replaced alert with a console error or a more subtle UI message if needed
             submitBtn.textContent = originalText;
             submitBtn.disabled = false;
         };
@@ -665,11 +666,11 @@ function renderDocuments(searchQuery = '') {
 
     const filteredDocs = documents.filter(doc =>
         doc.name.toLowerCase().includes(query) ||
-        (patients.find(p => p.id == doc.patientId)?.name.toLowerCase().includes(query))
+        (patients.find(p => p.id === doc.patientId)?.name.toLowerCase().includes(query))
     );
     
     const groupedDocs = filteredDocs.reduce((acc, doc) => {
-        const patient = patients.find(p => p.id == doc.patientId);
+        const patient = patients.find(p => p.id === doc.patientId);
         const patientName = patient ? patient.name : 'Ismeretlen páciens';
         const patientColor = patient ? patient.color : '#667eea';
         const patientId = patient ? patient.id : 'unknown';
@@ -787,7 +788,7 @@ if (document.getElementById('noteForm')) {
         const note = {
             id: Date.now(),
             content: document.getElementById('noteContent').value,
-            patientId: document.getElementById('notePatient').value,
+            patientId: parseInt(document.getElementById('notePatient').value),
             date: new Date().toLocaleString()
         };
         
@@ -807,11 +808,11 @@ function renderNotes(searchQuery = '') {
 
     const filteredNotes = notes.filter(note =>
         note.content.toLowerCase().includes(query) ||
-        (patients.find(p => p.id == note.patientId)?.name.toLowerCase().includes(query))
+        (patients.find(p => p.id === note.patientId)?.name.toLowerCase().includes(query))
     );
 
     const groupedNotes = filteredNotes.reduce((acc, note) => {
-        const patient = patients.find(p => p.id == note.patientId);
+        const patient = patients.find(p => p.id === note.patientId);
         const patientName = patient ? patient.name : 'Általános';
         const patientColor = patient ? patient.color : '#667eea';
         const patientId = patient ? patient.id : 'general';
@@ -878,9 +879,85 @@ function deleteNote(id) {
     }
 }
 
+// Data download functionality
+function downloadAllData() {
+    try {
+        const allData = {
+            patients: patients,
+            shoppingItems: shoppingItems,
+            documents: documents,
+            notes: notes
+        };
+        
+        const dataStr = JSON.stringify(allData, null, 2);
+        const blob = new Blob([dataStr], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = 'elderly_care_data.json';
+        
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        
+        URL.revokeObjectURL(url);
+    } catch (error) {
+        console.error('Hiba az adatok letöltésekor:', error);
+    }
+}
+
+// Data upload functionality
+if (uploadFile) {
+    uploadFile.addEventListener('change', function(event) {
+        const file = event.target.files[0];
+        if (!file) {
+            return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            try {
+                const uploadedData = JSON.parse(e.target.result);
+                
+                if (uploadedData.patients && Array.isArray(uploadedData.patients)) {
+                    patients = uploadedData.patients;
+                    localStorage.setItem('patients', JSON.stringify(patients));
+                }
+                if (uploadedData.shoppingItems && Array.isArray(uploadedData.shoppingItems)) {
+                    shoppingItems = uploadedData.shoppingItems;
+                    localStorage.setItem('shoppingItems', JSON.stringify(shoppingItems));
+                }
+                if (uploadedData.documents && Array.isArray(uploadedData.documents)) {
+                    documents = uploadedData.documents;
+                    localStorage.setItem('documents', JSON.stringify(documents));
+                }
+                if (uploadedData.notes && Array.isArray(uploadedData.notes)) {
+                    notes = uploadedData.notes;
+                    localStorage.setItem('notes', JSON.stringify(notes));
+                }
+
+                renderPatients();
+                renderShoppingList();
+                renderDocuments();
+                renderNotes();
+                updatePatientSelects();
+                generateCalendar();
+
+                alert('Az adatok sikeresen feltöltve!');
+
+            } catch (error) {
+                console.error('Hiba a fájl feltöltésekor:', error);
+                alert('Hiba a fájl feldolgozásakor. Kérjük, ellenőrizze, hogy a fájl érvényes JSON formátumú.');
+            }
+        };
+        reader.readAsText(file);
+    });
+}
 // Service Worker for offline functionality
 if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('/sw.js').catch(err => {
         console.log('A Service Worker regisztrációja sikertelen volt:', err);
     });
 }
+
