@@ -23,103 +23,186 @@
 
         <div id="patients" class="tab-content active">
             <h2>Pácienskezelés</h2>
-            
             <div id="patientsList" class="patient-list"></div>
         </div>
 
-        <button id="addPatientBtn" class="floating-btn">+</button>
-
-        <div id="patientFormContainer" class="patient-form-container">
-            <form id="patientForm">
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="name">Név *</label>
-                        <input type="text" id="name" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="phone">Telefonszám *</label>
-                        <input type="tel" id="phone" required>
-                    </div>
-                </div>
-
+        <div id="calendar" class="tab-content">
+            <h2>Látogatási Naptár</h2>
+            <div class="form-row">
                 <div class="form-group">
-                    <label for="address">Lakcím</label>
-                    <input type="text" id="address">
+                    <label for="calendarMonth">Hónap</label>
+                    <select id="calendarMonth">
+                        <option value="0">Január</option>
+                        <option value="1">Február</option>
+                        <option value="2">Március</option>
+                        <option value="3">Április</option>
+                        <option value="4">Május</option>
+                        <option value="5">Június</option>
+                        <option value="6">Július</option>
+                        <option value="7">Augusztus</option>
+                        <option value="8">Szeptember</option>
+                        <option value="9">Október</option>
+                        <option value="10">November</option>
+                        <option value="11">December</option>
+                    </select>
                 </div>
-
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="intercom">Kapukód</label>
-                        <input type="text" id="intercom">
-                    </div>
-                    <div class="form-group">
-                        <label for="taj">TAJ Szám</label>
-                        <input type="text" id="taj">
-                    </div>
-                </div>
-
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="emergencyContact">Értesítendő</label>
-                        <input type="text" id="emergencyContact">
-                    </div>
-                    <div class="form-group">
-                        <label for="emergencyPhone">Értesítendő Telefonszáma</label>
-                        <input type="tel" id="emergencyPhone">
-                    </div>
-                </div>
-
                 <div class="form-group">
-                    <label for="tasks">Feladatok</label>
-                    <textarea id="tasks" placeholder="Sorolja fel a páciens gondozási feladatait..."></textarea>
+                    <label for="calendarYear">Év</label>
+                    <input type="number" id="calendarYear" min="2020" max="2030">
                 </div>
-
-                <div class="form-group">
-                    <label for="patientColor">Naptár Szín</label>
-                    <input type="color" id="patientColor" class="color-picker" value="#667eea">
-                </div>
-
-                <div class="form-group">
-                    <label>Látogatási Napok</label>
-                    <div class="visit-days">
-                        <div class="day-checkbox">
-                            <input type="checkbox" id="monday" value="1">
-                            <label for="monday">Hétfő</label>
-                        </div>
-                        <div class="day-checkbox">
-                            <input type="checkbox" id="tuesday" value="2">
-                            <label for="tuesday">Kedd</label>
-                        </div>
-                        <div class="day-checkbox">
-                            <input type="checkbox" id="wednesday" value="3">
-                            <label for="wednesday">Szerda</label>
-                        </div>
-                        <div class="day-checkbox">
-                            <input type="checkbox" id="thursday" value="4">
-                            <label for="thursday">Csütörtök</label>
-                        </div>
-                        <div class="day-checkbox">
-                            <input type="checkbox" id="friday" value="5">
-                            <label for="friday">Péntek</label>
-                        </div>
-                    </div>
-                </div>
-
-                <button type="submit" class="btn">Mentés</button>
-                <button type="button" class="btn" onclick="clearForm()">Töröl</button>
-            </form>
+            </div>
+            <div id="calendarGrid" class="calendar"></div>
         </div>
 
-        <div id="calendar" class="tab-content">
-            </div>
         <div id="shopping" class="tab-content">
-            </div>
+            <h2>Bevásárló Lista</h2>
+            
+            <form id="shoppingForm">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="shoppingItem">Tétel</label>
+                        <input type="text" id="shoppingItem" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="shoppingPatient">Páciens</label>
+                        <select id="shoppingPatient">
+                            <option value="">Válasszon pácienst</option>
+                        </select>
+                    </div>
+                </div>
+                <button type="submit" class="btn">Hozzáad</button>
+            </form>
+
+            <div id="shoppingList"></div>
+        </div>
+
         <div id="documents" class="tab-content">
-            </div>
+            <h2>Páciens Dokumentumok</h2>
+            
+            <form id="documentForm">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="documentFile">Válasszon dokumentumot</label>
+                        <input type="file" id="documentFile" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="documentPatient">Páciens</label>
+                        <select id="documentPatient" required>
+                            <option value="">Válasszon pácienst</option>
+                        </select>
+                    </div>
+                </div>
+                <button type="submit" class="btn">Feltöltés</button>
+            </form>
+
+            <div id="documentsList"></div>
+        </div>
+
         <div id="notes" class="tab-content">
-            </div>
+            <h2>Jegyzetek</h2>
+            
+            <form id="noteForm">
+                <div class="form-group">
+                    <label for="notePatient">Páciens</label>
+                    <select id="notePatient">
+                        <option value="">Általános megjegyzés</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="noteContent">Jegyzet</label>
+                    <textarea id="noteContent" required placeholder="Ide írja a jegyzetet..."></textarea>
+                </div>
+                <button type="submit" class="btn">Jegyzet Hozzáadása</button>
+            </form>
+
+            <div id="notesList"></div>
+        </div>
 
     </div>
+
+    <button id="addPatientBtn" class="floating-btn">+</button>
+
+    <div id="patientFormContainer" class="patient-form-container">
+        <form id="patientForm">
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="name">Név *</label>
+                    <input type="text" id="name" required>
+                </div>
+                <div class="form-group">
+                    <label for="phone">Telefonszám *</label>
+                    <input type="tel" id="phone" required>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="address">Lakcím</label>
+                <input type="text" id="address">
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="intercom">Kapukód</label>
+                    <input type="text" id="intercom">
+                </div>
+                <div class="form-group">
+                    <label for="taj">TAJ Szám</label>
+                    <input type="text" id="taj">
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="emergencyContact">Értesítendő</label>
+                    <input type="text" id="emergencyContact">
+                </div>
+                <div class="form-group">
+                    <label for="emergencyPhone">Értesítendő Telefonszáma</label>
+                    <input type="tel" id="emergencyPhone">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="tasks">Feladatok</label>
+                <textarea id="tasks" placeholder="Sorolja fel a páciens gondozási feladatait..."></textarea>
+            </div>
+
+            <div class="form-group">
+                <label for="patientColor">Naptár Szín</label>
+                <input type="color" id="patientColor" class="color-picker" value="#667eea">
+            </div>
+
+            <div class="form-group">
+                <label>Látogatási Napok</label>
+                <div class="visit-days">
+                    <div class="day-checkbox">
+                        <input type="checkbox" id="monday" value="1">
+                        <label for="monday">Hétfő</label>
+                    </div>
+                    <div class="day-checkbox">
+                        <input type="checkbox" id="tuesday" value="2">
+                        <label for="tuesday">Kedd</label>
+                    </div>
+                    <div class="day-checkbox">
+                        <input type="checkbox" id="wednesday" value="3">
+                        <label for="wednesday">Szerda</label>
+                    </div>
+                    <div class="day-checkbox">
+                        <input type="checkbox" id="thursday" value="4">
+                        <label for="thursday">Csütörtök</label>
+                    </div>
+                    <div class="day-checkbox">
+                        <input type="checkbox" id="friday" value="5">
+                        <label for="friday">Péntek</label>
+                    </div>
+                </div>
+            </div>
+
+            <button type="submit" class="btn">Mentés</button>
+            <button type="button" class="btn" onclick="clearForm()">Töröl</button>
+        </form>
+    </div>
+
     <script src="script.js"></script>
 </body>
 </html>
