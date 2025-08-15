@@ -4,8 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Idősgondozási Menedzser</title>
-    <link rel="stylesheet" href="styles.css">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <style>
+        /* A CSS kód a következő blokkban található */
+    </style>
 </head>
 <body>
     <div class="app-container">
@@ -17,9 +19,18 @@
                 <button class="nav-tab" onclick="showTab('documents')">Dokumentumok</button>
                 <button class="nav-tab" onclick="showTab('notes')">Jegyzetek</button>
             </div>
-            <button class="settings-btn" onclick="showTab('settings')">
-                <i class="material-icons">settings</i>
-            </button>
+            <!-- Konténer a beállítások gombhoz és a legördülő menühöz -->
+            <div class="settings-btn-container">
+                <button class="settings-btn" id="settingsBtn" onclick="toggleSettingsDropdown()">
+                    <i class="material-icons">settings</i>
+                </button>
+                <!-- Új legördülő menü a beállítások tartalmával -->
+                <div id="settingsDropdown" class="settings-dropdown-menu">
+                    <button class="btn download-btn" onclick="downloadAllData()">Adatok letöltése</button>
+                    <input type="file" id="uploadFile" accept=".json" style="display: none;">
+                    <button class="btn upload-btn" onclick="document.getElementById('uploadFile').click()">Adatok feltöltése</button>
+                </div>
+            </div>
         </div>
 
         <div id="patients" class="tab-content active">
@@ -144,12 +155,9 @@
             <div id="notesList"></div>
         </div>
         
+        <!-- A beállítások oldal eltávolításra került, a funkciók a legördülő menüben vannak -->
         <div id="settings" class="tab-content">
-            <div class="settings-buttons-container">
-                <button class="btn download-btn" onclick="downloadAllData()">Adatok letöltése</button>
-                <input type="file" id="uploadFile" accept=".json" style="display: none;">
-                <button class="btn upload-btn" onclick="document.getElementById('uploadFile').click()">Adatok feltöltése</button>
-            </div>
+            <!-- Ez a div üresen maradhat, mivel már nincs szükségünk külön fülre -->
         </div>
 
     </div>
@@ -236,6 +244,8 @@
         </form>
     </div>
 
-    <script src="script.js"></script>
+    <script>
+        // A JavaScript kód a következő blokkban található
+    </script>
 </body>
 </html>
