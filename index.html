@@ -4,11 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Idősgondozási Menedzser</title>
+    <!-- A külső CSS fájlra mutató hivatkozás újra a helyén van -->
     <link rel="stylesheet" href="styles.css">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
-    <style>
-        /* A CSS kód a következő blokkban található */
-    </style>
 </head>
 <body>
     <div class="app-container">
@@ -25,7 +23,7 @@
                 <button class="settings-btn" id="settingsBtn" onclick="toggleSettingsDropdown()">
                     <i class="material-icons">settings</i>
                 </button>
-                <!-- Új legördülő menü a beállítások tartalmával -->
+                <!-- A legördülő menü a letöltés és feltöltés gombokkal -->
                 <div id="settingsDropdown" class="settings-dropdown-menu">
                     <button class="btn download-btn" onclick="downloadAllData()">Adatok letöltése</button>
                     <input type="file" id="uploadFile" accept=".json" style="display: none;">
@@ -156,9 +154,8 @@
             <div id="notesList"></div>
         </div>
         
-        <!-- A beállítások oldal eltávolításra került, a funkciók a legördülő menüben vannak -->
         <div id="settings" class="tab-content">
-            <!-- Ez a div üresen maradhat, mivel már nincs szükségünk külön fülre -->
+            <!-- Ezt a fület most már elhagyjuk, mivel a funkciók a legördülő menübe kerültek -->
         </div>
 
     </div>
@@ -244,5 +241,7 @@
             <button type="submit" class="btn">Mentés</button>
         </form>
     </div>
+
+    <script src="script.js"></script>
 </body>
 </html>
