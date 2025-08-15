@@ -142,6 +142,10 @@ textarea {
     background: linear-gradient(135deg, #f56565, #e53e3e);
 }
 
+.btn-cancel {
+    background: #a0aec0;
+}
+
 .patient-list {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
@@ -268,27 +272,38 @@ textarea {
     gap: 20px;
 }
 
-.patient-search-container {
-    margin-bottom: 20px;
+/* --- Search and Header Alignment --- */
+.header-with-search {
     display: flex;
-    flex-direction: column;
-    gap: 10px;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    flex-wrap: wrap; /* Allows wrapping on smaller screens */
 }
 
-.patient-search-container input {
-    font-size: 16px;
-    padding: 10px 15px;
-    border-radius: 12px;
+.header-with-search h2 {
+    margin: 0;
+}
+
+.search-container {
+    width: 250px; /* Adjust width as needed */
+}
+
+.search-container input {
+    width: 100%;
+    padding: 8px 12px; /* Smaller padding for a more compact look */
+    font-size: 14px;
+    border-radius: 20px;
     border: 2px solid #e2e8f0;
     transition: all 0.3s ease;
-    width: 100%;
 }
 
-.patient-search-container input:focus {
+.search-container input:focus {
     outline: none;
     border-color: #667eea;
     box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
 }
+/* ---------------------------------- */
 
 @media (max-width: 768px) {
     .form-row {
@@ -302,6 +317,16 @@ textarea {
     .nav-tab {
         font-size: 14px;
         padding: 10px 16px;
+    }
+    
+    .header-with-search {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+    
+    .search-container {
+        width: 100%;
     }
 }
 
@@ -383,22 +408,6 @@ textarea {
     display: block;
 }
 
-/* Add media query for smaller screens */
-@media (max-width: 768px) {
-    .floating-btn {
-        width: 50px;
-        height: 50px;
-        font-size: 2rem;
-        line-height: 50px;
-        bottom: 20px;
-        right: 20px;
-    }
-    .patient-form-container {
-        bottom: 80px;
-        right: 20px;
-        max-width: none;
-    }
-}
 .patient-card-header {
     display: flex;
     justify-content: space-between;
