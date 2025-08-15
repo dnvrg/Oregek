@@ -8,6 +8,7 @@ let notes = JSON.parse(localStorage.getItem('notes')) || [];
 const addPatientBtn = document.getElementById('addPatientBtn');
 const patientFormContainer = document.getElementById('patientFormContainer');
 const patientsTab = document.getElementById('patients');
+const patientSearchInput = document.getElementById('patientSearchInput');
 
 // Initialize app
 document.addEventListener('DOMContentLoaded', function() {
@@ -87,6 +88,12 @@ addPatientBtn.addEventListener('click', () => {
     }
 });
 
+// Patient search functionality
+patientSearchInput.addEventListener('input', (e) => {
+    renderPatients(e.target.value);
+});
+
+
 // Patient management
 document.getElementById('patientForm').addEventListener('submit', function(e) {
     e.preventDefault();
@@ -149,18 +156,28 @@ document.getElementById('patientForm').addEventListener('submit', function(e) {
     }
 });
 
-function renderPatients() {
+function renderPatients(searchQuery = '') {
     const container = document.getElementById('patientsList');
     container.innerHTML = '';
+    
+    // Sort patients alphabetically by name
+    const sortedPatients = [...patients].sort((a, b) => a.name.localeCompare(b.name, 'hu'));
+    
+    // Filter patients based on search query
+    const filteredPatients = sortedPatients.filter(patient => 
+        patient.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        patient.address.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        patient.phone.toLowerCase().includes(searchQuery.toLowerCase())
+    );
 
-    console.log('Páciensek renderelése:', patients); 
+    console.log('Páciensek renderelése:', filteredPatients); 
 
-    if (patients.length === 0) {
-        container.innerHTML = '<p style="text-align: center; color: #718096; padding: 20px;">Még nincsenek hozzáadott páciensek. Használja a fenti űrlapot az első páciens hozzáadásához.</p>';
+    if (filteredPatients.length === 0) {
+        container.innerHTML = '<p style="text-align: center; color: #718096; padding: 20px;">Nincsenek páciensek a keresési feltételeknek megfelelően.</p>';
         return;
     }
 
-    patients.forEach(patient => {
+    filteredPatients.forEach(patient => {
         const card = document.createElement('div');
         card.className = 'patient-card';
         card.style.borderLeftColor = patient.color || '#667eea';
@@ -335,10 +352,11 @@ function generateCalendar() {
         
         const dayOfWeekForVisit = currentDate.getDay(); // 0 for Sunday, 1 for Monday...
         let visitDayValue = dayOfWeekForVisit;
-        // The checkboxes are set up for Monday to Friday (values 1 to 5), so no change needed here.
-        // If your checkboxes were different, you would need to adjust this.
         
         patients.forEach(patient => {
+            // Your checkboxes are for Monday to Friday, so the values are 1-5.
+            // The `getDay()` method returns 0 for Sunday, 1 for Monday, etc.
+            // So, you can directly use the `getDay()` value.
             if (patient.visitDays && patient.visitDays.includes(visitDayValue)) {
                 const visit = document.createElement('span');
                 visit.className = 'calendar-visit';
