@@ -23,15 +23,22 @@
         </div>
 
         <div id="patients" class="tab-content active">
-            <div class="patient-search-container">
+            <div class="header-with-search">
                 <h2>Páciensek</h2>
-                <input type="text" id="patientSearchInput" placeholder="Páciensek keresése...">
+                <div class="search-container">
+                    <input type="text" id="patientSearchInput" placeholder="Keresés...">
+                </div>
             </div>
             <div id="patientsList" class="patient-list"></div>
         </div>
 
         <div id="calendar" class="tab-content">
-            <h2>Látogatási Naptár</h2>
+            <div class="header-with-search">
+                <h2>Látogatási Naptár</h2>
+                <div class="search-container">
+                    <input type="text" id="calendarSearchInput" placeholder="Keresés...">
+                </div>
+            </div>
             <div class="form-row">
                 <div class="form-group">
                     <label for="calendarMonth">Hónap</label>
@@ -59,7 +66,12 @@
         </div>
 
         <div id="shopping" class="tab-content">
-            <h2>Bevásárló Lista</h2>
+            <div class="header-with-search">
+                <h2>Bevásárló Lista</h2>
+                <div class="search-container">
+                    <input type="text" id="shoppingSearchInput" placeholder="Keresés...">
+                </div>
+            </div>
             
             <form id="shoppingForm">
                 <div class="form-row">
@@ -81,7 +93,12 @@
         </div>
 
         <div id="documents" class="tab-content">
-            <h2>Páciens Dokumentumok</h2>
+            <div class="header-with-search">
+                <h2>Páciens Dokumentumok</h2>
+                <div class="search-container">
+                    <input type="text" id="documentsSearchInput" placeholder="Keresés...">
+                </div>
+            </div>
             
             <form id="documentForm">
                 <div class="form-row">
@@ -103,7 +120,12 @@
         </div>
 
         <div id="notes" class="tab-content">
-            <h2>Jegyzetek</h2>
+            <div class="header-with-search">
+                <h2>Jegyzetek</h2>
+                <div class="search-container">
+                    <input type="text" id="notesSearchInput" placeholder="Keresés...">
+                </div>
+            </div>
             
             <form id="noteForm">
                 <div class="form-group">
@@ -203,7 +225,6 @@
             </div>
 
             <button type="submit" class="btn">Mentés</button>
-            <button type="button" class="btn" onclick="clearForm()">Töröl</button>
         </form>
     </div>
 
