@@ -1,3 +1,5 @@
+// A JavaScript kód a könnyebb kezelhetőség és karbantarthatóság érdekében a script.js fájlba került át.
+
 // Data storage
 let patients = JSON.parse(localStorage.getItem('patients')) || [];
 let shoppingItems = JSON.parse(localStorage.getItem('shoppingItems')) || [];
