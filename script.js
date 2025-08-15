@@ -9,7 +9,13 @@ const addPatientBtn = document.getElementById('addPatientBtn');
 const patientFormContainer = document.getElementById('patientFormContainer');
 const patientsTab = document.getElementById('patients');
 const patientSearchInput = document.getElementById('patientSearchInput');
+const shoppingSearchInput = document.getElementById('shoppingSearchInput');
+const documentsSearchInput = document.getElementById('documentsSearchInput');
+const notesSearchInput = document.getElementById('notesSearchInput');
 const patientForm = document.getElementById('patientForm');
+
+// Keep track of the patient being edited
+let patientToEdit = null;
 
 // Initialize app
 document.addEventListener('DOMContentLoaded', function() {
@@ -73,21 +79,38 @@ function showTab(tabName) {
     if (tabName === 'calendar') {
         generateCalendar();
     }
+    // Re-render lists with search queries when switching back to their tabs
+    if (tabName === 'shopping') {
+        renderShoppingList(shoppingSearchInput.value);
+    }
+    if (tabName === 'documents') {
+        renderDocuments(documentsSearchInput.value);
+    }
+    if (tabName === 'notes') {
+        renderNotes(notesSearchInput.value);
+    }
 }
 
 // Show/hide patient form
-addPatientBtn.addEventListener('click', () => {
-    // Only toggle the form if the 'patients' tab is the active one
-    if (patientsTab.classList.contains('active')) {
-        patientFormContainer.classList.toggle('visible');
-        addPatientBtn.classList.toggle('close');
-        
-        // Scroll to the form if it's visible
-        if (patientFormContainer.classList.contains('visible')) {
-             patientFormContainer.scrollIntoView({ behavior: 'smooth' });
+if (addPatientBtn) {
+    addPatientBtn.addEventListener('click', () => {
+        if (patientsTab.classList.contains('active')) {
+            // If form is visible, close it. Otherwise, open it.
+            if (patientFormContainer.classList.contains('visible')) {
+                patientFormContainer.classList.remove('visible');
+                addPatientBtn.classList.remove('close');
+                clearForm(); // Reset fields, remove buttons
+            } else {
+                patientToEdit = null;
+                clearForm(); // Reset fields, ensure default buttons
+                patientFormContainer.classList.add('visible');
+                addPatientBtn.classList.add('close');
+                patientFormContainer.scrollIntoView({ behavior: 'smooth' });
+            }
         }
-    }
-});
+    });
+}
+
 
 // Patient search functionality
 if (patientSearchInput) {
@@ -96,71 +119,102 @@ if (patientSearchInput) {
     });
 }
 
+// Shopping list search functionality
+if (shoppingSearchInput) {
+    shoppingSearchInput.addEventListener('input', (e) => {
+        renderShoppingList(e.target.value);
+    });
+}
+
+// Documents search functionality
+if (documentsSearchInput) {
+    documentsSearchInput.addEventListener('input', (e) => {
+        renderDocuments(e.target.value);
+    });
+}
+
+// Notes search functionality
+if (notesSearchInput) {
+    notesSearchInput.addEventListener('input', (e) => {
+        renderNotes(e.target.value);
+    });
+}
+
 
 // Patient management
-document.getElementById('patientForm').addEventListener('submit', function(e) {
-    e.preventDefault();
-    
-    const nameInput = document.getElementById('name');
-    const phoneInput = document.getElementById('phone');
-    
-    if (!nameInput.value.trim()) {
-        alert('Kérem, adja meg a páciens nevét.');
-        nameInput.focus();
-        return;
-    }
-    
-    if (!phoneInput.value.trim()) {
-        alert('Kérem, adja meg a telefonszámot.');
-        phoneInput.focus();
-        return;
-    }
-    
-    const visitDays = [];
-    const dayCheckboxes = document.querySelectorAll('.day-checkbox input[type="checkbox"]:checked');
-    dayCheckboxes.forEach(checkbox => {
-        visitDays.push(parseInt(checkbox.value));
+if (patientForm) {
+    patientForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const nameInput = document.getElementById('name');
+        const phoneInput = document.getElementById('phone');
+        
+        if (!nameInput.value.trim()) {
+            alert('Kérem, adja meg a páciens nevét.');
+            nameInput.focus();
+            return;
+        }
+        
+        if (!phoneInput.value.trim()) {
+            alert('Kérem, adja meg a telefonszámot.');
+            phoneInput.focus();
+            return;
+        }
+        
+        const visitDays = [];
+        const dayCheckboxes = document.querySelectorAll('.day-checkbox input[type="checkbox"]:checked');
+        dayCheckboxes.forEach(checkbox => {
+            visitDays.push(parseInt(checkbox.value));
+        });
+
+        const patientData = {
+            id: patientToEdit ? patientToEdit.id : Date.now(),
+            name: nameInput.value.trim(),
+            phone: phoneInput.value.trim(),
+            address: document.getElementById('address').value.trim(),
+            intercom: document.getElementById('intercom').value.trim(),
+            taj: document.getElementById('taj').value.trim(),
+            emergencyContact: document.getElementById('emergencyContact').value.trim(),
+            emergencyPhone: document.getElementById('emergencyPhone').value.trim(),
+            tasks: document.getElementById('tasks').value.trim(),
+            color: document.getElementById('patientColor').value,
+            visitDays: visitDays,
+            createdDate: patientToEdit ? patientToEdit.createdDate : new Date().toISOString()
+        };
+        
+        try {
+            if (patientToEdit) {
+                // Editing existing patient
+                const patientIndex = patients.findIndex(p => p.id === patientToEdit.id);
+                if (patientIndex !== -1) {
+                    patients[patientIndex] = patientData;
+                    alert(`A páciens, ${patientData.name}, sikeresen frissítve lett!`);
+                }
+            } else {
+                // Adding new patient
+                patients.push(patientData);
+                alert(`A páciens, ${patientData.name}, sikeresen hozzá lett adva!`);
+            }
+            
+            localStorage.setItem('patients', JSON.stringify(patients));
+            
+            renderPatients();
+            updatePatientSelects();
+            generateCalendar();
+            clearForm();
+            patientToEdit = null; // Clear patient in edit mode
+            
+        } catch (error) {
+            console.error('Hiba a páciens mentésekor:', error);
+            alert('Hiba a páciens mentésekor. Kérem, próbálja újra.');
+        }
     });
+}
 
-    const patient = {
-        id: Date.now(),
-        name: nameInput.value.trim(),
-        phone: phoneInput.value.trim(),
-        address: document.getElementById('address').value.trim(),
-        intercom: document.getElementById('intercom').value.trim(),
-        taj: document.getElementById('taj').value.trim(),
-        emergencyContact: document.getElementById('emergencyContact').value.trim(),
-        emergencyPhone: document.getElementById('emergencyPhone').value.trim(),
-        tasks: document.getElementById('tasks').value.trim(),
-        color: document.getElementById('patientColor').value,
-        visitDays: visitDays,
-        createdDate: new Date().toISOString()
-    };
-
-    console.log('Páciens hozzáadása:', patient); 
-    
-    try {
-        patients.push(patient);
-        localStorage.setItem('patients', JSON.stringify(patients));
-        
-        const saved = JSON.parse(localStorage.getItem('patients'));
-        console.log('Páciensek elmentve a helyi tárolóba:', saved); 
-        
-        renderPatients();
-        updatePatientSelects();
-        generateCalendar();
-        clearForm();
-        
-        alert(`A páciens, ${patient.name}, sikeresen hozzá lett adva!`);
-        
-    } catch (error) {
-        console.error('Hiba a páciens mentésekor:', error);
-        alert('Hiba a páciens mentésekor. Kérem, próbálja újra.');
-    }
-});
 
 function renderPatients(searchQuery = '') {
     const container = document.getElementById('patientsList');
+    if (!container) return;
     container.innerHTML = '';
     
     // Sort patients alphabetically by name
@@ -239,7 +293,9 @@ function deletePatient(id) {
 }
 
 function clearForm() {
-    document.getElementById('patientForm').reset();
+    if (patientForm) {
+        patientForm.reset();
+    }
     
     document.querySelectorAll('.day-checkbox input[type="checkbox"]').forEach(checkbox => {
         checkbox.checked = false;
@@ -247,43 +303,64 @@ function clearForm() {
     
     document.getElementById('patientColor').value = '#667eea';
     
-    // Remove the delete button
-    const deleteBtn = document.querySelector('#patientForm .btn-delete');
-    if (deleteBtn) {
-        deleteBtn.remove();
-    }
-
+    // Remove the dynamic buttons when clearing the form
+    const deleteBtn = patientForm.querySelector('.btn-delete');
+    if (deleteBtn) deleteBtn.remove();
+    const cancelBtn = patientForm.querySelector('.btn-cancel');
+    if (cancelBtn) cancelBtn.remove();
+    
+    // Change submit button text back to default
+    patientForm.querySelector('.btn[type="submit"]').textContent = 'Mentés';
+    
     console.log('Űrlap törölve'); 
     
-    // Hide the form after clearing
-    patientFormContainer.classList.remove('visible');
-    addPatientBtn.classList.remove('close');
+    // This part is now handled by the event listener that calls this function.
 }
 
 function editPatient(id) {
-    const patient = patients.find(p => p.id === id);
-    if (!patient) return;
+    patientToEdit = patients.find(p => p.id === id);
+    if (!patientToEdit) return;
     
+    // Reset the form to clear any previous state
+    clearForm();
+
     // Populate the form with patient data
-    document.getElementById('name').value = patient.name;
-    document.getElementById('phone').value = patient.phone;
-    document.getElementById('address').value = patient.address || '';
-    document.getElementById('intercom').value = patient.intercom || '';
-    document.getElementById('taj').value = patient.taj || '';
-    document.getElementById('emergencyContact').value = patient.emergencyContact || '';
-    document.getElementById('emergencyPhone').value = patient.emergencyPhone || '';
-    document.getElementById('tasks').value = patient.tasks || '';
-    document.getElementById('patientColor').value = patient.color || '#667eea';
+    document.getElementById('name').value = patientToEdit.name;
+    document.getElementById('phone').value = patientToEdit.phone;
+    document.getElementById('address').value = patientToEdit.address || '';
+    document.getElementById('intercom').value = patientToEdit.intercom || '';
+    document.getElementById('taj').value = patientToEdit.taj || '';
+    document.getElementById('emergencyContact').value = patientToEdit.emergencyContact || '';
+    document.getElementById('emergencyPhone').value = patientToEdit.emergencyPhone || '';
+    document.getElementById('tasks').value = patientToEdit.tasks || '';
+    document.getElementById('patientColor').value = patientToEdit.color || '#667eea';
     
     document.querySelectorAll('.day-checkbox input[type="checkbox"]').forEach(checkbox => {
-        checkbox.checked = patient.visitDays && patient.visitDays.includes(parseInt(checkbox.value));
+        checkbox.checked = patientToEdit.visitDays && patientToEdit.visitDays.includes(parseInt(checkbox.value));
     });
     
-    // Create and show the delete button within the form
-    showDeleteButton(id);
+    // Change the form buttons for editing
+    const submitBtn = patientForm.querySelector('.btn[type="submit"]');
+    submitBtn.textContent = 'Frissítés';
     
-    patients = patients.filter(p => p.id !== id);
-    localStorage.setItem('patients', JSON.stringify(patients));
+    // Create and add the "Mégse" button
+    const existingCancelBtn = patientForm.querySelector('.btn-cancel');
+    if (existingCancelBtn) existingCancelBtn.remove();
+
+    const cancelBtn = document.createElement('button');
+    cancelBtn.className = 'btn btn-cancel';
+    cancelBtn.textContent = 'Mégse';
+    cancelBtn.type = 'button';
+    cancelBtn.onclick = () => {
+        // This is a crucial fix: it now explicitly hides the form
+        patientFormContainer.classList.remove('visible');
+        addPatientBtn.classList.remove('close');
+        clearForm();
+        patientToEdit = null;
+    };
+    submitBtn.insertAdjacentElement('afterend', cancelBtn);
+    
+    showDeleteButton(id);
     
     patientFormContainer.classList.add('visible');
     addPatientBtn.classList.add('close');
@@ -306,7 +383,6 @@ function showDeleteButton(patientId) {
         deletePatient(patientId);
     };
     
-    // Add the delete button to the end of the form
     patientForm.appendChild(deleteBtn);
 }
 
@@ -316,6 +392,8 @@ function updatePatientSelects() {
     
     selects.forEach(selectId => {
         const select = document.getElementById(selectId);
+        if (!select) return;
+
         const currentValue = select.value;
         
         while (select.children.length > 1) {
@@ -335,12 +413,17 @@ function updatePatientSelects() {
 
 // Calendar functionality
 function initializeCalendar() {
-    const now = new Date();
-    document.getElementById('calendarMonth').value = now.getMonth();
-    document.getElementById('calendarYear').value = now.getFullYear();
-    
-    document.getElementById('calendarMonth').addEventListener('change', generateCalendar);
-    document.getElementById('calendarYear').addEventListener('change', generateCalendar);
+    const calendarMonth = document.getElementById('calendarMonth');
+    const calendarYear = document.getElementById('calendarYear');
+
+    if (calendarMonth && calendarYear) {
+        const now = new Date();
+        calendarMonth.value = now.getMonth();
+        calendarYear.value = now.getFullYear();
+        
+        calendarMonth.addEventListener('change', generateCalendar);
+        calendarYear.addEventListener('change', generateCalendar);
+    }
 }
 
 function generateCalendar() {
@@ -350,6 +433,7 @@ function generateCalendar() {
     if (isNaN(month) || isNaN(year)) return;
     
     const calendar = document.getElementById('calendarGrid');
+    if (!calendar) return;
     calendar.innerHTML = '';
     
     const days = ['H', 'K', 'Sz', 'Cs', 'P', 'Sz', 'V'];
@@ -410,44 +494,88 @@ function generateCalendar() {
 }
 
 // Shopping list functionality
-document.getElementById('shoppingForm').addEventListener('submit', function(e) {
-    e.preventDefault();
-    
-    const item = {
-        id: Date.now(),
-        item: document.getElementById('shoppingItem').value,
-        patientId: document.getElementById('shoppingPatient').value,
-        completed: false
-    };
-    
-    shoppingItems.push(item);
-    localStorage.setItem('shoppingItems', JSON.stringify(shoppingItems));
-    renderShoppingList();
-    document.getElementById('shoppingForm').reset();
-});
+if (document.getElementById('shoppingForm')) {
+    document.getElementById('shoppingForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const item = {
+            id: Date.now(),
+            item: document.getElementById('shoppingItem').value,
+            patientId: document.getElementById('shoppingPatient').value,
+            completed: false
+        };
+        
+        shoppingItems.push(item);
+        localStorage.setItem('shoppingItems', JSON.stringify(shoppingItems));
+        renderShoppingList();
+        document.getElementById('shoppingForm').reset();
+    });
+}
 
-function renderShoppingList() {
+
+function renderShoppingList(searchQuery = '') {
     const container = document.getElementById('shoppingList');
+    if (!container) return;
     container.innerHTML = '';
+    const query = searchQuery.toLowerCase();
     
-    shoppingItems.forEach(item => {
+    const filteredItems = shoppingItems.filter(item => 
+        item.item.toLowerCase().includes(query) ||
+        (patients.find(p => p.id == item.patientId)?.name.toLowerCase().includes(query))
+    );
+    
+    const groupedItems = filteredItems.reduce((acc, item) => {
         const patient = patients.find(p => p.id == item.patientId);
         const patientName = patient ? patient.name : 'Általános';
+        const patientColor = patient ? patient.color : '#667eea';
+        const patientId = patient ? patient.id : 'general';
+
+        if (!acc[patientId]) {
+            acc[patientId] = {
+                name: patientName,
+                color: patientColor,
+                items: []
+            };
+        }
+        acc[patientId].items.push(item);
+        return acc;
+    }, {});
+
+    const sortedGroups = Object.keys(groupedItems).sort((a, b) => {
+        if (a === 'general') return -1;
+        if (b === 'general') return 1;
+        return groupedItems[a].name.localeCompare(groupedItems[b].name, 'hu');
+    });
+
+    if (sortedGroups.length === 0) {
+        container.innerHTML = '<p style="text-align: center; color: #718096; padding: 20px;">Nincsenek tételek a keresési feltételeknek megfelelően.</p>';
+        return;
+    }
+
+    sortedGroups.forEach(patientId => {
+        const group = groupedItems[patientId];
+        const groupElement = document.createElement('div');
+        groupElement.className = 'patient-group';
         
-        const itemElement = document.createElement('div');
-        itemElement.className = 'shopping-item';
-        itemElement.innerHTML = `
-            <div>
-                <strong>${item.item}</strong>
-                <div style="font-size: 14px; color: #718096;">Páciens: ${patientName}</div>
-            </div>
-            <button class="btn btn-delete" onclick="deleteShoppingItem(${item.id})">Eltávolítás</button>
-        `;
-        
-        const listElement = document.createElement('div');
-        listElement.className = 'shopping-list';
-        listElement.appendChild(itemElement);
-        container.appendChild(listElement);
+        const heading = document.createElement('h3');
+        heading.textContent = group.name;
+        heading.style.color = group.color;
+        heading.style.borderLeft = `3px solid ${group.color}`;
+        heading.style.paddingLeft = '10px';
+        groupElement.appendChild(heading);
+
+        group.items.forEach(item => {
+            const itemElement = document.createElement('div');
+            itemElement.className = 'shopping-item';
+            itemElement.innerHTML = `
+                <div>
+                    <strong>${item.item}</strong>
+                </div>
+                <button class="btn btn-delete" onclick="deleteShoppingItem(${item.id})">Eltávolítás</button>
+            `;
+            groupElement.appendChild(itemElement);
+        });
+        container.appendChild(groupElement);
     });
 }
 
@@ -458,100 +586,140 @@ function deleteShoppingItem(id) {
 }
 
 // Document management
-document.getElementById('documentForm').addEventListener('submit', function(e) {
-    e.preventDefault();
-    
-    const fileInput = document.getElementById('documentFile');
-    const file = fileInput.files[0];
-    const patientId = document.getElementById('documentPatient').value;
-    
-    if (!file) {
-        alert('Kérem, válasszon egy fájlt a feltöltéshez.');
-        return;
-    }
-    
-    if (!patientId) {
-        alert('Kérem, válasszon egy pácienst ehhez a dokumentumhoz.');
-        return;
-    }
-    
-    const submitBtn = e.target.querySelector('button[type="submit"]');
-    const originalText = submitBtn.textContent;
-    submitBtn.textContent = 'Feltöltés...';
-    submitBtn.disabled = true;
-    
-    const reader = new FileReader();
-    reader.onload = function(e) {
-        try {
-            const documentObj = {
-                id: Date.now(),
-                name: file.name,
-                patientId: parseInt(patientId),
-                data: e.target.result,
-                type: file.type,
-                size: file.size,
-                uploadDate: new Date().toLocaleString()
-            };
-            
-            documents.push(documentObj);
-            localStorage.setItem('documents', JSON.stringify(documents));
-            renderDocuments();
-            
-            document.getElementById('documentForm').reset();
-            
-            alert('Dokumentum sikeresen feltöltve!');
-        } catch (error) {
-            console.error('Hiba a dokumentum mentésekor:', error);
-            alert('Hiba a dokumentum feltöltésekor. Kérem, próbálja újra.');
-        } finally {
+if (document.getElementById('documentForm')) {
+    document.getElementById('documentForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const fileInput = document.getElementById('documentFile');
+        const file = fileInput.files[0];
+        const patientId = document.getElementById('documentPatient').value;
+        
+        if (!file) {
+            alert('Kérem, válasszon egy fájlt a feltöltéshez.');
+            return;
+        }
+        
+        if (!patientId) {
+            alert('Kérem, válasszon egy pácienst ehhez a dokumentumhoz.');
+            return;
+        }
+        
+        const submitBtn = e.target.querySelector('button[type="submit"]');
+        const originalText = submitBtn.textContent;
+        submitBtn.textContent = 'Feltöltés...';
+        submitBtn.disabled = true;
+        
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            try {
+                const documentObj = {
+                    id: Date.now(),
+                    name: file.name,
+                    patientId: parseInt(patientId),
+                    data: e.target.result,
+                    type: file.type,
+                    size: file.size,
+                    uploadDate: new Date().toLocaleString()
+                };
+                
+                documents.push(documentObj);
+                localStorage.setItem('documents', JSON.stringify(documents));
+                renderDocuments();
+                
+                document.getElementById('documentForm').reset();
+                
+                alert('Dokumentum sikeresen feltöltve!');
+            } catch (error) {
+                console.error('Hiba a dokumentum mentésekor:', error);
+                alert('Hiba a dokumentum feltöltésekor. Kérem, próbálja újra.');
+            } finally {
+                submitBtn.textContent = originalText;
+                submitBtn.disabled = false;
+            }
+        };
+        
+        reader.onerror = function() {
+            alert('Hiba a fájl olvasásakor. Kérem, próbálja újra.');
             submitBtn.textContent = originalText;
             submitBtn.disabled = false;
-        }
-    };
-    
-    reader.onerror = function() {
-        alert('Hiba a fájl olvasásakor. Kérem, próbálja újra.');
-        submitBtn.textContent = originalText;
-        submitBtn.disabled = false;
-    };
-    
-    reader.readAsDataURL(file);
-});
+        };
+        
+        reader.readAsDataURL(file);
+    });
+}
 
-function renderDocuments() {
+
+function renderDocuments(searchQuery = '') {
     const container = document.getElementById('documentsList');
+    if (!container) return;
     container.innerHTML = '';
+    const query = searchQuery.toLowerCase();
+
+    const filteredDocs = documents.filter(doc => 
+        doc.name.toLowerCase().includes(query) ||
+        (patients.find(p => p.id == doc.patientId)?.name.toLowerCase().includes(query))
+    );
     
-    if (documents.length === 0) {
-        container.innerHTML = '<p style="text-align: center; color: #718096; padding: 20px;">Még nincsenek feltöltött dokumentumok.</p>';
-        return;
-    }
-    
-    const sortedDocs = [...documents].sort((a, b) => a.name.localeCompare(b.name));
-    
-    sortedDocs.forEach(doc => {
+    const groupedDocs = filteredDocs.reduce((acc, doc) => {
         const patient = patients.find(p => p.id == doc.patientId);
         const patientName = patient ? patient.name : 'Ismeretlen páciens';
+        const patientColor = patient ? patient.color : '#667eea';
+        const patientId = patient ? patient.id : 'unknown';
+
+        if (!acc[patientId]) {
+            acc[patientId] = {
+                name: patientName,
+                color: patientColor,
+                docs: []
+            };
+        }
+        acc[patientId].docs.push(doc);
+        return acc;
+    }, {});
+
+    const sortedGroups = Object.keys(groupedDocs).sort((a, b) => {
+        if (a === 'unknown') return -1;
+        if (b === 'unknown') return 1;
+        return groupedDocs[a].name.localeCompare(groupedDocs[b].name, 'hu');
+    });
+
+    if (sortedGroups.length === 0) {
+        container.innerHTML = '<p style="text-align: center; color: #718096; padding: 20px;">Nincsenek dokumentumok a keresési feltételeknek megfelelően.</p>';
+        return;
+    }
+
+    sortedGroups.forEach(patientId => {
+        const group = groupedDocs[patientId];
+        const groupElement = document.createElement('div');
+        groupElement.className = 'patient-group';
         
-        const fileSize = doc.size ? formatFileSize(doc.size) : 'Ismeretlen méret';
-        
-        const docElement = document.createElement('div');
-        docElement.className = 'document-item';
-        docElement.innerHTML = `
-            <div>
-                <strong>${doc.name}</strong>
-                <div style="font-size: 14px; color: #718096;">
-                    Páciens: ${patientName} | Méret: ${fileSize} | Feltöltve: ${doc.uploadDate}
+        const heading = document.createElement('h3');
+        heading.textContent = group.name;
+        heading.style.color = group.color;
+        heading.style.borderLeft = `3px solid ${group.color}`;
+        heading.style.paddingLeft = '10px';
+        groupElement.appendChild(heading);
+
+        group.docs.forEach(doc => {
+            const fileSize = doc.size ? formatFileSize(doc.size) : 'Ismeretlen méret';
+            const docElement = document.createElement('div');
+            docElement.className = 'document-item';
+            docElement.innerHTML = `
+                <div>
+                    <strong>${doc.name}</strong>
+                    <div style="font-size: 14px; color: #718096;">
+                        Méret: ${fileSize} | Feltöltve: ${doc.uploadDate}
+                    </div>
                 </div>
-            </div>
-            <div>
-                <button class="btn" onclick="viewDocument(${doc.id})">Megtekintés</button>
-                <button class="btn" onclick="downloadDocument(${doc.id})">Letöltés</button>
-                <button class="btn btn-delete" onclick="deleteDocument(${doc.id})">Törlés</button>
-            </div>
-        `;
-        
-        container.appendChild(docElement);
+                <div>
+                    <button class="btn" onclick="viewDocument(${doc.id})">Megtekintés</button>
+                    <button class="btn" onclick="downloadDocument(${doc.id})">Letöltés</button>
+                    <button class="btn btn-delete" onclick="deleteDocument(${doc.id})">Törlés</button>
+                </div>
+            `;
+            groupElement.appendChild(docElement);
+        });
+        container.appendChild(groupElement);
     });
 }
 
@@ -604,46 +772,93 @@ function deleteDocument(id) {
 }
 
 // Notes functionality
-document.getElementById('noteForm').addEventListener('submit', function(e) {
-    e.preventDefault();
-    
-    const note = {
-        id: Date.now(),
-        content: document.getElementById('noteContent').value,
-        patientId: document.getElementById('notePatient').value,
-        date: new Date().toLocaleString()
-    };
-    
-    notes.push(note);
-    localStorage.setItem('notes', JSON.stringify(notes));
-    renderNotes();
-    document.getElementById('noteForm').reset();
-});
+if (document.getElementById('noteForm')) {
+    document.getElementById('noteForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const note = {
+            id: Date.now(),
+            content: document.getElementById('noteContent').value,
+            patientId: document.getElementById('notePatient').value,
+            date: new Date().toLocaleString()
+        };
+        
+        notes.push(note);
+        localStorage.setItem('notes', JSON.stringify(notes));
+        renderNotes();
+        document.getElementById('noteForm').reset();
+    });
+}
 
-function renderNotes() {
+
+function renderNotes(searchQuery = '') {
     const container = document.getElementById('notesList');
+    if (!container) return;
     container.innerHTML = '';
-    
-    const sortedNotes = [...notes].sort((a, b) => new Date(b.date) - new Date(a.date));
-    
-    sortedNotes.forEach(note => {
+    const query = searchQuery.toLowerCase();
+
+    const filteredNotes = notes.filter(note => 
+        note.content.toLowerCase().includes(query) ||
+        (patients.find(p => p.id == note.patientId)?.name.toLowerCase().includes(query))
+    );
+
+    const groupedNotes = filteredNotes.reduce((acc, note) => {
         const patient = patients.find(p => p.id == note.patientId);
         const patientName = patient ? patient.name : 'Általános';
-        
-        const noteElement = document.createElement('div');
-        noteElement.className = 'note-item';
-        noteElement.innerHTML = `
-            <div class="note-header">
-                <strong>Jegyzet a következőhöz: ${patientName}</strong>
-                <div>
-                    <span class="note-date">${note.date}</span>
-                    <button class="btn btn-delete" onclick="deleteNote(${note.id})" style="padding: 5px 10px; font-size: 12px;">Törlés</button>
+        const patientColor = patient ? patient.color : '#667eea';
+        const patientId = patient ? patient.id : 'general';
+
+        if (!acc[patientId]) {
+            acc[patientId] = {
+                name: patientName,
+                color: patientColor,
+                notes: []
+            };
+        }
+        acc[patientId].notes.push(note);
+        return acc;
+    }, {});
+
+    const sortedGroups = Object.keys(groupedNotes).sort((a, b) => {
+        if (a === 'general') return -1;
+        if (b === 'general') return 1;
+        return groupedNotes[a].name.localeCompare(groupedNotes[b].name, 'hu');
+    });
+
+    if (sortedGroups.length === 0) {
+        container.innerHTML = '<p style="text-align: center; color: #718096; padding: 20px;">Nincsenek jegyzetek a keresési feltételeknek megfelelően.</p>';
+        return;
+    }
+
+    sortedGroups.forEach(patientId => {
+        const group = groupedNotes[patientId];
+        const groupElement = document.createElement('div');
+        groupElement.className = 'patient-group';
+
+        const heading = document.createElement('h3');
+        heading.textContent = group.name;
+        heading.style.color = group.color;
+        heading.style.borderLeft = `3px solid ${group.color}`;
+        heading.style.paddingLeft = '10px';
+        groupElement.appendChild(heading);
+
+        const sortedGroupNotes = group.notes.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+        sortedGroupNotes.forEach(note => {
+            const noteElement = document.createElement('div');
+            noteElement.className = 'note-item';
+            noteElement.innerHTML = `
+                <div class="note-header">
+                    <div>
+                        <span class="note-date">${note.date}</span>
+                        <button class="btn btn-delete" onclick="deleteNote(${note.id})" style="padding: 5px 10px; font-size: 12px;">Törlés</button>
+                    </div>
                 </div>
-            </div>
-            <div>${note.content}</div>
-        `;
-        
-        container.appendChild(noteElement);
+                <div>${note.content}</div>
+            `;
+            groupElement.appendChild(noteElement);
+        });
+        container.appendChild(groupElement);
     });
 }
 
