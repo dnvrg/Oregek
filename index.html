@@ -9,17 +9,17 @@
 </head>
 <body>
     <div class="app-container">
-        <div class="header">
-            <h1>Idősgondozási Menedzser</h1>
-            <p>Átfogó gondozási rendszer szociális munkásoknak</p>
-        </div>
-
-        <div class="nav-tabs">
-            <button class="nav-tab active" onclick="showTab('patients')">Páciensek</button>
-            <button class="nav-tab" onclick="showTab('calendar')">Naptár</button>
-            <button class="nav-tab" onclick="showTab('shopping')">Bevásárló Lista</button>
-            <button class="nav-tab" onclick="showTab('documents')">Dokumentumok</button>
-            <button class="nav-tab" onclick="showTab('notes')">Jegyzetek</button>
+        <div class="nav-container">
+            <div class="nav-tabs">
+                <button class="nav-tab active" onclick="showTab('patients')">Páciensek</button>
+                <button class="nav-tab" onclick="showTab('calendar')">Naptár</button>
+                <button class="nav-tab" onclick="showTab('shopping')">Bevásárló Lista</button>
+                <button class="nav-tab" onclick="showTab('documents')">Dokumentumok</button>
+                <button class="nav-tab" onclick="showTab('notes')">Jegyzetek</button>
+            </div>
+            <button class="settings-btn" onclick="showTab('settings')">
+                <i class="material-icons">settings</i>
+            </button>
         </div>
 
         <div id="patients" class="tab-content active">
@@ -142,6 +142,14 @@
             </form>
 
             <div id="notesList"></div>
+        </div>
+        
+        <div id="settings" class="tab-content">
+            <div class="settings-buttons-container">
+                <button class="btn download-btn" onclick="downloadAllData()">Adatok letöltése</button>
+                <input type="file" id="uploadFile" accept=".json" style="display: none;">
+                <button class="btn upload-btn" onclick="document.getElementById('uploadFile').click()">Adatok feltöltése</button>
+            </div>
         </div>
 
     </div>
