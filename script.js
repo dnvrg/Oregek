@@ -9,6 +9,7 @@ const addPatientBtn = document.getElementById('addPatientBtn');
 const patientFormContainer = document.getElementById('patientFormContainer');
 const patientsTab = document.getElementById('patients');
 const patientSearchInput = document.getElementById('patientSearchInput');
+const patientForm = document.getElementById('patientForm');
 
 // Initialize app
 document.addEventListener('DOMContentLoaded', function() {
@@ -89,9 +90,11 @@ addPatientBtn.addEventListener('click', () => {
 });
 
 // Patient search functionality
-patientSearchInput.addEventListener('input', (e) => {
-    renderPatients(e.target.value);
-});
+if (patientSearchInput) {
+    patientSearchInput.addEventListener('input', (e) => {
+        renderPatients(e.target.value);
+    });
+}
 
 
 // Patient management
@@ -164,11 +167,14 @@ function renderPatients(searchQuery = '') {
     const sortedPatients = [...patients].sort((a, b) => a.name.localeCompare(b.name, 'hu'));
     
     // Filter patients based on search query
-    const filteredPatients = sortedPatients.filter(patient => 
-        patient.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        patient.address.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        patient.phone.toLowerCase().includes(searchQuery.toLowerCase())
-    );
+    const filteredPatients = sortedPatients.filter(patient => {
+        const query = searchQuery.toLowerCase();
+        return (
+            patient.name.toLowerCase().includes(query) ||
+            (patient.address && patient.address.toLowerCase().includes(query)) ||
+            (patient.phone && patient.phone.toLowerCase().includes(query))
+        );
+    });
 
     console.log('Páciensek renderelése:', filteredPatients); 
 
@@ -185,7 +191,14 @@ function renderPatients(searchQuery = '') {
         const visitDaysText = getVisitDaysText(patient.visitDays || []);
         
         card.innerHTML = `
-            <div class="patient-name">${patient.name}</div>
+            <div class="patient-card-header">
+                <div class="patient-name">${patient.name}</div>
+                <div class="patient-actions">
+                    <button class="icon-btn edit-btn" onclick="editPatient(${patient.id})">
+                        <i class="material-icons">edit</i>
+                    </button>
+                </div>
+            </div>
             <p><strong>Telefonszám:</strong> ${patient.phone}</p>
             <p><strong>Cím:</strong> ${patient.address || 'Nincs megadva'}</p>
             <p><strong>Kapukód:</strong> ${patient.intercom || 'Nincs megadva'}</p>
@@ -194,10 +207,8 @@ function renderPatients(searchQuery = '') {
             <p><strong>Értesítendő telefonszáma:</strong> ${patient.emergencyPhone || 'Nincs megadva'}</p>
             <p><strong>Feladatok:</strong> ${patient.tasks || 'Nincs megadva'}</p>
             <p><strong>Látogatási napok:</strong> ${visitDaysText}</p>
-            <div style="margin-top: 15px;">
+            <div class="call-btn-container">
                 <button class="btn btn-call" onclick="callPatient('${patient.phone}')">📞 Hívás</button>
-                <button class="btn" onclick="editPatient(${patient.id})">Szerkesztés</button>
-                <button class="btn btn-delete" onclick="deletePatient(${patient.id})">Törlés</button>
             </div>
         `;
         
@@ -222,6 +233,7 @@ function deletePatient(id) {
         renderPatients();
         updatePatientSelects();
         generateCalendar(); 
+        clearForm(); // Clear the form and remove the delete button
         alert('Páciens sikeresen törölve!');
     }
 }
@@ -235,6 +247,12 @@ function clearForm() {
     
     document.getElementById('patientColor').value = '#667eea';
     
+    // Remove the delete button
+    const deleteBtn = document.querySelector('#patientForm .btn-delete');
+    if (deleteBtn) {
+        deleteBtn.remove();
+    }
+
     console.log('Űrlap törölve'); 
     
     // Hide the form after clearing
@@ -246,6 +264,7 @@ function editPatient(id) {
     const patient = patients.find(p => p.id === id);
     if (!patient) return;
     
+    // Populate the form with patient data
     document.getElementById('name').value = patient.name;
     document.getElementById('phone').value = patient.phone;
     document.getElementById('address').value = patient.address || '';
@@ -260,13 +279,37 @@ function editPatient(id) {
         checkbox.checked = patient.visitDays && patient.visitDays.includes(parseInt(checkbox.value));
     });
     
+    // Create and show the delete button within the form
+    showDeleteButton(id);
+    
     patients = patients.filter(p => p.id !== id);
     localStorage.setItem('patients', JSON.stringify(patients));
     
-    document.getElementById('patientForm').scrollIntoView({ behavior: 'smooth' });
+    patientFormContainer.classList.add('visible');
+    addPatientBtn.classList.add('close');
+    patientFormContainer.scrollIntoView({ behavior: 'smooth' });
     
     alert('Páciens betöltve szerkesztésre. Frissítse az adatokat, és kattintson a "Mentés" gombra a változások mentéséhez.');
 }
+
+function showDeleteButton(patientId) {
+    const existingDeleteBtn = patientForm.querySelector('.btn-delete');
+    if (existingDeleteBtn) {
+        existingDeleteBtn.remove();
+    }
+    
+    const deleteBtn = document.createElement('button');
+    deleteBtn.className = 'btn btn-delete';
+    deleteBtn.textContent = 'Páciens törlése';
+    deleteBtn.type = 'button';
+    deleteBtn.onclick = () => {
+        deletePatient(patientId);
+    };
+    
+    // Add the delete button to the end of the form
+    patientForm.appendChild(deleteBtn);
+}
+
 
 function updatePatientSelects() {
     const selects = ['shoppingPatient', 'documentPatient', 'notePatient'];
@@ -309,7 +352,6 @@ function generateCalendar() {
     const calendar = document.getElementById('calendarGrid');
     calendar.innerHTML = '';
     
-    // Updated day header to start with Monday
     const days = ['H', 'K', 'Sz', 'Cs', 'P', 'Sz', 'V'];
     days.forEach(day => {
         const header = document.createElement('div');
@@ -318,14 +360,12 @@ function generateCalendar() {
         calendar.appendChild(header);
     });
     
-    // Correctly calculate the starting day for a Monday-based calendar
     const firstDay = new Date(year, month, 1);
     let dayOfWeek = firstDay.getDay();
-    // Adjust for Monday being day 1 and Sunday being day 0
     if (dayOfWeek === 0) dayOfWeek = 7;
     
     const startDate = new Date(firstDay);
-    startDate.setDate(startDate.getDate() - (dayOfWeek - 1)); // Adjust to start on the correct Monday
+    startDate.setDate(startDate.getDate() - (dayOfWeek - 1));
     
     for (let i = 0; i < 42; i++) {
         const currentDate = new Date(startDate);
@@ -350,13 +390,10 @@ function generateCalendar() {
         
         dayElement.appendChild(dayNumber);
         
-        const dayOfWeekForVisit = currentDate.getDay(); // 0 for Sunday, 1 for Monday...
+        const dayOfWeekForVisit = currentDate.getDay();
         let visitDayValue = dayOfWeekForVisit;
         
         patients.forEach(patient => {
-            // Your checkboxes are for Monday to Friday, so the values are 1-5.
-            // The `getDay()` method returns 0 for Sunday, 1 for Monday, etc.
-            // So, you can directly use the `getDay()` value.
             if (patient.visitDays && patient.visitDays.includes(visitDayValue)) {
                 const visit = document.createElement('span');
                 visit.className = 'calendar-visit';
