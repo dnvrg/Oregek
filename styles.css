@@ -299,3 +299,78 @@ textarea {
     border: 2px solid #e2e8f0;
     cursor: pointer;
 }
+
+.floating-btn {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    width: 60px;
+    height: 60px;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    font-size: 2.5rem;
+    line-height: 60px;
+    text-align: center;
+    cursor: pointer;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    transition: transform 0.3s ease, background 0.3s ease;
+    z-index: 1000;
+}
+
+.floating-btn:hover {
+    transform: scale(1.1) rotate(45deg);
+    background: linear-gradient(135deg, #764ba2, #667eea);
+}
+
+.floating-btn.close {
+    transform: rotate(45deg);
+}
+
+.patient-form-container {
+    position: fixed;
+    bottom: 100px; /* Adjust based on button size */
+    right: 30px;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    border-radius: 20px;
+    padding: 20px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    width: 90%;
+    max-width: 600px;
+    max-height: 80vh;
+    overflow-y: auto;
+    transform: scale(0.8);
+    transform-origin: bottom right;
+    transition: all 0.3s ease-in-out;
+    opacity: 0;
+    pointer-events: none;
+    z-index: 999;
+    
+    display: none; /* Add this line to hide it by default */
+}
+
+.patient-form-container.visible {
+    transform: scale(1);
+    opacity: 1;
+    pointer-events: auto;
+    display: block; /* Add this line to show it when the class is added */
+}
+
+/* Add media query for smaller screens */
+@media (max-width: 768px) {
+    .floating-btn {
+        width: 50px;
+        height: 50px;
+        font-size: 2rem;
+        line-height: 50px;
+        bottom: 20px;
+        right: 20px;
+    }
+    .patient-form-container {
+        bottom: 80px;
+        right: 20px;
+        max-width: none;
+    }
+}
