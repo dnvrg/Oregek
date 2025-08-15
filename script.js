@@ -292,7 +292,8 @@ function generateCalendar() {
     const calendar = document.getElementById('calendarGrid');
     calendar.innerHTML = '';
     
-    const days = ['V', 'H', 'K', 'Sz', 'Cs', 'P', 'Sz'];
+    // Updated day header to start with Monday
+    const days = ['H', 'K', 'Sz', 'Cs', 'P', 'Sz', 'V'];
     days.forEach(day => {
         const header = document.createElement('div');
         header.className = 'calendar-header';
@@ -300,10 +301,14 @@ function generateCalendar() {
         calendar.appendChild(header);
     });
     
+    // Correctly calculate the starting day for a Monday-based calendar
     const firstDay = new Date(year, month, 1);
-    const lastDay = new Date(year, month + 1, 0);
+    let dayOfWeek = firstDay.getDay();
+    // Adjust for Monday being day 1 and Sunday being day 0
+    if (dayOfWeek === 0) dayOfWeek = 7;
+    
     const startDate = new Date(firstDay);
-    startDate.setDate(startDate.getDate() - firstDay.getDay());
+    startDate.setDate(startDate.getDate() - (dayOfWeek - 1)); // Adjust to start on the correct Monday
     
     for (let i = 0; i < 42; i++) {
         const currentDate = new Date(startDate);
@@ -328,9 +333,13 @@ function generateCalendar() {
         
         dayElement.appendChild(dayNumber);
         
-        const dayOfWeek = currentDate.getDay();
+        const dayOfWeekForVisit = currentDate.getDay(); // 0 for Sunday, 1 for Monday...
+        let visitDayValue = dayOfWeekForVisit;
+        // The checkboxes are set up for Monday to Friday (values 1 to 5), so no change needed here.
+        // If your checkboxes were different, you would need to adjust this.
+        
         patients.forEach(patient => {
-            if (patient.visitDays && patient.visitDays.includes(dayOfWeek)) {
+            if (patient.visitDays && patient.visitDays.includes(visitDayValue)) {
                 const visit = document.createElement('span');
                 visit.className = 'calendar-visit';
                 visit.textContent = patient.name;
