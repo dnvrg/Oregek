@@ -132,6 +132,10 @@ textarea {
 
 .btn-call {
     background: linear-gradient(135deg, #48bb78, #38a169);
+    width: 80%;
+    padding: 15px 0;
+    font-size: 1.1rem;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
 }
 
 .btn-delete {
@@ -394,4 +398,45 @@ textarea {
         right: 20px;
         max-width: none;
     }
+}
+.patient-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.patient-actions {
+    display: flex;
+    gap: 5px;
+}
+
+.icon-btn {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    transition: transform 0.2s ease;
+    padding: 5px;
+    border-radius: 50%;
+}
+
+.icon-btn:hover {
+    transform: scale(1.1);
+}
+
+.icon-btn.edit-btn {
+    color: #667eea;
+}
+
+.call-btn-container {
+    text-align: center;
+    margin-top: 20px;
+}
+
+.btn-call {
+    width: 80%;
+    padding: 15px 0;
+    font-size: 1.1rem;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
 }
