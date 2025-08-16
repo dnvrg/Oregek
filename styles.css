@@ -157,7 +157,7 @@ textarea {
 }
 
 .btn {
-    background: linear-gradient(135deg, #667eea, #764ba2);
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     color: white;
     border: none;
     padding: 12px 24px;
@@ -177,7 +177,7 @@ textarea {
 }
 
 .btn-call {
-    background: linear-gradient(135deg, #48bb78, #38a169);
+    background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
     width: 80%;
     padding: 15px 0;
     font-size: 1.1rem;
@@ -185,7 +185,7 @@ textarea {
 }
 
 .btn-delete {
-    background: linear-gradient(135deg, #f56565, #e53e3e);
+    background: linear-gradient(135deg, #f56565 0%, #e53e3e 100%);
 }
 
 .btn-cancel {
@@ -460,7 +460,7 @@ textarea {
     right: 30px;
     width: 60px;
     height: 60px;
-    background: linear-gradient(135deg, #667eea, #764ba2);
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     color: white;
     border: none;
     border-radius: 50%;
@@ -547,40 +547,94 @@ textarea {
 }
 
 .btn-call {
+    background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
     width: 80%;
     padding: 15px 0;
     font-size: 1.1rem;
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
 }
 
-.download-btn {
-    background: linear-gradient(135deg, #48bb78, #38a169);
-    width: 100%;
-    padding: 15px 0;
-}
-.upload-btn {
-    background: linear-gradient(135deg, #4299e1, #3182ce);
-    width: 100%;
-    padding: 15px 0;
+.btn-delete {
+    background: linear-gradient(135deg, #f56565 0%, #e53e3e 100%);
 }
 
-/* New Kiszámoló styles */
-body {
-    font-family: 'Inter', sans-serif;
-    background-color: #f3f4f6;
+.btn-cancel {
+    background: #a0aec0;
 }
-.container {
-    max-width: 100%;
-    overflow-x: auto;
+
+/* Kiszámoló-specific styles */
+#calculator.tab-content {
+    padding: 1rem;
 }
-.number-input {
-    width: 70px;
+
+.responsive-table {
+    width: 100%;
+    table-layout: fixed;
+    border-collapse: collapse;
+}
+
+.responsive-table thead {
+    background: linear-gradient(135deg, #a78bfa 0%, #8b5cf6 100%);
+    color: white;
+}
+
+.responsive-table th,
+.responsive-table td {
+    border: 1px solid #d1d5db;
     text-align: center;
-    /* Hide the up and down arrows for number inputs */
-    -moz-appearance: textfield; /* Firefox */
+    vertical-align: middle;
 }
-.number-input::-webkit-outer-spin-button,
-.number-input::-webkit-inner-spin-button {
+
+.responsive-table th {
+    padding: 8px 4px;
+    font-size: 10px;
+    word-wrap: break-word;
+}
+
+.responsive-table td {
+    padding: 0;
+    height: 38px;
+}
+
+.responsive-table input {
+    width: 100%;
+    height: 100%;
+    padding: 0;
+    border: none;
+    background-color: transparent;
+    text-align: center;
+    font-size: 12px;
+    box-sizing: border-box;
+    transition: background-color 0.2s ease;
+    line-height: 1.2;
+}
+
+.responsive-table input:focus {
+    background-color: #ede9fe;
+    outline: none;
+}
+
+/* Remove up and down arrows from number inputs */
+.responsive-table input[type="number"]::-webkit-outer-spin-button,
+.responsive-table input[type="number"]::-webkit-inner-spin-button {
     -webkit-appearance: none;
     margin: 0;
+}
+
+.responsive-table input[type="number"] {
+    -moz-appearance: textfield;
+}
+
+.responsive-table .ora-perc-total {
+    font-weight: 700;
+    font-size: 13px;
+    color: #4a5568;
+    background-color: #e2e8f0;
+    padding: 0 4px;
+    box-sizing: border-box;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    word-wrap: break-word;
 }
