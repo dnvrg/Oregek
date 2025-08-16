@@ -22,21 +22,21 @@ let renameId = null;
 // Initialize app
 document.addEventListener('DOMContentLoaded', function() {
     console.log('Initializing application...');
-    
+
     try {
         // Load data from localStorage
         const storedPatients = localStorage.getItem('patients');
         const storedShoppingItems = localStorage.getItem('shoppingItems');
         const storedDocuments = localStorage.getItem('documents');
         const storedNotes = localStorage.getItem('notes');
-        
+
         patients = storedPatients ? JSON.parse(storedPatients) : [];
         shoppingItems = storedShoppingItems ? JSON.parse(storedShoppingItems) : [];
         documents = storedDocuments ? JSON.parse(storedDocuments) : [];
         notes = storedNotes ? JSON.parse(storedNotes) : [];
-        
+
         console.log('Data loaded from storage:', { patients, shoppingItems, documents, notes });
-        
+
     } catch (error) {
         console.error('Error loading data from localStorage:', error);
         patients = [];
@@ -44,12 +44,12 @@ document.addEventListener('DOMContentLoaded', function() {
         documents = [];
         notes = [];
     }
-    
+
     // Initialize UI
     initializeNavigation();
     initializeModals();
     initializeEventListeners();
-    
+
     // Render initial data
     renderPatients();
     renderShoppingList();
@@ -58,10 +58,10 @@ document.addEventListener('DOMContentLoaded', function() {
     updatePatientSelects();
     initializeCalendar();
     generateCalendar();
-    
+
     // Initialize calculator
     initializeCalculator();
-    
+
     console.log('Application initialized successfully');
 });
 
@@ -69,14 +69,14 @@ document.addEventListener('DOMContentLoaded', function() {
 function initializeNavigation() {
     const desktopNav = document.getElementById('desktopNavItems');
     const mobileNav = document.getElementById('mobileNavItems');
-    
+
     navItems.forEach(item => {
         // Desktop navigation
         if (desktopNav) {
             const navItem = createNavItem(item, false);
             desktopNav.appendChild(navItem);
         }
-        
+
         // Mobile navigation
         if (mobileNav) {
             const mobileNavItem = createNavItem(item, true);
@@ -92,14 +92,14 @@ function createNavItem(item, isMobile) {
         <i class="${item.icon}"></i>
         <span>${item.label}</span>
     `;
-    
+
     navItem.addEventListener('click', () => {
         showTab(item.id);
         if (isMobile) {
             closeMobileMenu();
         }
     });
-    
+
     return navItem;
 }
 
@@ -109,7 +109,7 @@ function showTab(tabId) {
         tab.classList.remove('active');
     });
     document.getElementById(tabId).classList.add('active');
-    
+
     // Update active navigation
     document.querySelectorAll('.nav-item').forEach(item => {
         item.classList.remove('active');
@@ -119,7 +119,7 @@ function showTab(tabId) {
             item.classList.add('active');
         }
     });
-    
+
     // Tab-specific actions
     switch (tabId) {
         case 'calendar':
@@ -145,15 +145,15 @@ function initializeModals() {
     const mobileMenuBtn = document.getElementById('mobileMenuBtn');
     const closeMobileMenuBtn = document.getElementById('closeMobileMenu');
     const mobileMenuOverlay = document.getElementById('mobileMenuOverlay');
-    
+
     if (mobileMenuBtn) {
         mobileMenuBtn.addEventListener('click', openMobileMenu);
     }
-    
+
     if (closeMobileMenuBtn) {
         closeMobileMenuBtn.addEventListener('click', closeMobileMenu);
     }
-    
+
     if (mobileMenuOverlay) {
         mobileMenuOverlay.addEventListener('click', (e) => {
             if (e.target === mobileMenuOverlay) {
@@ -161,25 +161,25 @@ function initializeModals() {
             }
         });
     }
-    
+
     // Patient Modal
     const patientModal = document.getElementById('patientModal');
     const addPatientBtn = document.getElementById('addPatientBtn');
     const closeModalBtn = document.getElementById('closeModal');
     const cancelBtn = document.getElementById('cancelBtn');
-    
+
     if (addPatientBtn) {
         addPatientBtn.addEventListener('click', openPatientModal);
     }
-    
+
     if (closeModalBtn) {
         closeModalBtn.addEventListener('click', closePatientModal);
     }
-    
+
     if (cancelBtn) {
         cancelBtn.addEventListener('click', closePatientModal);
     }
-    
+
     if (patientModal) {
         patientModal.addEventListener('click', (e) => {
             if (e.target === patientModal) {
@@ -226,55 +226,55 @@ function initializeEventListeners() {
             renderPatients(e.target.value);
         });
     }
-    
+
     const shoppingSearchInput = document.getElementById('shoppingSearchInput');
     if (shoppingSearchInput) {
         shoppingSearchInput.addEventListener('input', (e) => {
             renderShoppingList(e.target.value);
         });
     }
-    
+
     const documentsSearchInput = document.getElementById('documentsSearchInput');
     if (documentsSearchInput) {
         documentsSearchInput.addEventListener('input', (e) => {
             renderDocuments(e.target.value);
         });
     }
-    
+
     const notesSearchInput = document.getElementById('notesSearchInput');
     if (notesSearchInput) {
         notesSearchInput.addEventListener('input', (e) => {
             renderNotes(e.target.value);
         });
     }
-    
+
     // Forms
     const patientForm = document.getElementById('patientForm');
     if (patientForm) {
         patientForm.addEventListener('submit', handlePatientSubmit);
     }
-    
+
     const shoppingForm = document.getElementById('shoppingForm');
     if (shoppingForm) {
         shoppingForm.addEventListener('submit', handleShoppingSubmit);
     }
-    
+
     const documentForm = document.getElementById('documentForm');
     if (documentForm) {
         documentForm.addEventListener('submit', handleDocumentSubmit);
     }
-    
+
     const noteForm = document.getElementById('noteForm');
     if (noteForm) {
         noteForm.addEventListener('submit', handleNoteSubmit);
     }
-    
+
     // File upload
     const uploadFile = document.getElementById('uploadFile');
     if (uploadFile) {
         uploadFile.addEventListener('change', handleFileUpload);
     }
-    
+
     // Delete patient button
     const deletePatientBtn = document.getElementById('deletePatientBtn');
     if (deletePatientBtn) {
@@ -289,14 +289,14 @@ function initializeEventListeners() {
 // Patient Management
 function handlePatientSubmit(e) {
     e.preventDefault();
-    
+
     const nameInput = document.getElementById('name');
     const phoneInput = document.getElementById('phone');
-    
+
     if (!nameInput.value.trim() || !phoneInput.value.trim()) {
         return;
     }
-    
+
     const visitDays = [];
     const dayCheckboxes = document.querySelectorAll('#patientModal input[type="checkbox"]:checked');
     dayCheckboxes.forEach(checkbox => {
@@ -317,7 +317,7 @@ function handlePatientSubmit(e) {
         visitDays: visitDays,
         createdDate: patientToEdit ? patientToEdit.createdDate : new Date().toISOString()
     };
-    
+
     try {
         if (patientToEdit) {
             const patientIndex = patients.findIndex(p => p.id === patientToEdit.id);
@@ -327,14 +327,14 @@ function handlePatientSubmit(e) {
         } else {
             patients.push(patientData);
         }
-        
+
         localStorage.setItem('patients', JSON.stringify(patients));
-        
+
         renderPatients();
         updatePatientSelects();
         generateCalendar();
         closePatientModal();
-        
+
     } catch (error) {
         console.error('Error saving patient:', error);
     }
@@ -343,11 +343,11 @@ function handlePatientSubmit(e) {
 function renderPatients(searchQuery = '') {
     const container = document.getElementById('patientsList');
     if (!container) return;
-    
+
     container.innerHTML = '';
-    
+
     const sortedPatients = [...patients].sort((a, b) => a.name.localeCompare(b.name, 'hu'));
-    
+
     const filteredPatients = sortedPatients.filter(patient => {
         const query = searchQuery.toLowerCase();
         return (
@@ -356,7 +356,7 @@ function renderPatients(searchQuery = '') {
             (patient.phone && patient.phone.toLowerCase().includes(query))
         );
     });
-    
+
     if (filteredPatients.length === 0) {
         container.innerHTML = '<div class="empty-state">Nincsenek páciensek a keresési feltételeknek megfelelően.</div>';
         return;
@@ -366,9 +366,9 @@ function renderPatients(searchQuery = '') {
         const card = document.createElement('div');
         card.className = 'patient-card';
         card.style.borderLeftColor = patient.color || '#8b5cf6';
-        
+
         const visitDaysText = getVisitDaysText(patient.visitDays || []);
-        
+
         const emergencyPhoneLink = patient.emergencyPhone
             ? `<a href="tel:${patient.emergencyPhone}">${patient.emergencyPhone}</a>`
             : 'Nincs megadva';
@@ -422,7 +422,7 @@ function renderPatients(searchQuery = '') {
                 </button>
             </div>
         `;
-        
+
         container.appendChild(card);
     });
 }
@@ -439,7 +439,7 @@ function callPatient(phone) {
 function editPatient(id) {
     patientToEdit = patients.find(p => p.id === id);
     if (!patientToEdit) return;
-    
+
     clearPatientForm();
 
     document.getElementById('name').value = patientToEdit.name;
@@ -451,11 +451,11 @@ function editPatient(id) {
     document.getElementById('emergencyPhone').value = patientToEdit.emergencyPhone || '';
     document.getElementById('tasks').value = patientToEdit.tasks || '';
     document.getElementById('patientColor').value = patientToEdit.color || '#8b5cf6';
-    
+
     document.querySelectorAll('#patientModal input[type="checkbox"]').forEach(checkbox => {
         checkbox.checked = patientToEdit.visitDays && patientToEdit.visitDays.includes(parseInt(checkbox.value));
     });
-    
+
     document.getElementById('modalTitle').textContent = 'Páciens szerkesztése';
     document.getElementById('deletePatientBtn').classList.remove('hidden');
     document.getElementById('patientModal').classList.add('show');
@@ -464,17 +464,17 @@ function editPatient(id) {
 function deletePatient(id) {
     const patient = patients.find(p => p.id === id);
     if (confirm(`Biztosan törölni szeretné ${patient ? patient.name : 'ezt a pácienst'}? Ez az akció visszavonhatatlan és minden hozzá kapcsolódó adatot töröl.`)) {
-        
+
         patients = patients.filter(p => p.id !== id);
         shoppingItems = shoppingItems.filter(item => parseInt(item.patientId) !== id);
         documents = documents.filter(doc => parseInt(doc.patientId) !== id);
         notes = notes.filter(note => parseInt(note.patientId) !== id);
-        
+
         localStorage.setItem('patients', JSON.stringify(patients));
         localStorage.setItem('shoppingItems', JSON.stringify(shoppingItems));
         localStorage.setItem('documents', JSON.stringify(documents));
         localStorage.setItem('notes', JSON.stringify(notes));
-        
+
         renderPatients();
         updatePatientSelects();
         renderShoppingList();
@@ -482,6 +482,7 @@ function deletePatient(id) {
         renderNotes();
         generateCalendar();
         closePatientModal();
+        updateCalculatorPatientSelects();
     }
 }
 
@@ -490,34 +491,46 @@ function clearPatientForm() {
     if (form) {
         form.reset();
     }
-    
+
     document.querySelectorAll('#patientModal input[type="checkbox"]').forEach(checkbox => {
         checkbox.checked = false;
     });
-    
+
     document.getElementById('patientColor').value = '#8b5cf6';
 }
 
 function updatePatientSelects() {
     const selects = ['shoppingPatient', 'documentPatient', 'notePatient'];
-    
+
     selects.forEach(selectId => {
         const select = document.getElementById(selectId);
         if (!select) return;
 
         const currentValue = select.value;
-        
+
         while (select.children.length > 1) {
             select.removeChild(select.lastChild);
         }
-        
+
         patients.forEach(patient => {
             const option = document.createElement('option');
             option.value = patient.id;
             option.textContent = patient.name;
             select.appendChild(option);
         });
-        
+
+        select.value = currentValue;
+    });
+
+    updateCalculatorPatientSelects();
+}
+
+function updateCalculatorPatientSelects() {
+    const patientSelects = document.querySelectorAll('#calculation-table .patient-select');
+    patientSelects.forEach(select => {
+        const currentValue = select.value;
+        const optionsHTML = patients.map(patient => `<option value="${patient.id}">${patient.name}</option>`).join('');
+        select.innerHTML = `<option value="">Válasszon pácienst</option>${optionsHTML}`;
         select.value = currentValue;
     });
 }
@@ -531,7 +544,7 @@ function initializeCalendar() {
         const now = new Date();
         calendarMonth.value = now.getMonth();
         calendarYear.value = now.getFullYear();
-        
+
         calendarMonth.addEventListener('change', generateCalendar);
         calendarYear.addEventListener('change', generateCalendar);
     }
@@ -540,19 +553,19 @@ function initializeCalendar() {
 function generateCalendar() {
     const monthSelect = document.getElementById('calendarMonth');
     const yearSelect = document.getElementById('calendarYear');
-    
+
     if (!monthSelect || !yearSelect) return;
-    
+
     const month = parseInt(monthSelect.value);
     const year = parseInt(yearSelect.value);
-    
+
     if (isNaN(month) || isNaN(year)) return;
-    
+
     const calendar = document.getElementById('calendarGrid');
     if (!calendar) return;
-    
+
     calendar.innerHTML = '';
-    
+
     // Calendar headers
     const days = ['H', 'K', 'Sz', 'Cs', 'P', 'Sz', 'V'];
     days.forEach(day => {
@@ -561,37 +574,37 @@ function generateCalendar() {
         header.textContent = day;
         calendar.appendChild(header);
     });
-    
+
     const firstDay = new Date(year, month, 1);
     let dayOfWeek = firstDay.getDay();
     if (dayOfWeek === 0) dayOfWeek = 7;
-    
+
     const startDate = new Date(firstDay);
     startDate.setDate(startDate.getDate() - (dayOfWeek - 1));
-    
+
     for (let i = 0; i < 42; i++) {
         const currentDate = new Date(startDate);
         currentDate.setDate(startDate.getDate() + i);
-        
+
         const dayElement = document.createElement('div');
         dayElement.className = 'calendar-day';
-        
+
         if (currentDate.getMonth() !== month) {
             dayElement.classList.add('other-month');
         }
-        
+
         const today = new Date();
         if (currentDate.toDateString() === today.toDateString()) {
             dayElement.classList.add('today');
         }
-        
+
         const dayNumber = document.createElement('div');
         dayNumber.className = 'calendar-day-number';
         dayNumber.textContent = currentDate.getDate();
         dayElement.appendChild(dayNumber);
-        
+
         const dayOfWeekForVisit = currentDate.getDay();
-        
+
         patients.forEach(patient => {
             if (patient.visitDays && patient.visitDays.includes(dayOfWeekForVisit)) {
                 const visit = document.createElement('div');
@@ -602,7 +615,7 @@ function generateCalendar() {
                 dayElement.appendChild(visit);
             }
         });
-        
+
         calendar.appendChild(dayElement);
     }
 }
@@ -610,14 +623,14 @@ function generateCalendar() {
 // Shopping list functionality
 function handleShoppingSubmit(e) {
     e.preventDefault();
-    
+
     const item = {
         id: Date.now(),
         item: document.getElementById('shoppingItem').value,
         patientId: parseInt(document.getElementById('shoppingPatient').value),
         completed: false
     };
-    
+
     shoppingItems.push(item);
     localStorage.setItem('shoppingItems', JSON.stringify(shoppingItems));
     renderShoppingList();
@@ -627,15 +640,15 @@ function handleShoppingSubmit(e) {
 function renderShoppingList(searchQuery = '') {
     const container = document.getElementById('shoppingList');
     if (!container) return;
-    
+
     container.innerHTML = '';
     const query = searchQuery.toLowerCase();
-    
+
     const filteredItems = shoppingItems.filter(item =>
         item.item.toLowerCase().includes(query) ||
         (patients.find(p => p.id === item.patientId)?.name.toLowerCase().includes(query))
     );
-    
+
     const groupedItems = filteredItems.reduce((acc, item) => {
         const patient = patients.find(p => p.id === item.patientId);
         const patientName = patient ? patient.name : 'Általános';
@@ -668,7 +681,7 @@ function renderShoppingList(searchQuery = '') {
         const group = groupedItems[patientId];
         const groupElement = document.createElement('div');
         groupElement.className = 'patient-group';
-        
+
         const heading = document.createElement('h3');
         heading.textContent = group.name;
         heading.style.color = group.color;
@@ -701,20 +714,20 @@ function deleteShoppingItem(id) {
 // Document management
 function handleDocumentSubmit(e) {
     e.preventDefault();
-    
+
     const fileInput = document.getElementById('documentFile');
     const file = fileInput.files[0];
     const patientId = document.getElementById('documentPatient').value;
-    
+
     if (!file || !patientId) {
         return;
     }
-    
+
     const submitBtn = e.target.querySelector('button[type="submit"]');
     const originalText = submitBtn.textContent;
     submitBtn.textContent = 'Feltöltés...';
     submitBtn.disabled = true;
-    
+
     const reader = new FileReader();
     reader.onload = function(e) {
         try {
@@ -727,11 +740,11 @@ function handleDocumentSubmit(e) {
                 size: file.size,
                 uploadDate: new Date().toLocaleString()
             };
-            
+
             documents.push(documentObj);
             localStorage.setItem('documents', JSON.stringify(documents));
             renderDocuments();
-            
+
             document.getElementById('documentForm').reset();
         } catch (error) {
             console.error('Error saving document:', error);
@@ -740,19 +753,19 @@ function handleDocumentSubmit(e) {
             submitBtn.disabled = false;
         }
     };
-    
+
     reader.onerror = function() {
         submitBtn.textContent = originalText;
         submitBtn.disabled = false;
     };
-    
+
     reader.readAsDataURL(file);
 }
 
 function renderDocuments(searchQuery = '') {
     const container = document.getElementById('documentsList');
     if (!container) return;
-    
+
     container.innerHTML = '';
     const query = searchQuery.toLowerCase();
 
@@ -760,7 +773,7 @@ function renderDocuments(searchQuery = '') {
         doc.name.toLowerCase().includes(query) ||
         (patients.find(p => p.id === doc.patientId)?.name.toLowerCase().includes(query))
     );
-    
+
     const groupedDocs = filteredDocs.reduce((acc, doc) => {
         const patient = patients.find(p => p.id === doc.patientId);
         const patientName = patient ? patient.name : 'Ismeretlen páciens';
@@ -793,7 +806,7 @@ function renderDocuments(searchQuery = '') {
         const group = groupedDocs[patientId];
         const groupElement = document.createElement('div');
         groupElement.className = 'patient-group';
-        
+
         const heading = document.createElement('h3');
         heading.textContent = group.name;
         heading.style.color = group.color;
@@ -874,14 +887,14 @@ function deleteDocument(id) {
 // Notes functionality
 function handleNoteSubmit(e) {
     e.preventDefault();
-    
+
     const note = {
         id: Date.now(),
         content: document.getElementById('noteContent').value,
         patientId: parseInt(document.getElementById('notePatient').value),
         date: new Date().toLocaleString()
     };
-    
+
     notes.push(note);
     localStorage.setItem('notes', JSON.stringify(notes));
     renderNotes();
@@ -891,7 +904,7 @@ function handleNoteSubmit(e) {
 function renderNotes(searchQuery = '') {
     const container = document.getElementById('notesList');
     if (!container) return;
-    
+
     container.innerHTML = '';
     const query = searchQuery.toLowerCase();
 
@@ -976,19 +989,19 @@ function downloadAllData() {
             documents: documents,
             notes: notes,
         };
-        
+
         const dataStr = JSON.stringify(allData, null, 2);
         const blob = new Blob([dataStr], { type: 'application/json' });
         const url = URL.createObjectURL(blob);
-        
+
         const link = document.createElement('a');
         link.href = url;
         link.download = 'elderly_care_data.json';
-        
+
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
-        
+
         URL.revokeObjectURL(url);
     } catch (error) {
         console.error('Error downloading data:', error);
@@ -1003,7 +1016,7 @@ function handleFileUpload(event) {
     reader.onload = function(e) {
         try {
             const uploadedData = JSON.parse(e.target.result);
-            
+
             if (uploadedData.patients && Array.isArray(uploadedData.patients)) {
                 patients = uploadedData.patients;
                 localStorage.setItem('patients', JSON.stringify(patients));
@@ -1084,7 +1097,7 @@ function initializeCalculator() {
             isRenameMode = false;
             document.getElementById('modal-title').textContent = "Számítás mentése";
             saveConfirmBtn.textContent = "Mentés";
-            
+
             const now = new Date();
             const dayNames = ['Vasárnap', 'Hétfő', 'Kedd', 'Szerda', 'Csütörtök', 'Péntek', 'Szombat'];
             const dayName = dayNames[now.getDay()];
@@ -1129,7 +1142,7 @@ function initializeCalculator() {
             if (!parentDiv) return;
 
             const id = parentDiv.dataset.id;
-            
+
             if (button.classList.contains('load-btn')) {
                 loadCalculation(id);
             } else if (button.classList.contains('delete-btn')) {
@@ -1155,14 +1168,14 @@ function initializeCalculator() {
     }
 }
 
-function createCalculatorRow(name = '', gond1 = '', gond2 = '', gondUtazas = '') {
+function createCalculatorRow(patientId = '', gond1 = '', gond2 = '', gondUtazas = '') {
     const newRow = document.createElement('tr');
-    
-    const rowContent = `
-        <td>
-            <input type="text" class="name-input" value="${name}">
-        </td>
-        <td>
+
+    const select = document.createElement('select');
+    select.className = 'form-select patient-select';
+
+    newRow.innerHTML = `
+        <td></td> <td>
             <input type="number" class="number-input gond1-input" value="${gond1}" min="0">
         </td>
         <td>
@@ -1175,15 +1188,25 @@ function createCalculatorRow(name = '', gond1 = '', gond2 = '', gondUtazas = '')
             <div class="ora-perc-total">00:00 - 00:00</div>
         </td>
     `;
-    newRow.innerHTML = rowContent;
-    
+    newRow.querySelector('td').appendChild(select);
+
     const inputs = newRow.querySelectorAll('input');
     inputs.forEach(input => {
         input.addEventListener('input', updateAllCalculations);
     });
 
+    select.addEventListener('change', updateAllCalculations);
+
+    // Populate the select after the row is created
+    updateCalculatorPatientSelects();
+
+    if (patientId) {
+        select.value = patientId;
+    }
+
     return newRow;
 }
+
 
 function updateAllCalculations() {
     const tableRows = document.querySelectorAll('#table-body tr');
@@ -1205,7 +1228,7 @@ function updateAllCalculations() {
             newStartTimeMinutes = previousEndTimeMinutes + travelTime;
             newEndTimeMinutes = newStartTimeMinutes + gond1 + gond2;
         }
-        
+
         const timeRange = `${minutesToTime(newStartTimeMinutes)} - ${minutesToTime(newEndTimeMinutes)}`;
         row.querySelector('.ora-perc-total').textContent = timeRange;
         previousEndTimeMinutes = newEndTimeMinutes;
@@ -1221,12 +1244,13 @@ function minutesToTime(totalMinutes) {
 
 function getTableData() {
     const rows = Array.from(document.querySelectorAll('#table-body tr')).map(row => {
+        const patientSelect = row.querySelector('.patient-select');
         const inputs = row.querySelectorAll('input');
         return {
-            name: inputs[0].value,
-            gond1: inputs[1].value,
-            gond2: inputs[2].value,
-            gondUtazas: inputs[3].value
+            patientId: patientSelect ? patientSelect.value : '',
+            gond1: inputs[0].value,
+            gond2: inputs[1].value,
+            gondUtazas: inputs[2].value
         };
     });
     return rows;
@@ -1268,18 +1292,18 @@ function loadCalculation(id) {
 
     if (itemToLoad && tableBody) {
         tableBody.innerHTML = '';
-        
+
         if (itemToLoad.data.length === 0) {
             for (let i = 1; i <= 12; i++) {
                 tableBody.appendChild(createCalculatorRow(''));
             }
         } else {
             itemToLoad.data.forEach(rowData => {
-                const newRow = createCalculatorRow(rowData.name, rowData.gond1, rowData.gond2, rowData.gondUtazas);
+                const newRow = createCalculatorRow(rowData.patientId, rowData.gond1, rowData.gond2, rowData.gondUtazas);
                 tableBody.appendChild(newRow);
             });
         }
-        
+
         const now = new Date().toISOString();
         const itemIndex = savedData.findIndex(item => item.id === id);
         if (itemIndex > -1) {
@@ -1304,7 +1328,7 @@ function deleteCalculation(id) {
 function renderSavedCalculationsList() {
     const savedList = document.getElementById('saved-calculations-list');
     if (!savedList) return;
-    
+
     savedList.innerHTML = '';
 
     const savedData = JSON.parse(localStorage.getItem('savedCalculations') || '[]');
@@ -1318,7 +1342,7 @@ function renderSavedCalculationsList() {
         const savedItemDiv = document.createElement('div');
         savedItemDiv.classList.add('saved-item');
         savedItemDiv.dataset.id = item.id;
-        
+
         savedItemDiv.innerHTML = `
             <div class="saved-item-info">
                 <h4>${item.name}</h4>
@@ -1344,8 +1368,10 @@ function exportToCsv() {
 
     const header = ['Név', 'Gondozási idő 1', 'Gondozási idő 2', 'Gond. idő + Utazás', 'Óra és perc'].join(';');
     const rows = Array.from(tableRows).map(row => {
+        const patientSelect = row.querySelector('.patient-select');
+        const patientName = patientSelect ? patientSelect.options[patientSelect.selectedIndex].text : '';
         const rowData = [
-            row.querySelector('.name-input').value,
+            patientName,
             row.querySelector('.gond1-input').value,
             row.querySelector('.gond2-input').value,
             row.querySelector('.gond-utazas-input').value,
