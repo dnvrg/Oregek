@@ -4,298 +4,376 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Idősgondozási Menedzser</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
-    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body>
-    <div class="app-container">
-        <div class="nav-container">
-            <div class="nav-tabs">
-                <button class="nav-tab active" onclick="showTab('patients')">Páciensek</button>
-                <button class="nav-tab" onclick="showTab('calendar')">Naptár</button>
-                <button class="nav-tab" onclick="showTab('shopping')">Bevásárló Lista</button>
-                <button class="nav-tab" onclick="showTab('documents')">Dokumentumok</button>
-                <button class="nav-tab" onclick="showTab('notes')">Jegyzetek</button>
-                <button class="nav-tab" onclick="showTab('calculator')">Kiszámoló</button>
-            </div>
-            <div class="settings-btn-container">
-                <button class="settings-btn" id="settingsBtn" onclick="toggleSettingsDropdown()">
-                    <i class="material-icons">settings</i>
+    <header class="mobile-header">
+        <div class="mobile-header-content">
+            <h1 class="mobile-title">Idősgondozás</h1>
+            <button id="mobileMenuBtn" class="mobile-menu-btn">
+                <i class="fas fa-bars"></i>
+            </button>
+        </div>
+    </header>
+
+    <div id="mobileMenuOverlay" class="mobile-menu-overlay">
+        <div class="mobile-menu-content">
+            <div class="mobile-menu-header">
+                <h2>Menü</h2>
+                <button id="closeMobileMenu">
+                    <i class="fas fa-times"></i>
                 </button>
-                <div id="settingsDropdown" class="settings-dropdown-menu">
-                    <button class="btn download-btn" onclick="downloadAllData()">Adatok letöltése</button>
-                    <input type="file" id="uploadFile" accept=".json" style="display: none;">
-                    <button class="btn upload-btn" onclick="document.getElementById('uploadFile').click()">Adatok feltöltése</button>
-                </div>
             </div>
+            <nav class="mobile-nav">
+                <div id="mobileNavItems" class="nav-items">
+                    </div>
+            </nav>
         </div>
+    </div>
 
-        <div id="patients" class="tab-content active">
-            <div class="header-with-search">
-                <h2>Páciensek</h2>
-                <div class="search-container">
-                    <input type="text" id="patientSearchInput" placeholder="Keresés...">
-                </div>
-            </div>
-            <div id="patientsList" class="patient-list"></div>
-        </div>
-
-        <div id="calendar" class="tab-content">
-            <div class="header-with-search">
-                <h2>Látogatási Naptár</h2>
-                <div class="search-container">
-                    <input type="text" id="calendarSearchInput" placeholder="Keresés...">
-                </div>
-            </div>
-            <div class="form-row">
-                <div class="form-group">
-                    <label for="calendarMonth">Hónap</label>
-                    <select id="calendarMonth">
-                        <option value="0">Január</option>
-                        <option value="1">Február</option>
-                        <option value="2">Március</option>
-                        <option value="3">Április</option>
-                        <option value="4">Május</option>
-                        <option value="5">Június</option>
-                        <option value="6">Július</option>
-                        <option value="7">Augusztus</option>
-                        <option value="8">Szeptember</option>
-                        <option value="9">Október</option>
-                        <option value="10">November</option>
-                        <option value="11">December</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label for="calendarYear">Év</label>
-                    <input type="number" id="calendarYear" min="2020" max="2030">
-                </div>
-            </div>
-            <div id="calendarGrid" class="calendar"></div>
-        </div>
-
-        <div id="shopping" class="tab-content">
-            <div class="header-with-search">
-                <h2>Bevásárló Lista</h2>
-                <div class="search-container">
-                    <input type="text" id="shoppingSearchInput" placeholder="Keresés...">
-                </div>
+    <div class="app-layout">
+        <aside class="desktop-sidebar">
+            <div class="sidebar-header">
+                <i class="fas fa-users sidebar-title-icon"></i>
             </div>
             
-            <form id="shoppingForm">
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="shoppingItem">Tétel</label>
-                        <input type="text" id="shoppingItem" required>
+            <nav class="sidebar-nav">
+                <div id="desktopNavItems" class="nav-items">
                     </div>
-                    <div class="form-group">
-                        <label for="shoppingPatient">Páciens</label>
-                        <select id="shoppingPatient">
+                
+                <div class="settings-section">
+                    <h3>BEÁLLÍTÁSOK</h3>
+                    <div class="settings-items">
+                        <button onclick="downloadAllData()" class="settings-item">
+                            <i class="fas fa-download"></i>
+                            <span>Adatok letöltése</span>
+                        </button>
+                        <input type="file" id="uploadFile" accept=".json" style="display: none;">
+                        <button onclick="document.getElementById('uploadFile').click()" class="settings-item">
+                            <i class="fas fa-upload"></i>
+                            <span>Adatok feltöltése</span>
+                        </button>
+                    </div>
+                </div>
+            </nav>
+        </aside>
+
+        <main class="main-content">
+            <div id="patients" class="tab-content active">
+                <header class="content-header">
+                    <div class="header-info">
+                        <h2>Páciensek</h2>
+                        <p>Gondozottak kezelése és nyomon követése</p>
+                    </div>
+                    <div class="header-actions">
+                        <div class="search-container">
+                            <input type="text" id="patientSearchInput" placeholder="Keresés páciensek között...">
+                            <i class="fas fa-search search-icon"></i>
+                        </div>
+                        <button id="addPatientBtn" class="btn btn-primary">
+                            <i class="fas fa-plus"></i>
+                            <span>Új páciens</span>
+                        </button>
+                    </div>
+                </header>
+                
+                <div class="content-body">
+                    <div id="patientsList" class="patients-grid">
+                        </div>
+                </div>
+            </div>
+
+            <div id="calendar" class="tab-content">
+                <header class="content-header">
+                    <div class="header-info">
+                        <h2>Naptár</h2>
+                        <p>Látogatások ütemezése és követése</p>
+                    </div>
+                    <div class="header-actions">
+                        <select id="calendarMonth" class="form-select">
+                            <option value="0">Január</option>
+                            <option value="1">Február</option>
+                            <option value="2">Március</option>
+                            <option value="3">Április</option>
+                            <option value="4">Május</option>
+                            <option value="5">Június</option>
+                            <option value="6">Július</option>
+                            <option value="7">Augusztus</option>
+                            <option value="8">Szeptember</option>
+                            <option value="9">Október</option>
+                            <option value="10">November</option>
+                            <option value="11">December</option>
+                        </select>
+                        <input type="number" id="calendarYear" min="2020" max="2030" class="form-input year-input">
+                    </div>
+                </header>
+                
+                <div class="content-body">
+                    <div id="calendarGrid" class="calendar-grid">
+                        </div>
+                </div>
+            </div>
+
+            <div id="shopping" class="tab-content">
+                <header class="content-header">
+                    <div class="header-info">
+                        <h2>Bevásárló Lista</h2>
+                        <p>Szükséges tételek követése</p>
+                    </div>
+                    <div class="header-actions">
+                        <div class="search-container">
+                            <input type="text" id="shoppingSearchInput" placeholder="Keresés listában...">
+                            <i class="fas fa-search search-icon"></i>
+                        </div>
+                    </div>
+                </header>
+                
+                <div class="form-section">
+                    <form id="shoppingForm" class="inline-form">
+                        <input type="text" id="shoppingItem" placeholder="Új tétel hozzáadása..." required class="form-input flex-1">
+                        <select id="shoppingPatient" class="form-select">
                             <option value="">Válasszon pácienst</option>
                         </select>
-                    </div>
-                </div>
-                <button type="submit" class="btn">Hozzáad</button>
-            </form>
-
-            <div id="shoppingList"></div>
-        </div>
-
-        <div id="documents" class="tab-content">
-            <div class="header-with-search">
-                <h2>Páciens Dokumentumok</h2>
-                <div class="search-container">
-                    <input type="text" id="documentsSearchInput" placeholder="Keresés...">
-                </div>
-            </div>
-            
-            <form id="documentForm">
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="documentFile">Válasszon dokumentumot</label>
-                        <input type="file" id="documentFile" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="documentPatient">Páciens</label>
-                        <select id="documentPatient" required>
-                            <option value="">Válasszon pácienst</option>
-                        </select>
-                    </div>
-                </div>
-                <button type="submit" class="btn">Feltöltés</button>
-            </form>
-
-            <div id="documentsList"></div>
-        </div>
-
-        <div id="notes" class="tab-content">
-            <div class="header-with-search">
-                <h2>Jegyzetek</h2>
-                <div class="search-container">
-                    <input type="text" id="notesSearchInput" placeholder="Keresés...">
-                </div>
-            </div>
-            
-            <form id="noteForm">
-                <div class="form-group">
-                    <label for="notePatient">Páciens</label>
-                    <select id="notePatient">
-                        <option value="">Általános megjegyzés</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label for="noteContent">Jegyzet</label>
-                    <textarea id="noteContent" required placeholder="Ide írja a jegyzetet..."></textarea>
-                </div>
-                <button type="submit" class="btn">Jegyzet Hozzáadása</button>
-            </form>
-
-            <div id="notesList"></div>
-        </div>
-        
-        <div id="settings" class="tab-content">
-            </div>
-
-        <div id="calculator" class="tab-content tab-content-calculator">
-            <div class="container bg-white rounded-xl shadow-lg p-6 md:p-8 w-full">
-                <div class="flex items-center justify-between mb-6 md:mb-8">
-                    <h1 class="text-3xl font-bold text-gray-800">Kiszámoló</h1>
-                    <button id="export-btn" class="w-12 h-12 flex items-center justify-center bg-blue-500 text-white font-bold text-2xl rounded-full shadow-lg hover:bg-blue-600 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-ring-blue-400">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                        </svg>
-                    </button>
-                </div>
-
-                <div class="table-responsive">
-                    <table id="calculation-table" class="responsive-table">
-                        <thead class="bg-blue-600 text-white">
-                            <tr>
-                                <th class="p-3 text-sm font-semibold tracking-wide text-left rounded-tl-lg border border-white border-opacity-30">Név</th>
-                                <th class="p-3 text-sm font-semibold tracking-wide text-left border border-white border-opacity-30">G1</th>
-                                <th class="p-3 text-sm font-semibold tracking-wide text-left border border-white border-opacity-30">G2</th>
-                                <th class="p-3 text-sm font-semibold tracking-wide text-left border border-white border-opacity-30">G+U</th>
-                                <th class="p-3 text-sm font-semibold tracking-wide text-left rounded-tr-lg border border-white border-opacity-30">Óra</th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-gray-200" id="table-body">
-                            </tbody>
-                    </table>
+                        <button type="submit" class="btn btn-primary">Hozzáad</button>
+                    </form>
                 </div>
                 
-                <div class="mt-6 flex flex-col md:flex-row justify-between gap-4">
-                    <button id="add-row-btn" class="bg-green-500 text-white font-semibold py-2 px-4 rounded-lg shadow-md hover:bg-green-600 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-green-400">
-                        <i class="fas fa-plus mr-2"></i> Sor hozzáadása
-                    </button>
-                    <button id="clear-table-btn" class="bg-red-500 text-white font-semibold py-2 px-4 rounded-lg shadow-md hover:bg-red-600 transition-colors duration-200">
-                        Táblázat törlése
-                    </button>
-                    <button id="save-btn" class="bg-blue-500 text-white font-semibold py-2 px-4 rounded-lg shadow-md hover:bg-blue-600 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-400">
-                        <i class="fa-solid fa-floppy-disk mr-2"></i> Mentés</button>
+                <div class="content-body">
+                    <div id="shoppingList">
+                        </div>
                 </div>
             </div>
 
-            <div class="mt-8 w-full max-w-6xl bg-white rounded-xl shadow-lg p-6 md:p-8">
-                <h2 class="text-2xl font-bold text-gray-800 mb-4">Mentett számítások</h2>
-                <div id="saved-calculations-list" class="space-y-4">
+            <div id="documents" class="tab-content">
+                <header class="content-header">
+                    <div class="header-info">
+                        <h2>Dokumentumok</h2>
+                        <p>Páciens dokumentumok kezelése</p>
                     </div>
+                    <div class="header-actions">
+                        <div class="search-container">
+                            <input type="text" id="documentsSearchInput" placeholder="Keresés dokumentumokban...">
+                            <i class="fas fa-search search-icon"></i>
+                        </div>
+                    </div>
+                </header>
+                
+                <div class="form-section">
+                    <form id="documentForm" class="inline-form">
+                        <input type="file" id="documentFile" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png" required class="form-input flex-1">
+                        <select id="documentPatient" required class="form-select">
+                            <option value="">Válasszon pácienst</option>
+                        </select>
+                        <button type="submit" class="btn btn-primary">Feltöltés</button>
+                    </form>
+                </div>
+                
+                <div class="content-body">
+                    <div id="documentsList">
+                        </div>
+                </div>
             </div>
 
-            <div id="save-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden flex items-center justify-center z-50">
-                <div class="bg-white p-6 rounded-lg shadow-xl w-80">
-                    <h3 class="text-xl font-bold mb-4" id="modal-title">Számítás mentése</h3>
-                    <p class="mb-2">Adja meg a mentés nevét:</p>
-                    <input type="text" id="save-name-input" class="w-full p-2 border border-gray-300 rounded-md mb-4" placeholder="Pl. Heti számítás">
-                    <div class="flex justify-end space-x-2">
-                        <button id="save-confirm-btn" class="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600">Mentés</button>
-                        <button id="save-cancel-btn" class="bg-gray-300 text-gray-800 px-4 py-2 rounded-md hover:bg-gray-400">Mégsem</button>
+            <div id="notes" class="tab-content">
+                <header class="content-header">
+                    <div class="header-info">
+                        <h2>Jegyzetek</h2>
+                        <p>Fontos megjegyzések és észrevételek</p>
                     </div>
+                    <div class="header-actions">
+                        <div class="search-container">
+                            <input type="text" id="notesSearchInput" placeholder="Keresés jegyzetekben...">
+                            <i class="fas fa-search search-icon"></i>
+                        </div>
+                    </div>
+                </header>
+                
+                <div class="form-section">
+                    <form id="noteForm" class="note-form">
+                        <div class="form-group-inline">
+                            <div class="form-group-note">
+                                <label for="notePatient">Páciens</label>
+                                <select id="notePatient" class="form-select"></select>
+                            </div>
+                        </div>
+                        <div class="form-group-note-content">
+                            <label for="noteContent">Jegyzet</label>
+                            <textarea id="noteContent" required placeholder="Írja ide a jegyzetet..." rows="3" class="form-textarea"></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Jegyzet mentése</button>
+                    </form>
+                </div>
+                
+                <div class="content-body">
+                    <div id="notesList">
+                        </div>
+                </div>
+            </div>
+
+            <div id="calculator" class="tab-content">
+                <header class="content-header">
+                    <div class="header-info">
+                        <h2>Kiszámoló</h2>
+                        <p>Időbeosztás és számítások</p>
+                    </div>
+                    <div class="header-actions calculator-actions">
+                        <button id="export-btn" class="btn btn-success">
+                            <i class="fas fa-download"></i>
+                            <span>Export</span>
+                        </button>
+                        <button id="save-btn" class="btn btn-primary">
+                            <i class="fas fa-save"></i>
+                            <span>Mentés</span>
+                        </button>
+                        <button id="add-row-btn" class="btn btn-purple">
+                            <i class="fas fa-plus"></i>
+                            <span>Sor</span>
+                        </button>
+                        <button id="clear-table-btn" class="btn btn-danger">
+                            <i class="fas fa-trash"></i>
+                            <span>Törlés</span>
+                        </button>
+                    </div>
+                </header>
+                
+                <div class="content-body">
+                    <div class="table-container">
+                        <table id="calculation-table" class="calculation-table">
+                            <thead>
+                                <tr>
+                                    <th>Név</th>
+                                    <th>G1</th>
+                                    <th>G2</th>
+                                    <th>G+U</th>
+                                    <th>Óra</th>
+                                </tr>
+                            </thead>
+                            <tbody id="table-body">
+                                </tbody>
+                        </table>
+                    </div>
+                    
+                    <div class="saved-calculations">
+                        <h3>Mentett számítások</h3>
+                        <div id="saved-calculations-list" class="saved-list">
+                            </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <div id="patientModal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modalTitle">Új páciens</h3>
+                <button id="closeModal" class="modal-close">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <form id="patientForm" class="modal-form">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="name">Név *</label>
+                        <input type="text" id="name" required class="form-input">
+                    </div>
+                    <div class="form-group">
+                        <label for="phone">Telefonszám *</label>
+                        <input type="tel" id="phone" required class="form-input">
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="address">Lakcím</label>
+                    <input type="text" id="address" class="form-input">
+                </div>
+                
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="intercom">Kapukód</label>
+                        <input type="text" id="intercom" class="form-input">
+                    </div>
+                    <div class="form-group">
+                        <label for="taj">TAJ Szám</label>
+                        <input type="text" id="taj" class="form-input">
+                    </div>
+                </div>
+                
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="emergencyContact">Értesítendő</label>
+                        <input type="text" id="emergencyContact" class="form-input">
+                    </div>
+                    <div class="form-group">
+                        <label for="emergencyPhone">Értesítendő Telefonszáma</label>
+                        <input type="tel" id="emergencyPhone" class="form-input">
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="tasks">Feladatok</label>
+                    <textarea id="tasks" rows="3" placeholder="Sorolja fel a páciens gondozási feladatait..." class="form-textarea"></textarea>
+                </div>
+                
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="patientColor">Naptár Szín</label>
+                        <div class="color-picker-container">
+                            <input type="color" id="patientColor" value="#8b5cf6" class="color-picker">
+                            <span>Válasszon színt a naptárhoz</span>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Látogatási Napok</label>
+                        <div class="checkbox-grid">
+                            <label class="checkbox-item">
+                                <input type="checkbox" id="monday" value="1">
+                                <span>Hétfő</span>
+                            </label>
+                            <label class="checkbox-item">
+                                <input type="checkbox" id="tuesday" value="2">
+                                <span>Kedd</span>
+                            </label>
+                            <label class="checkbox-item">
+                                <input type="checkbox" id="wednesday" value="3">
+                                <span>Szerda</span>
+                            </label>
+                            <label class="checkbox-item">
+                                <input type="checkbox" id="thursday" value="4">
+                                <span>Csütörtök</span>
+                            </label>
+                            <label class="checkbox-item">
+                                <input type="checkbox" id="friday" value="5">
+                                <span>Péntek</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="modal-actions">
+                    <button type="button" id="cancelBtn" class="btn btn-secondary">Mégse</button>
+                    <button type="submit" class="btn btn-primary">Mentés</button>
+                    <button type="button" id="deletePatientBtn" class="btn btn-danger hidden">Törlés</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="save-modal" class="modal-overlay">
+        <div class="modal-content modal-sm">
+            <div class="modal-body">
+                <h3 id="modal-title">Számítás mentése</h3>
+                <p>Adja meg a mentés nevét:</p>
+                <input type="text" id="save-name-input" placeholder="Pl. Heti számítás" class="form-input">
+                <div class="modal-actions">
+                    <button id="save-cancel-btn" class="btn btn-secondary">Mégsem</button>
+                    <button id="save-confirm-btn" class="btn btn-primary">Mentés</button>
                 </div>
             </div>
         </div>
-        </div>
-
-    <button id="addPatientBtn" class="floating-btn">+</button>
-
-    <div id="patientFormContainer" class="patient-form-container">
-        <form id="patientForm">
-            <div class="form-row">
-                <div class="form-group">
-                    <label for="name">Név *</label>
-                    <input type="text" id="name" required>
-                </div>
-                <div class="form-group">
-                    <label for="phone">Telefonszám *</label>
-                    <input type="tel" id="phone" required>
-                </div>
-            </div>
-
-            <div class="form-group">
-                <label for="address">Lakcím</label>
-                <input type="text" id="address">
-            </div>
-
-            <div class="form-row">
-                <div class="form-group">
-                    <label for="intercom">Kapukód</label>
-                    <input type="text" id="intercom">
-                </div>
-                <div class="form-group">
-                    <label for="taj">TAJ Szám</label>
-                    <input type="text" id="taj">
-                </div>
-            </div>
-
-            <div class="form-row">
-                <div class="form-group">
-                    <label for="emergencyContact">Értesítendő</label>
-                    <input type="text" id="emergencyContact">
-                </div>
-                <div class="form-group">
-                    <label for="emergencyPhone">Értesítendő Telefonszáma</label>
-                    <input type="tel" id="emergencyPhone">
-                </div>
-            </div>
-
-            <div class="form-group">
-                <label for="tasks">Feladatok</label>
-                <textarea id="tasks" placeholder="Sorolja fel a páciens gondozási feladatait..."></textarea>
-            </div>
-
-            <div class="form-group">
-                <label for="patientColor">Naptár Szín</label>
-                <input type="color" id="patientColor" class="color-picker" value="#667eea">
-            </div>
-
-            <div class="form-group">
-                <label>Látogatási Napok</label>
-                <div class="visit-days">
-                    <div class="day-checkbox">
-                        <input type="checkbox" id="monday" value="1">
-                        <label for="monday">Hétfő</label>
-                    </div>
-                    <div class="day-checkbox">
-                        <input type="checkbox" id="tuesday" value="2">
-                        <label for="tuesday">Kedd</label>
-                    </div>
-                    <div class="day-checkbox">
-                        <input type="checkbox" id="wednesday" value="3">
-                        <label for="wednesday">Szerda</label>
-                    </div>
-                    <div class="day-checkbox">
-                        <input type="checkbox" id="thursday" value="4">
-                        <label for="thursday">Csütörtök</label>
-                    </div>
-                    <div class="day-checkbox">
-                        <input type="checkbox" id="friday" value="5">
-                        <label for="friday">Péntek</label>
-                    </div>
-                </div>
-            </div>
-
-            <button type="submit" class="btn">Mentés</button>
-        </form>
     </div>
 
     <script src="script.js"></script>
