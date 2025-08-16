@@ -57,6 +57,127 @@ document.addEventListener('DOMContentLoaded', function() {
     generateCalendar();
     
     console.log('Alkalmazás sikeresen inicializálva');
+
+    // **Start of Kiszámoló (Calculator) specific initialization**
+    const tableBody = document.getElementById('table-body');
+    const addRowBtn = document.getElementById('add-row-btn');
+    const exportBtn = document.getElementById('export-btn');
+    const clearBtn = document.getElementById('clear-table-btn');
+    const saveBtn = document.getElementById('save-btn');
+    const saveModal = document.getElementById('save-modal');
+    const saveNameInput = document.getElementById('save-name-input');
+    const saveConfirmBtn = document.getElementById('save-confirm-btn');
+    const saveCancelBtn = document.getElementById('save-cancel-btn');
+    const savedList = document.getElementById('saved-calculations-list');
+    const modalTitle = document.getElementById('modal-title');
+
+    if (tableBody) {
+        // Add 12 initial rows
+        for (let i = 1; i <= 12; i++) {
+            tableBody.appendChild(createRow(''));
+        }
+        updateAllCalculations();
+        renderSavedList();
+    }
+
+    if (addRowBtn) addRowBtn.addEventListener('click', () => {
+        tableBody.appendChild(createRow(''));
+        updateAllCalculations();
+    });
+
+    if (clearBtn) clearBtn.addEventListener('click', () => {
+        const modal = document.createElement('div');
+        modal.classList.add('fixed', 'top-0', 'left-0', 'w-full', 'h-full', 'bg-gray-800', 'bg-opacity-50', 'flex', 'justify-center', 'items-center', 'z-50');
+        modal.innerHTML = `
+            <div class="bg-white rounded-lg p-6 shadow-xl text-center max-w-sm mx-4">
+                <p class="mb-4">Biztosan törölni szeretné az összes sort?</p>
+                <div class="flex justify-center space-x-4">
+                    <button id="confirm-yes" class="bg-red-500 text-white font-semibold py-2 px-4 rounded-full hover:bg-red-600 transition-colors duration-200">Igen</button>
+                    <button id="confirm-no" class="bg-gray-300 text-gray-800 font-semibold py-2 px-4 rounded-full hover:bg-gray-400 transition-colors duration-200">Mégsem</button>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(modal);
+
+        document.getElementById('confirm-yes').addEventListener('click', () => {
+            tableBody.innerHTML = '';
+            for (let i = 1; i <= 12; i++) {
+                tableBody.appendChild(createRow(''));
+            }
+            updateAllCalculations();
+            document.body.removeChild(modal);
+        });
+
+        document.getElementById('confirm-no').addEventListener('click', () => {
+            document.body.removeChild(modal);
+        });
+    });
+
+    if (saveBtn) saveBtn.addEventListener('click', () => {
+        isRenameMode = false;
+        modalTitle.textContent = "Számítás mentése";
+        saveConfirmBtn.textContent = "Mentés";
+        
+        const now = new Date();
+        const dayNames = ['Vasárnap', 'Hétfő', 'Kedd', 'Szerda', 'Csütörtök', 'Péntek', 'Szombat'];
+        const dayName = dayNames[now.getDay()];
+        const formattedDate = `${dayName}__${now.getFullYear()} - ${String(now.getMonth() + 1).padStart(2, '0')} - ${String(now.getDate()).padStart(2, '0')}__${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+        saveNameInput.value = formattedDate;
+
+        saveModal.classList.remove('hidden');
+        saveNameInput.focus();
+    });
+
+    if (saveConfirmBtn) saveConfirmBtn.addEventListener('click', () => {
+        const name = saveNameInput.value.trim();
+        if (name) {
+            if (isRenameMode) {
+                renameCalculation(renameId, name);
+            } else {
+                saveCalculation(name);
+            }
+            saveModal.classList.add('hidden');
+            saveNameInput.value = '';
+        } else {
+            alert('Kérjük, adja meg a számítás nevét.');
+        }
+    });
+
+    if (saveCancelBtn) saveCancelBtn.addEventListener('click', () => {
+        saveModal.classList.add('hidden');
+        saveNameInput.value = '';
+    });
+
+    if (savedList) savedList.addEventListener('click', (e) => {
+        const button = e.target.closest('button');
+        if (!button) return;
+
+        const parentDiv = button.closest('[data-id]');
+        if (!parentDiv) return;
+
+        const id = parentDiv.dataset.id;
+        
+        if (button.classList.contains('load-btn')) {
+            loadCalculation(id);
+        } else if (button.classList.contains('delete-btn')) {
+            deleteCalculation(id);
+        } else if (button.classList.contains('rename-btn')) {
+            isRenameMode = true;
+            renameId = id;
+            const savedData = JSON.parse(localStorage.getItem('savedCalculations') || '[]');
+            const currentItem = savedData.find(item => item.id === id);
+            if (currentItem) {
+                modalTitle.textContent = "Név szerkesztése";
+                saveConfirmBtn.textContent = "Átnevezés";
+                saveNameInput.value = currentItem.name;
+                saveModal.classList.remove('hidden');
+                saveNameInput.focus();
+            }
+        }
+    });
+
+    if (exportBtn) exportBtn.addEventListener('click', exportToCsv);
+    // **End of Kiszámoló specific initialization**
 });
 
 // Tab switching
@@ -859,7 +980,7 @@ function renderNotes(searchQuery = '') {
     const sortedGroups = Object.keys(groupedNotes).sort((a, b) => {
         if (a === 'general') return -1;
         if (b === 'general') return 1;
-        return groupedNotes[a].name.localeCompare(groupedNotes[b].name, 'hu');
+        return groupedNotes[a].name.localeCompare(groupedGroups[b].name, 'hu');
     });
 
     if (sortedGroups.length === 0) {
@@ -987,4 +1108,233 @@ if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('/sw.js').catch(err => {
         console.log('A Service Worker regisztrációja sikertelen volt:', err);
     });
+}
+
+// Global variables for modal state
+let isRenameMode = false;
+let renameId = null;
+
+// Helper function to convert total minutes back to "HH:MM" format
+function minutesToTime(totalMinutes) {
+    if (totalMinutes < 0) totalMinutes = 0;
+    const hours = Math.floor(totalMinutes / 60);
+    const minutes = totalMinutes % 60;
+    return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
+}
+
+// Function to get current table data
+function getTableData() {
+    const rows = Array.from(document.querySelectorAll('#table-body tr')).map(row => {
+        const inputs = row.querySelectorAll('input');
+        return {
+            name: inputs[0].value,
+            gond1: inputs[1].value,
+            gond2: inputs[2].value,
+            gondUtazas: inputs[3].value
+        };
+    });
+    return rows;
+}
+
+// Function to render the list of saved calculations
+function renderSavedList() {
+    const savedList = document.getElementById('saved-calculations-list');
+    if (!savedList) return;
+    savedList.innerHTML = ''; // Clear existing list
+
+    const savedData = JSON.parse(localStorage.getItem('savedCalculations') || '[]');
+
+    if (savedData.length === 0) {
+        savedList.innerHTML = '<p class="text-gray-500 text-center">Nincsenek mentett számítások.</p>';
+        return;
+    }
+
+    savedData.forEach(item => {
+        // IMPORTANT FIX: The data-id is moved to the outermost container of the list item
+        const savedItemDiv = document.createElement('div');
+        savedItemDiv.classList.add('flex', 'flex-col', 'sm:flex-row', 'items-center', 'justify-between', 'p-4', 'bg-gray-50', 'rounded-lg', 'shadow-sm', 'cursor-pointer', 'hover:bg-gray-100', 'transition-colors');
+        savedItemDiv.dataset.id = item.id; // Corrected: data-id is now on the parent div
+        
+        savedItemDiv.innerHTML = `
+            <div class="flex-grow w-full sm:w-auto mb-2 sm:mb-0">
+                <p class="font-semibold text-gray-800">${item.name}</p>
+                <p class="text-sm text-gray-500">Mentve: ${new Date(item.created).toLocaleString()}</p>
+                <p class="text-sm text-gray-500">Utoljára szerkesztve: ${new Date(item.lastEdited).toLocaleString()}</p>
+            </div>
+            <div class="flex space-x-2">
+                <button class="load-btn bg-blue-500 text-white px-3 py-1 text-sm rounded-full hover:bg-blue-600">Betöltés</button>
+                <button class="rename-btn bg-gray-400 text-white px-3 py-1 text-sm rounded-full hover:bg-gray-500">Átnevez</button>
+                <button class="delete-btn bg-red-500 text-white px-3 py-1 text-sm rounded-full hover:bg-red-600">Törlés</button>
+            </div>
+        `;
+        savedList.appendChild(savedItemDiv);
+    });
+}
+
+// Function to save the current table state
+function saveCalculation(name) {
+    const savedData = JSON.parse(localStorage.getItem('savedCalculations') || '[]');
+    const now = new Date().toISOString();
+    const id = `calc-${Date.now()}`;
+    const newCalculation = {
+        id: id,
+        name: name,
+        created: now,
+        lastEdited: now,
+        data: getTableData()
+    };
+
+    savedData.push(newCalculation);
+    localStorage.setItem('savedCalculations', JSON.stringify(savedData));
+    renderSavedList();
+}
+
+// Function to rename a saved calculation
+function renameCalculation(id, newName) {
+    const savedData = JSON.parse(localStorage.getItem('savedCalculations') || '[]');
+    const itemToRename = savedData.find(item => item.id === id);
+
+    if (itemToRename) {
+        itemToRename.name = newName;
+        itemToRename.lastEdited = new Date().toISOString();
+        localStorage.setItem('savedCalculations', JSON.stringify(savedData));
+        renderSavedList();
+    }
+}
+
+// Function to load a saved calculation
+function loadCalculation(id) {
+    const savedData = JSON.parse(localStorage.getItem('savedCalculations') || '[]');
+    const itemToLoad = savedData.find(item => item.id === id);
+    const tableBody = document.getElementById('table-body');
+
+    if (itemToLoad && tableBody) {
+        tableBody.innerHTML = '';
+        
+        if (itemToLoad.data.length === 0) {
+            for (let i = 1; i <= 12; i++) {
+                tableBody.appendChild(createRow(''));
+            }
+            const messageBox = document.createElement('div');
+            messageBox.textContent = 'A mentett számítás üres volt, az alapértelmezett sorok betöltve.';
+            messageBox.classList.add('fixed', 'top-1/2', 'left-1/2', 'transform', '-translate-x-1/2', '-translate-y-1/2', 'bg-blue-500', 'text-white', 'p-4', 'rounded-lg', 'shadow-xl', 'z-50');
+            document.body.appendChild(messageBox);
+            setTimeout(() => document.body.removeChild(messageBox), 3000);
+        } else {
+            itemToLoad.data.forEach(rowData => {
+                const newRow = createRow(rowData.name, rowData.gond1, rowData.gond2, rowData.gondUtazas);
+                tableBody.appendChild(newRow);
+            });
+        }
+        
+        const now = new Date().toISOString();
+        const itemIndex = savedData.findIndex(item => item.id === id);
+        if (itemIndex > -1) {
+            savedData[itemIndex].lastEdited = now;
+            localStorage.setItem('savedCalculations', JSON.stringify(savedData));
+        }
+
+        updateAllCalculations();
+        renderSavedList();
+    }
+}
+
+// Function to delete a saved calculation
+function deleteCalculation(id) {
+    let savedData = JSON.parse(localStorage.getItem('savedCalculations') || '[]');
+    savedData = savedData.filter(item => item.id !== id);
+    localStorage.setItem('savedCalculations', JSON.stringify(savedData));
+    renderSavedList();
+}
+
+// Main function to perform all calculations and update the table
+function updateAllCalculations() {
+    const tableRows = document.querySelectorAll('#table-body tr');
+    let previousEndTimeMinutes = 8 * 60; // Start time for the first row (08:00)
+
+    tableRows.forEach((row, index) => {
+        const gond1 = parseInt(row.querySelector('.gond1-input').value) || 0;
+        const gond2 = parseInt(row.querySelector('.gond2-input').value) || 0;
+        const gondUtazasTotal = parseInt(row.querySelector('.gond-utazas-input').value) || 0;
+
+        let newStartTimeMinutes;
+        let newEndTimeMinutes;
+
+        if (index === 0) {
+            newStartTimeMinutes = previousEndTimeMinutes;
+            newEndTimeMinutes = newStartTimeMinutes + gondUtazasTotal;
+        } else {
+            const travelTime = gondUtazasTotal - (gond1 + gond2);
+            newStartTimeMinutes = previousEndTimeMinutes + travelTime;
+            newEndTimeMinutes = newStartTimeMinutes + gond1 + gond2;
+        }
+        
+        const timeRange = `${minutesToTime(newStartTimeMinutes)} - ${minutesToTime(newEndTimeMinutes)}`;
+        row.querySelector('.ora-perc-total').textContent = timeRange;
+        previousEndTimeMinutes = newEndTimeMinutes;
+    });
+}
+
+// Function to create a new table row with inputs and cells
+function createRow(name = '', gond1 = '', gond2 = '', gondUtazas = '') {
+    const newRow = document.createElement('tr');
+    newRow.classList.add('hover:bg-gray-50');
+
+    const rowContent = `
+        <td class="p-3 text-sm text-gray-700 text-center border-b border-gray-200">
+            <input type="text" class="bg-gray-100 rounded-lg p-1 text-center w-full" value="${name}">
+        </td>
+        <td class="p-3 text-sm text-gray-700 text-center border-b border-gray-200">
+            <input type="number" class="number-input bg-gray-100 rounded-lg p-1 text-center gond1-input" value="${gond1}" min="0">
+        </td>
+        <td class="p-3 text-sm text-gray-700 text-center border-b border-gray-200">
+            <input type="number" class="number-input bg-gray-100 rounded-lg p-1 text-center gond2-input" value="${gond2}" min="0">
+        </td>
+        <td class="p-3 text-sm text-gray-700 text-center border-b border-gray-200">
+            <input type="number" class="number-input bg-gray-100 rounded-lg p-1 text-center gond-utazas-input" value="${gondUtazas}" min="0">
+        </td>
+        <td class="p-3 text-sm text-gray-700 text-center border-b border-gray-200 font-bold ora-perc-total">00:00 - 00:00</td>
+    `;
+    newRow.innerHTML = rowContent;
+    
+    const inputs = newRow.querySelectorAll('input');
+    inputs.forEach(input => {
+        input.addEventListener('input', updateAllCalculations);
+    });
+
+    return newRow;
+}
+
+// Function to export table data to CSV
+function exportToCsv() {
+    const tableRows = document.querySelectorAll('#table-body tr');
+    if (tableRows.length === 0) {
+        const messageBox = document.createElement('div');
+        messageBox.textContent = 'A táblázat üres. Nincs mit exportálni.';
+        messageBox.classList.add('fixed', 'top-1/2', 'left-1/2', 'transform', '-translate-x-1/2', '-translate-y-1/2', 'bg-red-500', 'text-white', 'p-4', 'rounded-lg', 'shadow-xl', 'z-50');
+        document.body.appendChild(messageBox);
+        setTimeout(() => document.body.removeChild(messageBox), 3000);
+        return;
+    }
+
+    const header = ['Név', 'Gondozási idő 1', 'Gondozási idő 2', 'Gond. idő + Utazás', 'Óra és perc'].join(';');
+    const rows = Array.from(tableRows).map(row => {
+        const rowData = [
+            row.querySelector('td:first-child input').value,
+            row.querySelector('.gond1-input').value,
+            row.querySelector('.gond2-input').value,
+            row.querySelector('.gond-utazas-input').value,
+            row.querySelector('.ora-perc-total').textContent.trim()
+        ];
+        return rowData.join(';');
+    });
+
+    const csvContent = [header, ...rows].join('\n');
+    const blob = new Blob(["\ufeff" + csvContent], { type: 'text/csv;charset=utf-8;' }); // Add UTF-8 BOM for Excel compatibility
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = 'Kiszamolo.csv';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
 }
