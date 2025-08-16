@@ -563,3 +563,24 @@ textarea {
     width: 100%;
     padding: 15px 0;
 }
+
+/* New Kiszámoló styles */
+body {
+    font-family: 'Inter', sans-serif;
+    background-color: #f3f4f6;
+}
+.container {
+    max-width: 100%;
+    overflow-x: auto;
+}
+.number-input {
+    width: 70px;
+    text-align: center;
+    /* Hide the up and down arrows for number inputs */
+    -moz-appearance: textfield; /* Firefox */
+}
+.number-input::-webkit-outer-spin-button,
+.number-input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
