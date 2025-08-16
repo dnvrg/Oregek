@@ -980,7 +980,7 @@ function renderNotes(searchQuery = '') {
     const sortedGroups = Object.keys(groupedNotes).sort((a, b) => {
         if (a === 'general') return -1;
         if (b === 'general') return 1;
-        return groupedNotes[a].name.localeCompare(groupedGroups[b].name, 'hu');
+        return groupedGroups[a].name.localeCompare(groupedGroups[b].name, 'hu');
     });
 
     if (sortedGroups.length === 0) {
@@ -1281,19 +1281,21 @@ function createRow(name = '', gond1 = '', gond2 = '', gondUtazas = '') {
     newRow.classList.add('hover:bg-gray-50');
 
     const rowContent = `
-        <td class="p-3 text-sm text-gray-700 text-center border-b border-gray-200">
-            <input type="text" class="bg-gray-100 rounded-lg p-1 text-center w-full" value="${name}">
+        <td>
+            <input type="text" class="name-input" value="${name}">
         </td>
-        <td class="p-3 text-sm text-gray-700 text-center border-b border-gray-200">
-            <input type="number" class="number-input bg-gray-100 rounded-lg p-1 text-center gond1-input" value="${gond1}" min="0">
+        <td>
+            <input type="number" class="number-input gond1-input" value="${gond1}" min="0">
         </td>
-        <td class="p-3 text-sm text-gray-700 text-center border-b border-gray-200">
-            <input type="number" class="number-input bg-gray-100 rounded-lg p-1 text-center gond2-input" value="${gond2}" min="0">
+        <td>
+            <input type="number" class="number-input gond2-input" value="${gond2}" min="0">
         </td>
-        <td class="p-3 text-sm text-gray-700 text-center border-b border-gray-200">
-            <input type="number" class="number-input bg-gray-100 rounded-lg p-1 text-center gond-utazas-input" value="${gondUtazas}" min="0">
+        <td>
+            <input type="number" class="number-input gond-utazas-input" value="${gondUtazas}" min="0">
         </td>
-        <td class="p-3 text-sm text-gray-700 text-center border-b border-gray-200 font-bold ora-perc-total">00:00 - 00:00</td>
+        <td>
+            <span class="ora-perc-total">00:00 - 00:00</span>
+        </td>
     `;
     newRow.innerHTML = rowContent;
     
@@ -1320,7 +1322,7 @@ function exportToCsv() {
     const header = ['Név', 'Gondozási idő 1', 'Gondozási idő 2', 'Gond. idő + Utazás', 'Óra és perc'].join(';');
     const rows = Array.from(tableRows).map(row => {
         const rowData = [
-            row.querySelector('td:first-child input').value,
+            row.querySelector('.name-input').value,
             row.querySelector('.gond1-input').value,
             row.querySelector('.gond2-input').value,
             row.querySelector('.gond-utazas-input').value,
