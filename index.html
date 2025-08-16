@@ -4,9 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Idősgondozási Menedzser</title>
-    <!-- A külső CSS fájlra mutató hivatkozás újra a helyén van -->
     <link rel="stylesheet" href="styles.css">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body>
     <div class="app-container">
@@ -17,13 +18,12 @@
                 <button class="nav-tab" onclick="showTab('shopping')">Bevásárló Lista</button>
                 <button class="nav-tab" onclick="showTab('documents')">Dokumentumok</button>
                 <button class="nav-tab" onclick="showTab('notes')">Jegyzetek</button>
+                <button class="nav-tab" onclick="showTab('calculator')">Kiszámoló</button>
             </div>
-            <!-- Konténer a beállítások gombhoz és a legördülő menühöz -->
             <div class="settings-btn-container">
                 <button class="settings-btn" id="settingsBtn" onclick="toggleSettingsDropdown()">
                     <i class="material-icons">settings</i>
                 </button>
-                <!-- A legördülő menü a letöltés és feltöltés gombokkal -->
                 <div id="settingsDropdown" class="settings-dropdown-menu">
                     <button class="btn download-btn" onclick="downloadAllData()">Adatok letöltése</button>
                     <input type="file" id="uploadFile" accept=".json" style="display: none;">
@@ -155,10 +155,67 @@
         </div>
         
         <div id="settings" class="tab-content">
-            <!-- Ezt a fület most már elhagyjuk, mivel a funkciók a legördülő menübe kerültek -->
-        </div>
+            </div>
 
-    </div>
+        <div id="calculator" class="tab-content">
+            <div class="container bg-white rounded-xl shadow-lg p-6 md:p-8 w-full max-w-6xl">
+                <div class="flex items-center justify-between mb-6 md:mb-8">
+                    <h1 class="text-3xl font-bold text-gray-800">Kiszámoló</h1>
+                    <button id="export-btn" class="w-12 h-12 flex items-center justify-center bg-blue-500 text-white font-bold text-2xl rounded-full shadow-lg hover:bg-blue-600 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-ring-blue-400">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                        </svg>
+                    </button>
+                </div>
+
+                <div class="overflow-x-auto rounded-lg">
+                    <table id="calculation-table" class="min-w-full bg-white border-collapse">
+                        <thead class="bg-blue-600 text-white">
+                            <tr>
+                                <th class="p-3 text-sm font-semibold tracking-wide text-left rounded-tl-lg border border-white border-opacity-30">Név</th>
+                                <th class="p-3 text-sm font-semibold tracking-wide text-left border border-white border-opacity-30">Gondozási idő 1</th>
+                                <th class="p-3 text-sm font-semibold tracking-wide text-left border border-white border-opacity-30">Gondozási idő 2</th>
+                                <th class="p-3 text-sm font-semibold tracking-wide text-left border border-white border-opacity-30">Gond. idő + Utazás</th>
+                                <th class="p-3 text-sm font-semibold tracking-wide text-left rounded-tr-lg border border-white border-opacity-30">Óra és perc</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-200" id="table-body">
+                            </tbody>
+                    </table>
+                </div>
+                
+                <div class="mt-6 flex flex-col md:flex-row justify-between gap-4">
+                    <button id="add-row-btn" class="bg-green-500 text-white font-semibold py-2 px-4 rounded-lg shadow-md hover:bg-green-600 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-green-400">
+                        <i class="fas fa-plus mr-2"></i> Sor hozzáadása
+                    </button>
+                    <button id="clear-table-btn" class="bg-red-500 text-white font-semibold py-2 px-4 rounded-lg shadow-md hover:bg-red-600 transition-colors duration-200">
+                        Táblázat törlése
+                    </button>
+                    <button id="save-btn" class="bg-blue-500 text-white font-semibold py-2 px-4 rounded-lg shadow-md hover:bg-blue-600 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-400">
+                        <i class="fa-solid fa-floppy-disk mr-2"></i> Mentés
+                    </button>
+                </div>
+            </div>
+
+            <div class="mt-8 w-full max-w-6xl bg-white rounded-xl shadow-lg p-6 md:p-8">
+                <h2 class="text-2xl font-bold text-gray-800 mb-4">Mentett számítások</h2>
+                <div id="saved-calculations-list" class="space-y-4">
+                    </div>
+            </div>
+
+            <div id="save-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden flex items-center justify-center z-50">
+                <div class="bg-white p-6 rounded-lg shadow-xl w-80">
+                    <h3 class="text-xl font-bold mb-4" id="modal-title">Számítás mentése</h3>
+                    <p class="mb-2">Adja meg a mentés nevét:</p>
+                    <input type="text" id="save-name-input" class="w-full p-2 border border-gray-300 rounded-md mb-4" placeholder="Pl. Heti számítás">
+                    <div class="flex justify-end space-x-2">
+                        <button id="save-confirm-btn" class="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600">Mentés</button>
+                        <button id="save-cancel-btn" class="bg-gray-300 text-gray-800 px-4 py-2 rounded-md hover:bg-gray-400">Mégsem</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        </div>
 
     <button id="addPatientBtn" class="floating-btn">+</button>
 
