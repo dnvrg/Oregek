@@ -13,6 +13,8 @@ let patients = JSON.parse(localStorage.getItem('patients')) || [];
 let shoppingItems = JSON.parse(localStorage.getItem('shoppingItems')) || [];
 let documents = JSON.parse(localStorage.getItem('documents')) || [];
 let notes = JSON.parse(localStorage.getItem('notes')) || [];
+let savedCalculations = JSON.parse(localStorage.getItem('savedCalculations')) || [];
+let savedCalendarData = JSON.parse(localStorage.getItem('savedCalendarData')) || [];
 
 // UI element references
 let patientToEdit = null;
@@ -29,13 +31,17 @@ document.addEventListener('DOMContentLoaded', function() {
         const storedShoppingItems = localStorage.getItem('shoppingItems');
         const storedDocuments = localStorage.getItem('documents');
         const storedNotes = localStorage.getItem('notes');
+        const storedCalculations = localStorage.getItem('savedCalculations');
+        const storedCalendarData = localStorage.getItem('savedCalendarData');
 
         patients = storedPatients ? JSON.parse(storedPatients) : [];
         shoppingItems = storedShoppingItems ? JSON.parse(storedShoppingItems) : [];
         documents = storedDocuments ? JSON.parse(storedDocuments) : [];
         notes = storedNotes ? JSON.parse(storedNotes) : [];
+        savedCalculations = storedCalculations ? JSON.parse(storedCalculations) : [];
+        savedCalendarData = storedCalendarData ? JSON.parse(storedCalendarData) : [];
 
-        console.log('Data loaded from storage:', { patients, shoppingItems, documents, notes });
+        console.log('Data loaded from storage:', { patients, shoppingItems, documents, notes, savedCalculations, savedCalendarData });
 
     } catch (error) {
         console.error('Error loading data from localStorage:', error);
@@ -43,6 +49,8 @@ document.addEventListener('DOMContentLoaded', function() {
         shoppingItems = [];
         documents = [];
         notes = [];
+        savedCalculations = [];
+        savedCalendarData = [];
     }
 
     // Initialize UI
@@ -469,11 +477,16 @@ function deletePatient(id) {
         shoppingItems = shoppingItems.filter(item => parseInt(item.patientId) !== id);
         documents = documents.filter(doc => parseInt(doc.patientId) !== id);
         notes = notes.filter(note => parseInt(note.patientId) !== id);
+        savedCalculations = savedCalculations.map(calc => ({
+            ...calc,
+            data: calc.data.filter(row => parseInt(row.patientId) !== id)
+        }));
 
         localStorage.setItem('patients', JSON.stringify(patients));
         localStorage.setItem('shoppingItems', JSON.stringify(shoppingItems));
         localStorage.setItem('documents', JSON.stringify(documents));
         localStorage.setItem('notes', JSON.stringify(notes));
+        localStorage.setItem('savedCalculations', JSON.stringify(savedCalculations));
 
         renderPatients();
         updatePatientSelects();
@@ -603,22 +616,28 @@ function generateCalendar() {
         dayNumber.textContent = currentDate.getDate();
         dayElement.appendChild(dayNumber);
 
-        const dayOfWeekForVisit = currentDate.getDay();
+        // Load visits for this day from the saved calendar data
+        const visits = savedCalendarData.filter(visit => {
+            const visitDate = new Date(visit.date);
+            return visitDate.getFullYear() === currentDate.getFullYear() &&
+                   visitDate.getMonth() === currentDate.getMonth() &&
+                   visitDate.getDate() === currentDate.getDate();
+        });
 
-        patients.forEach(patient => {
-            if (patient.visitDays && patient.visitDays.includes(dayOfWeekForVisit)) {
-                const visit = document.createElement('div');
-                visit.className = 'calendar-visit';
-                visit.textContent = patient.name;
-                visit.style.backgroundColor = patient.color || '#8b5cf6';
-                visit.title = `Látogatás: ${patient.name}`;
-                dayElement.appendChild(visit);
-            }
+        visits.forEach(visit => {
+            const visitElement = document.createElement('div');
+            visitElement.className = 'calendar-visit';
+            visitElement.textContent = `${visit.name} (${visit.time})`; // Display name and time
+            const patient = patients.find(p => p.name === visit.name);
+            visitElement.style.backgroundColor = patient ? patient.color : '#8b5cf6';
+            visitElement.title = `Látogatás: ${visit.name} (${visit.time})`;
+            dayElement.appendChild(visitElement);
         });
 
         calendar.appendChild(dayElement);
     }
 }
+
 
 // Shopping list functionality
 function handleShoppingSubmit(e) {
@@ -988,6 +1007,8 @@ function downloadAllData() {
             shoppingItems: shoppingItems,
             documents: documents,
             notes: notes,
+            savedCalculations: savedCalculations,
+            savedCalendarData: savedCalendarData
         };
 
         const dataStr = JSON.stringify(allData, null, 2);
@@ -1033,6 +1054,14 @@ function handleFileUpload(event) {
                 notes = uploadedData.notes;
                 localStorage.setItem('notes', JSON.stringify(notes));
             }
+            if (uploadedData.savedCalculations && Array.isArray(uploadedData.savedCalculations)) {
+                savedCalculations = uploadedData.savedCalculations;
+                localStorage.setItem('savedCalculations', JSON.stringify(savedCalculations));
+            }
+            if (uploadedData.savedCalendarData && Array.isArray(uploadedData.savedCalendarData)) {
+                savedCalendarData = uploadedData.savedCalendarData;
+                localStorage.setItem('savedCalendarData', JSON.stringify(uploadedData.savedCalendarData));
+            }
 
             renderPatients();
             renderShoppingList();
@@ -1071,12 +1100,16 @@ function initializeCalculator() {
         }
         updateAllCalculations();
         renderSavedCalculationsList();
+        
+        // Add event listener to the table body for changes
+        tableBody.addEventListener('input', updateAndSyncCalendar);
     }
 
     if (addRowBtn) {
         addRowBtn.addEventListener('click', () => {
             tableBody.appendChild(createCalculatorRow(''));
             updateAllCalculations();
+            syncCalculatorToCalendar();
         });
     }
 
@@ -1088,6 +1121,7 @@ function initializeCalculator() {
                     tableBody.appendChild(createCalculatorRow(''));
                 }
                 updateAllCalculations();
+                syncCalculatorToCalendar();
             }
         });
     }
@@ -1150,8 +1184,7 @@ function initializeCalculator() {
             } else if (button.classList.contains('rename-btn')) {
                 isRenameMode = true;
                 renameId = id;
-                const savedData = JSON.parse(localStorage.getItem('savedCalculations') || '[]');
-                const currentItem = savedData.find(item => item.id === id);
+                const currentItem = savedCalculations.find(item => item.id === id);
                 if (currentItem) {
                     document.getElementById('modal-title').textContent = "Név szerkesztése";
                     saveConfirmBtn.textContent = "Átnevezés";
@@ -1168,6 +1201,49 @@ function initializeCalculator() {
     }
 }
 
+// Function to handle changes in the calculator table and sync to calendar
+function updateAndSyncCalendar() {
+    updateAllCalculations();
+    syncCalculatorToCalendar();
+}
+
+function syncCalculatorToCalendar() {
+    const now = new Date();
+    const currentDay = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+
+    const tableRows = document.querySelectorAll('#table-body tr');
+    const patientVisits = [];
+    tableRows.forEach(row => {
+        const patientSelect = row.querySelector('.patient-select');
+        const patientId = patientSelect.value;
+        const timeElement = row.querySelector('.ora-perc-total');
+        const timeRange = timeElement.textContent.trim();
+
+        if (patientId) {
+            const patient = patients.find(p => String(p.id) === String(patientId));
+            patientVisits.push({
+                name: patient ? patient.name : 'Ismeretlen Páciens',
+                date: now.toISOString(),
+                time: timeRange
+            });
+        }
+    });
+
+    // Remove any existing entries for today's date
+    savedCalendarData = savedCalendarData.filter(visit => {
+        const visitDate = new Date(visit.date);
+        const visitDay = `${visitDate.getFullYear()}-${String(visitDate.getMonth() + 1).padStart(2, '0')}-${String(visitDate.getDate()).padStart(2, '0')}`;
+        return visitDay !== currentDay;
+    });
+
+    // Add the new visits
+    savedCalendarData.push(...patientVisits);
+    localStorage.setItem('savedCalendarData', JSON.stringify(savedCalendarData));
+
+    // Refresh the calendar view
+    generateCalendar();
+}
+
 function createCalculatorRow(patientId = '', gond1 = '', gond2 = '', gondUtazas = '') {
     const newRow = document.createElement('tr');
 
@@ -1175,7 +1251,8 @@ function createCalculatorRow(patientId = '', gond1 = '', gond2 = '', gondUtazas 
     select.className = 'form-select patient-select';
 
     newRow.innerHTML = `
-        <td></td> <td>
+        <td></td>
+        <td>
             <input type="number" class="number-input gond1-input" value="${gond1}" min="0">
         </td>
         <td>
@@ -1189,13 +1266,6 @@ function createCalculatorRow(patientId = '', gond1 = '', gond2 = '', gondUtazas 
         </td>
     `;
     newRow.querySelector('td').appendChild(select);
-
-    const inputs = newRow.querySelectorAll('input');
-    inputs.forEach(input => {
-        input.addEventListener('input', updateAllCalculations);
-    });
-
-    select.addEventListener('change', updateAllCalculations);
 
     // Populate the select after the row is created
     updateCalculatorPatientSelects();
@@ -1257,37 +1327,41 @@ function getTableData() {
 }
 
 function saveCalculation(name) {
-    const savedData = JSON.parse(localStorage.getItem('savedCalculations') || '[]');
-    const now = new Date().toISOString();
-    const id = `calc-${Date.now()}`;
+    const now = new Date();
+    
+    // First, update the calendar data
+    syncCalculatorToCalendar();
+
+    // Then, save the calculation data
+    const calculationData = getTableData();
     const newCalculation = {
-        id: id,
+        id: `calc-${Date.now()}`,
         name: name,
-        created: now,
-        lastEdited: now,
-        data: getTableData()
+        created: now.toISOString(),
+        lastEdited: now.toISOString(),
+        data: calculationData
     };
 
-    savedData.push(newCalculation);
-    localStorage.setItem('savedCalculations', JSON.stringify(savedData));
+    savedCalculations.push(newCalculation);
+    localStorage.setItem('savedCalculations', JSON.stringify(savedCalculations));
+
     renderSavedCalculationsList();
 }
 
+
 function renameCalculation(id, newName) {
-    const savedData = JSON.parse(localStorage.getItem('savedCalculations') || '[]');
-    const itemToRename = savedData.find(item => item.id === id);
+    const itemToRename = savedCalculations.find(item => item.id === id);
 
     if (itemToRename) {
         itemToRename.name = newName;
         itemToRename.lastEdited = new Date().toISOString();
-        localStorage.setItem('savedCalculations', JSON.stringify(savedData));
+        localStorage.setItem('savedCalculations', JSON.stringify(savedCalculations));
         renderSavedCalculationsList();
     }
 }
 
 function loadCalculation(id) {
-    const savedData = JSON.parse(localStorage.getItem('savedCalculations') || '[]');
-    const itemToLoad = savedData.find(item => item.id === id);
+    const itemToLoad = savedCalculations.find(item => item.id === id);
     const tableBody = document.getElementById('table-body');
 
     if (itemToLoad && tableBody) {
@@ -1305,23 +1379,24 @@ function loadCalculation(id) {
         }
 
         const now = new Date().toISOString();
-        const itemIndex = savedData.findIndex(item => item.id === id);
+        const itemIndex = savedCalculations.findIndex(item => item.id === id);
         if (itemIndex > -1) {
-            savedData[itemIndex].lastEdited = now;
-            localStorage.setItem('savedCalculations', JSON.stringify(savedData));
+            savedCalculations[itemIndex].lastEdited = now;
+            localStorage.setItem('savedCalculations', JSON.stringify(savedCalculations));
         }
 
         updateAllCalculations();
+        syncCalculatorToCalendar();
         renderSavedCalculationsList();
     }
 }
 
 function deleteCalculation(id) {
     if (confirm('Biztosan törölni szeretné ezt a számítást?')) {
-        let savedData = JSON.parse(localStorage.getItem('savedCalculations') || '[]');
-        savedData = savedData.filter(item => item.id !== id);
-        localStorage.setItem('savedCalculations', JSON.stringify(savedData));
+        savedCalculations = savedCalculations.filter(item => item.id !== id);
+        localStorage.setItem('savedCalculations', JSON.stringify(savedCalculations));
         renderSavedCalculationsList();
+        syncCalculatorToCalendar();
     }
 }
 
@@ -1331,14 +1406,12 @@ function renderSavedCalculationsList() {
 
     savedList.innerHTML = '';
 
-    const savedData = JSON.parse(localStorage.getItem('savedCalculations') || '[]');
-
-    if (savedData.length === 0) {
+    if (savedCalculations.length === 0) {
         savedList.innerHTML = '<div class="empty-state">Nincsenek mentett számítások.</div>';
         return;
     }
 
-    savedData.forEach(item => {
+    savedCalculations.forEach(item => {
         const savedItemDiv = document.createElement('div');
         savedItemDiv.classList.add('saved-item');
         savedItemDiv.dataset.id = item.id;
