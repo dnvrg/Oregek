@@ -118,12 +118,16 @@ function showTab(tabId) {
     });
     document.getElementById(tabId).classList.add('active');
 
-    // Update active navigation
+    // Update active navigation with lilac highlighting
     document.querySelectorAll('.nav-item').forEach(item => {
         item.classList.remove('active');
     });
+    
+    // Find and activate the corresponding nav items
     document.querySelectorAll('.nav-item').forEach(item => {
-        if (item.onclick && item.onclick.toString().includes(tabId)) {
+        const itemText = item.querySelector('span').textContent;
+        const targetItem = navItems.find(nav => nav.id === tabId);
+        if (targetItem && itemText === targetItem.label) {
             item.classList.add('active');
         }
     });
@@ -548,7 +552,7 @@ function updateCalculatorPatientSelects() {
     });
 }
 
-// Calendar functionality
+// Enhanced Calendar functionality with mobile responsiveness
 function initializeCalendar() {
     const calendarMonth = document.getElementById('calendarMonth');
     const calendarYear = document.getElementById('calendarYear');
@@ -574,6 +578,12 @@ function generateCalendar() {
 
     if (isNaN(month) || isNaN(year)) return;
 
+    // Generate both desktop and mobile calendar views
+    generateDesktopCalendar(month, year);
+    generateMobileCalendar(month, year);
+}
+
+function generateDesktopCalendar(month, year) {
     const calendar = document.getElementById('calendarGrid');
     if (!calendar) return;
 
@@ -617,27 +627,132 @@ function generateCalendar() {
         dayElement.appendChild(dayNumber);
 
         // Load visits for this day from the saved calendar data
-        const visits = savedCalendarData.filter(visit => {
-            const visitDate = new Date(visit.date);
-            return visitDate.getFullYear() === currentDate.getFullYear() &&
-                   visitDate.getMonth() === currentDate.getMonth() &&
-                   visitDate.getDate() === currentDate.getDate();
-        });
+        const visits = getVisitsForDate(currentDate);
 
-        visits.forEach(visit => {
+        const visitsContainer = document.createElement('div');
+        visitsContainer.className = 'calendar-visits-container';
+
+        const maxVisibleVisits = 3;
+        const visibleVisits = visits.slice(0, maxVisibleVisits);
+        const hiddenVisitsCount = Math.max(0, visits.length - maxVisibleVisits);
+
+        visibleVisits.forEach(visit => {
             const visitElement = document.createElement('div');
             visitElement.className = 'calendar-visit';
-            visitElement.textContent = `${visit.name} (${visit.time})`; // Display name and time
+            visitElement.textContent = `${visit.name} (${visit.time})`;
             const patient = patients.find(p => p.name === visit.name);
             visitElement.style.backgroundColor = patient ? patient.color : '#8b5cf6';
             visitElement.title = `Látogatás: ${visit.name} (${visit.time})`;
-            dayElement.appendChild(visitElement);
+            visitsContainer.appendChild(visitElement);
         });
 
+        if (hiddenVisitsCount > 0) {
+            const overflowElement = document.createElement('div');
+            overflowElement.className = 'visits-overflow';
+            overflowElement.textContent = `+${hiddenVisitsCount}`;
+            dayElement.appendChild(overflowElement);
+            dayElement.classList.add('has-overflow');
+        }
+
+        dayElement.appendChild(visitsContainer);
         calendar.appendChild(dayElement);
     }
 }
 
+function generateMobileCalendar(month, year) {
+    const mobileView = document.createElement('div');
+    mobileView.className = 'calendar-mobile-view';
+    mobileView.innerHTML = '<div class="calendar-mobile-list"></div>';
+
+    // Insert mobile view into calendar content
+    const calendarGrid = document.getElementById('calendarGrid');
+    if (calendarGrid && calendarGrid.parentNode) {
+        let existingMobileView = calendarGrid.parentNode.querySelector('.calendar-mobile-view');
+        if (existingMobileView) {
+            existingMobileView.remove();
+        }
+        calendarGrid.parentNode.insertBefore(mobileView, calendarGrid.nextSibling);
+    }
+
+    const mobileList = mobileView.querySelector('.calendar-mobile-list');
+    
+    // Generate days for the current month
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    const dayNames = ['Vasárnap', 'Hétfő', 'Kedd', 'Szerda', 'Csütörtök', 'Péntek', 'Szombat'];
+    
+    for (let day = 1; day <= daysInMonth; day++) {
+        const currentDate = new Date(year, month, day);
+        const visits = getVisitsForDate(currentDate);
+        
+        // Show all days in mobile view, not just days with visits
+        const mobileDay = document.createElement('div');
+        mobileDay.className = 'calendar-mobile-day';
+        
+        const today = new Date();
+        if (currentDate.toDateString() === today.toDateString()) {
+            mobileDay.classList.add('today');
+        }
+        
+        const header = document.createElement('div');
+        header.className = 'calendar-mobile-day-header';
+        
+        const dayName = document.createElement('div');
+        dayName.className = 'calendar-mobile-day-name';
+        dayName.textContent = dayNames[currentDate.getDay()];
+        
+        const dayNumber = document.createElement('div');
+        dayNumber.className = 'calendar-mobile-day-number';
+        dayNumber.textContent = `${month + 1}/${day}`;
+        
+        header.appendChild(dayName);
+        header.appendChild(dayNumber);
+        mobileDay.appendChild(header);
+        
+        const visitsContainer = document.createElement('div');
+        visitsContainer.className = 'calendar-mobile-visits';
+        
+        if (visits.length > 0) {
+            visits.forEach(visit => {
+                const visitElement = document.createElement('div');
+                visitElement.className = 'calendar-mobile-visit';
+                
+                const patient = patients.find(p => p.name === visit.name);
+                if (patient) {
+                    visitElement.style.borderLeftColor = patient.color;
+                }
+                
+                const timeElement = document.createElement('div');
+                timeElement.className = 'calendar-mobile-visit-time';
+                timeElement.textContent = visit.time;
+                
+                const nameElement = document.createElement('div');
+                nameElement.className = 'calendar-mobile-visit-name';
+                nameElement.textContent = visit.name;
+                
+                visitElement.appendChild(timeElement);
+                visitElement.appendChild(nameElement);
+                visitsContainer.appendChild(visitElement);
+            });
+        } else {
+            const noVisits = document.createElement('div');
+            noVisits.className = 'calendar-mobile-no-visits';
+            noVisits.textContent = 'Nincs látogatás';
+            visitsContainer.appendChild(noVisits);
+        }
+        
+        mobileDay.appendChild(visitsContainer);
+        mobileList.appendChild(mobileDay);
+    }
+}
+
+function getVisitsForDate(date) {
+    return savedCalendarData.filter(visit => {
+        const visitDate = new Date(visit.date);
+        return visitDate.getFullYear() === date.getFullYear() &&
+               visitDate.getMonth() === date.getMonth() &&
+               visitDate.getDate() === date.getDate();
+    });
+}
 
 // Shopping list functionality
 function handleShoppingSubmit(e) {
@@ -668,60 +783,39 @@ function renderShoppingList(searchQuery = '') {
         (patients.find(p => p.id === item.patientId)?.name.toLowerCase().includes(query))
     );
 
-    const groupedItems = filteredItems.reduce((acc, item) => {
-        const patient = patients.find(p => p.id === item.patientId);
-        const patientName = patient ? patient.name : 'Általános';
-        const patientColor = patient ? patient.color : '#8b5cf6';
-        const patientId = patient ? patient.id : 'general';
-
-        if (!acc[patientId]) {
-            acc[patientId] = {
-                name: patientName,
-                color: patientColor,
-                items: []
-            };
-        }
-        acc[patientId].items.push(item);
-        return acc;
-    }, {});
-
-    const sortedGroups = Object.keys(groupedItems).sort((a, b) => {
-        if (a === 'general') return -1;
-        if (b === 'general') return 1;
-        return groupedItems[a].name.localeCompare(groupedItems[b].name, 'hu');
-    });
-
-    if (sortedGroups.length === 0) {
+    if (filteredItems.length === 0) {
         container.innerHTML = '<div class="empty-state">Nincsenek tételek a keresési feltételeknek megfelelően.</div>';
         return;
     }
 
-    sortedGroups.forEach(patientId => {
-        const group = groupedItems[patientId];
-        const groupElement = document.createElement('div');
-        groupElement.className = 'patient-group';
+    const gridContainer = document.createElement('div');
+    gridContainer.className = 'card-grid';
 
-        const heading = document.createElement('h3');
-        heading.textContent = group.name;
-        heading.style.color = group.color;
-        heading.style.borderLeftColor = group.color;
-        groupElement.appendChild(heading);
+    filteredItems.forEach(item => {
+        const patient = patients.find(p => p.id === item.patientId);
+        const patientName = patient ? patient.name : 'Általános';
+        const patientColor = patient ? patient.color : '#8b5cf6';
 
-        group.items.forEach(item => {
-            const itemElement = document.createElement('div');
-            itemElement.className = 'shopping-item';
-            itemElement.innerHTML = `
-                <div class="shopping-item-content">
-                    <div class="shopping-item-title">${item.item}</div>
+        const card = document.createElement('div');
+        card.className = 'card';
+        card.style.borderLeftColor = patientColor;
+        card.innerHTML = `
+            <div class="card-header">
+                <div class="card-title">${item.item}</div>
+                <div class="card-actions">
+                    <button class="icon-btn btn-danger" onclick="deleteShoppingItem(${item.id})">
+                        <i class="fas fa-trash"></i>
+                    </button>
                 </div>
-                <div class="shopping-item-actions">
-                    <button class="btn btn-danger" onclick="deleteShoppingItem(${item.id})">Eltávolítás</button>
-                </div>
-            `;
-            groupElement.appendChild(itemElement);
-        });
-        container.appendChild(groupElement);
+            </div>
+            <div>
+                <p class="text-sm text-gray-600">Páciens: ${patientName}</p>
+            </div>
+        `;
+        gridContainer.appendChild(card);
     });
+
+    container.appendChild(gridContainer);
 }
 
 function deleteShoppingItem(id) {
@@ -793,66 +887,47 @@ function renderDocuments(searchQuery = '') {
         (patients.find(p => p.id === doc.patientId)?.name.toLowerCase().includes(query))
     );
 
-    const groupedDocs = filteredDocs.reduce((acc, doc) => {
-        const patient = patients.find(p => p.id === doc.patientId);
-        const patientName = patient ? patient.name : 'Ismeretlen páciens';
-        const patientColor = patient ? patient.color : '#8b5cf6';
-        const patientId = patient ? patient.id : 'unknown';
-
-        if (!acc[patientId]) {
-            acc[patientId] = {
-                name: patientName,
-                color: patientColor,
-                docs: []
-            };
-        }
-        acc[patientId].docs.push(doc);
-        return acc;
-    }, {});
-
-    const sortedGroups = Object.keys(groupedDocs).sort((a, b) => {
-        if (a === 'unknown') return -1;
-        if (b === 'unknown') return 1;
-        return groupedDocs[a].name.localeCompare(groupedDocs[b].name, 'hu');
-    });
-
-    if (sortedGroups.length === 0) {
+    if (filteredDocs.length === 0) {
         container.innerHTML = '<div class="empty-state">Nincsenek dokumentumok a keresési feltételeknek megfelelően.</div>';
         return;
     }
 
-    sortedGroups.forEach(patientId => {
-        const group = groupedDocs[patientId];
-        const groupElement = document.createElement('div');
-        groupElement.className = 'patient-group';
+    const gridContainer = document.createElement('div');
+    gridContainer.className = 'card-grid';
 
-        const heading = document.createElement('h3');
-        heading.textContent = group.name;
-        heading.style.color = group.color;
-        heading.style.borderLeftColor = group.color;
-        groupElement.appendChild(heading);
+    filteredDocs.forEach(doc => {
+        const patient = patients.find(p => p.id === doc.patientId);
+        const patientName = patient ? patient.name : 'Ismeretlen páciens';
+        const patientColor = patient ? patient.color : '#8b5cf6';
+        const fileSize = doc.size ? formatFileSize(doc.size) : 'Ismeretlen méret';
 
-        group.docs.forEach(doc => {
-            const fileSize = doc.size ? formatFileSize(doc.size) : 'Ismeretlen méret';
-            const docElement = document.createElement('div');
-            docElement.className = 'document-item';
-            docElement.innerHTML = `
-                <div class="document-item-content">
-                    <div class="document-item-title">${doc.name}</div>
-                    <div class="document-item-meta">
-                        Méret: ${fileSize} | Feltöltve: ${doc.uploadDate}
-                    </div>
+        const card = document.createElement('div');
+        card.className = 'card';
+        card.style.borderLeftColor = patientColor;
+        card.innerHTML = `
+            <div class="card-header">
+                <div class="card-title">${doc.name}</div>
+                <div class="card-actions">
+                    <button class="icon-btn" onclick="viewDocument(${doc.id})" title="Megtekintés">
+                        <i class="fas fa-eye"></i>
+                    </button>
+                    <button class="icon-btn" onclick="downloadDocument(${doc.id})" title="Letöltés">
+                        <i class="fas fa-download"></i>
+                    </button>
+                    <button class="icon-btn btn-danger" onclick="deleteDocument(${doc.id})" title="Törlés">
+                        <i class="fas fa-trash"></i>
+                    </button>
                 </div>
-                <div class="document-item-actions">
-                    <button class="btn btn-primary" onclick="viewDocument(${doc.id})">Megtekintés</button>
-                    <button class="btn btn-secondary" onclick="downloadDocument(${doc.id})">Letöltés</button>
-                    <button class="btn btn-danger" onclick="deleteDocument(${doc.id})">Törlés</button>
-                </div>
-            `;
-            groupElement.appendChild(docElement);
-        });
-        container.appendChild(groupElement);
+            </div>
+            <div>
+                <p class="text-sm text-gray-600">Páciens: ${patientName}</p>
+                <p class="text-xs text-gray-500">Méret: ${fileSize} | Feltöltve: ${doc.uploadDate}</p>
+            </div>
+        `;
+        gridContainer.appendChild(card);
     });
+
+    container.appendChild(gridContainer);
 }
 
 function formatFileSize(bytes) {
@@ -932,63 +1007,41 @@ function renderNotes(searchQuery = '') {
         (patients.find(p => p.id === note.patientId)?.name.toLowerCase().includes(query))
     );
 
-    const groupedNotes = filteredNotes.reduce((acc, note) => {
-        const patient = patients.find(p => p.id === note.patientId);
-        const patientName = patient ? patient.name : 'Általános';
-        const patientColor = patient ? patient.color : '#8b5cf6';
-        const patientId = patient ? patient.id : 'general';
-
-        if (!acc[patientId]) {
-            acc[patientId] = {
-                name: patientName,
-                color: patientColor,
-                notes: []
-            };
-        }
-        acc[patientId].notes.push(note);
-        return acc;
-    }, {});
-
-    const sortedGroups = Object.keys(groupedNotes).sort((a, b) => {
-        if (a === 'general') return -1;
-        if (b === 'general') return 1;
-        return groupedNotes[a].name.localeCompare(groupedNotes[b].name, 'hu');
-    });
-
-    if (sortedGroups.length === 0) {
+    if (filteredNotes.length === 0) {
         container.innerHTML = '<div class="empty-state">Nincsenek jegyzetek a keresési feltételeknek megfelelően.</div>';
         return;
     }
 
-    sortedGroups.forEach(patientId => {
-        const group = groupedNotes[patientId];
-        const groupElement = document.createElement('div');
-        groupElement.className = 'patient-group';
+    const gridContainer = document.createElement('div');
+    gridContainer.className = 'card-grid';
 
-        const heading = document.createElement('h3');
-        heading.textContent = group.name;
-        heading.style.color = group.color;
-        heading.style.borderLeftColor = group.color;
-        groupElement.appendChild(heading);
+    filteredNotes.forEach(note => {
+        const patient = patients.find(p => p.id === note.patientId);
+        const patientName = patient ? patient.name : 'Általános';
+        const patientColor = patient ? patient.color : '#8b5cf6';
 
-        const sortedGroupNotes = group.notes.sort((a, b) => new Date(b.date) - new Date(a.date));
-
-        sortedGroupNotes.forEach(note => {
-            const noteElement = document.createElement('div');
-            noteElement.className = 'note-item';
-            noteElement.innerHTML = `
-                <div class="note-header">
-                    <span class="note-date">${note.date}</span>
-                    <button class="btn btn-danger" onclick="deleteNote(${note.id})" style="padding: 0.25rem 0.5rem; font-size: 0.75rem;">
-                        Törlés
+        const card = document.createElement('div');
+        card.className = 'card';
+        card.style.borderLeftColor = patientColor;
+        card.innerHTML = `
+            <div class="card-header">
+                <div class="card-title">Jegyzet</div>
+                <div class="card-actions">
+                    <button class="icon-btn btn-danger" onclick="deleteNote(${note.id})" title="Törlés">
+                        <i class="fas fa-trash"></i>
                     </button>
                 </div>
-                <div class="note-content">${note.content}</div>
-            `;
-            groupElement.appendChild(noteElement);
-        });
-        container.appendChild(groupElement);
+            </div>
+            <div>
+                <p class="text-sm text-gray-600">Páciens: ${patientName}</p>
+                <p class="text-xs text-gray-500">Dátum: ${note.date}</p>
+                <p class="mt-2 text-gray-700">${note.content}</p>
+            </div>
+        `;
+        gridContainer.appendChild(card);
     });
+
+    container.appendChild(gridContainer);
 }
 
 function deleteNote(id) {
@@ -1080,7 +1133,7 @@ function handleFileUpload(event) {
     reader.readAsText(file);
 }
 
-// Calculator functionality
+// Enhanced Calculator functionality with daily restriction
 function initializeCalculator() {
     const tableBody = document.getElementById('table-body');
     const addRowBtn = document.getElementById('add-row-btn');
@@ -1150,7 +1203,7 @@ function initializeCalculator() {
                 if (isRenameMode) {
                     renameCalculation(renameId, name);
                 } else {
-                    saveCalculation(name);
+                    saveCalculationWithDailyRestriction(name);
                 }
                 saveModal.classList.remove('show');
                 saveNameInput.value = '';
@@ -1263,7 +1316,7 @@ function createCalculatorRow(patientId = '', gond1 = '', gond2 = '', gondUtazas 
         </td>
         <td>
             <div class="ora-perc-total">00:00 - 00:00</div>
-        </td>
+            </td>
     `;
     newRow.querySelector('td').appendChild(select);
 
@@ -1276,7 +1329,6 @@ function createCalculatorRow(patientId = '', gond1 = '', gond2 = '', gondUtazas 
 
     return newRow;
 }
-
 
 function updateAllCalculations() {
     const tableRows = document.querySelectorAll('#table-body tr');
@@ -1326,13 +1378,22 @@ function getTableData() {
     return rows;
 }
 
-function saveCalculation(name) {
+// Enhanced save function with daily restriction
+function saveCalculationWithDailyRestriction(name) {
     const now = new Date();
+    const todayString = now.toISOString().split('T')[0]; // Get YYYY-MM-DD format
     
     // First, update the calendar data
     syncCalculatorToCalendar();
 
-    // Then, save the calculation data
+    // Remove any existing calculation for today
+    savedCalculations = savedCalculations.filter(calc => {
+        const calcDate = new Date(calc.created);
+        const calcDateString = calcDate.toISOString().split('T')[0];
+        return calcDateString !== todayString;
+    });
+
+    // Then, save the new calculation data
     const calculationData = getTableData();
     const newCalculation = {
         id: `calc-${Date.now()}`,
@@ -1346,8 +1407,10 @@ function saveCalculation(name) {
     localStorage.setItem('savedCalculations', JSON.stringify(savedCalculations));
 
     renderSavedCalculationsList();
+    
+    // Show message about daily restriction
+    alert('Számítás mentve! Megjegyzés: Naponta csak egy számítás menthető, a korábbi mai számítás felülírva.');
 }
-
 
 function renameCalculation(id, newName) {
     const itemToRename = savedCalculations.find(item => item.id === id);
@@ -1411,14 +1474,21 @@ function renderSavedCalculationsList() {
         return;
     }
 
-    savedCalculations.forEach(item => {
+    // Sort calculations by creation date (newest first)
+    const sortedCalculations = [...savedCalculations].sort((a, b) => new Date(b.created) - new Date(a.created));
+
+    sortedCalculations.forEach(item => {
         const savedItemDiv = document.createElement('div');
         savedItemDiv.classList.add('saved-item');
         savedItemDiv.dataset.id = item.id;
 
+        const createdDate = new Date(item.created);
+        const isToday = createdDate.toDateString() === new Date().toDateString();
+        const dayIndicator = isToday ? ' (Ma)' : '';
+
         savedItemDiv.innerHTML = `
             <div class="saved-item-info">
-                <h4>${item.name}</h4>
+                <h4>${item.name}${dayIndicator}</h4>
                 <p>Mentve: ${new Date(item.created).toLocaleString()}</p>
                 <p>Utoljára szerkesztve: ${new Date(item.lastEdited).toLocaleString()}</p>
             </div>
@@ -1428,6 +1498,13 @@ function renderSavedCalculationsList() {
                 <button class="btn btn-danger delete-btn">Törlés</button>
             </div>
         `;
+
+        // Highlight today's entry with lilac styling
+        if (isToday) {
+            savedItemDiv.style.background = 'linear-gradient(135deg, #f3f0ff 0%, #e9e5ff 100%)';
+            savedItemDiv.style.border = '1px solid #d4c7ff';
+        }
+
         savedList.appendChild(savedItemDiv);
     });
 }
@@ -1457,7 +1534,12 @@ function exportToCsv() {
     const blob = new Blob(["\ufeff" + csvContent], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
     link.href = URL.createObjectURL(blob);
-    link.download = 'Kiszamolo.csv';
+    
+    // Add date to filename
+    const now = new Date();
+    const dateString = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+    link.download = `Kiszamolo_${dateString}.csv`;
+    
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
