@@ -73,6 +73,12 @@ document.addEventListener('DOMContentLoaded', function() {
     // Initialize calculator
     initializeCalculator();
 
+    // --- FIX START ---
+    // On page load, explicitly sync calendar data for today to ensure it's always visible
+    const today = new Date().toISOString();
+    syncCalculatorToCalendar(today);
+    // --- FIX END ---
+
     console.log('Application initialized successfully');
 });
 
