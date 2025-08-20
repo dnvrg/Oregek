@@ -969,7 +969,7 @@ function renderDocuments(searchQuery = '') {
     }
 
     const gridContainer = document.createElement('div');
-    gridContainer.className = 'card-grid';
+        gridContainer.className = 'card-grid';
 
     filteredDocs.forEach(doc => {
         const patient = patients.find(p => p.id === doc.patientId);
@@ -1294,29 +1294,32 @@ function initializeCalculator() {
 
     if (savedList) {
         savedList.addEventListener('click', (e) => {
-            const button = e.target.closest('button');
-            if (!button) return;
-
-            const parentDiv = button.closest('[data-id]');
+            // Find the closest parent with a data-id, which will be the saved-item div
+            const parentDiv = e.target.closest('[data-id]');
             if (!parentDiv) return;
 
             const id = parentDiv.dataset.id;
+            const button = e.target.closest('button');
 
-            if (button.classList.contains('load-btn')) {
-                loadCalculation(id);
-            } else if (button.classList.contains('delete-btn')) {
-                deleteCalculation(id);
-            } else if (button.classList.contains('rename-btn')) {
-                isRenameMode = true;
-                renameId = id;
-                const currentItem = savedCalculations.find(item => item.id === id);
-                if (currentItem) {
-                    document.getElementById('modal-title').textContent = "Név szerkesztése";
-                    saveConfirmBtn.textContent = "Átnevezés";
-                    saveNameInput.value = currentItem.name;
-                    saveModal.classList.add('show');
-                    saveNameInput.focus();
+            // If a button was clicked, handle it as before
+            if (button) {
+                if (button.classList.contains('delete-btn')) {
+                    deleteCalculation(id);
+                } else if (button.classList.contains('rename-btn')) {
+                    isRenameMode = true;
+                    renameId = id;
+                    const currentItem = savedCalculations.find(item => item.id === id);
+                    if (currentItem) {
+                        document.getElementById('modal-title').textContent = "Név szerkesztése";
+                        saveConfirmBtn.textContent = "Átnevezés";
+                        saveNameInput.value = currentItem.name;
+                        saveModal.classList.add('show');
+                        saveNameInput.focus();
+                    }
                 }
+            } else {
+                // If a button was NOT clicked, and a valid parent was found, load the calculation
+                loadCalculation(id);
             }
         });
     }
@@ -1585,7 +1588,6 @@ function renderSavedCalculationsList() {
                 <p>Utoljára szerkesztve: ${new Date(item.lastEdited).toLocaleString()}</p>
             </div>
             <div class="saved-item-actions">
-                <button class="btn btn-primary load-btn">Betöltés</button>
                 <button class="btn btn-secondary rename-btn">Átnevez</button>
                 <button class="btn btn-danger delete-btn">Törlés</button>
             </div>
