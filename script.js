@@ -1648,7 +1648,7 @@ function renameCalculation(id, newName) {
     const itemToRename = savedCalculations.find(item => item.id === id);
 
     if (itemToRename) {
-        itemToRename.name = newName;
+    itemToRename.name = newName;
         itemToRename.lastEdited = new Date().toISOString();
         localStorage.setItem('savedCalculations', JSON.stringify(savedCalculations));
         renderSavedCalculationsList();
@@ -1831,66 +1831,24 @@ async function analyzeImageWithGemini(imageData, patientId) {
     // Convert data URL to base64 string
     const base64ImageData = imageData.split(',')[1];
 
-    const prompt = 'Please identify the items on this handwritten shopping list and respond with a comma-separated list of the items, in Hungarian. Example: tej,kenyér,tojás. Do not include any other text.';
+    try {
+        const analyzeShoppingList = firebase.functions().httpsCallable('analyzeShoppingList');
+        const result = await analyzeShoppingList({ image: base64ImageData });
 
-    let retryCount = 0;
-    const maxRetries = 3;
-    const baseDelay = 1000;
-
-    async function callApiWithRetry() {
-        try {
-            const payload = {
-                contents: [{
-                    parts: [{ text: prompt }, {
-                        inlineData: {
-                            mimeType: "image/png",
-                            data: base64ImageData
-                        }
-                    }]
-                }],
-            };
-
-            const apiKey = "";
-            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
-
-            const response = await fetch(apiUrl, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
-            });
-
-            if (!response.ok) {
-                if (response.status === 429 && retryCount < maxRetries) {
-                    const delay = baseDelay * Math.pow(2, retryCount) + Math.random() * 1000;
-                    retryCount++;
-                    console.warn(`API rate limit exceeded, retrying in ${delay}ms...`);
-                    await new Promise(res => setTimeout(res, delay));
-                    return await callApiWithRetry();
-                }
-                throw new Error(`API call failed with status: ${response.status}`);
-            }
-
-            const result = await response.json();
-
-            if (result.candidates && result.candidates.length > 0 &&
-                result.candidates[0].content && result.candidates[0].content.parts &&
-                result.candidates[0].content.parts.length > 0) {
-                const text = result.candidates[0].content.parts[0].text;
-                const items = text.split(',').map(item => item.trim());
-                addItemsToShoppingList(items, patientId);
-            } else {
-                throw new Error('Unexpected API response format');
-            }
-        } catch (error) {
-            console.error('Hiba az elemzés során:', error);
-            alert('Hiba történt az elemzés során. Kérjük, próbálja meg újra.');
-        } finally {
-            loadingIndicator.classList.add('hidden');
-            document.getElementById('analyzeBtn').disabled = false;
+        if (result.data && result.data.text) {
+            const text = result.data.text;
+            const items = text.split(',').map(item => item.trim());
+            addItemsToShoppingList(items, patientId);
+        } else {
+            throw new Error('Unexpected function response format');
         }
+    } catch (error) {
+        console.error('Hiba az elemzés során:', error);
+        alert('Hiba történt az elemzés során. Kérjük, próbálja meg újra.');
+    } finally {
+        loadingIndicator.classList.add('hidden');
+        document.getElementById('analyzeBtn').disabled = false;
     }
-
-    callApiWithRetry();
 }
 
 function addItemsToShoppingList(items, patientId) {
