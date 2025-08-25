@@ -1,0 +1,14 @@
+{
+  "name": "api",
+  "version": "1.0.0",
+  "description": "Serverless function for Gemini API proxy",
+  "main": "gemini-proxy.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "@google/generative-ai": "^0.8.0"
+  },
+  "author": "",
+  "license": "ISC"
+}
