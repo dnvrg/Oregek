@@ -282,6 +282,14 @@ body {
     text-align: center;
 }
 
+.btn-delete-all {
+    color: var(--danger-500);
+}
+
+.btn-delete-all:hover {
+    background: var(--danger-50);
+}
+
 /* Main Content */
 .main-content {
     flex: 1;
@@ -1148,12 +1156,26 @@ body {
 }
 
 .color-picker {
-    width: 3rem;
+    width: 2.5rem;
     height: 2.5rem;
-    border-radius: var(--radius-lg);
+    border-radius: 50%;
     border: 1px solid var(--gray-300);
     cursor: pointer;
     padding: 0;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    outline: none;
+}
+
+.color-picker::-webkit-color-swatch {
+    border: none;
+    border-radius: 50%;
+}
+
+.color-picker::-moz-color-swatch {
+    border: none;
+    border-radius: 50%;
 }
 
 .color-picker-container span {
