@@ -23,6 +23,7 @@ let renameId = null;
 
 // New global variable to track the date of the loaded calculation
 let currentCalculationDate = null;
+let cameraStream = null;
 
 // Initialize app
 document.addEventListener('DOMContentLoaded', function() {
@@ -230,6 +231,16 @@ function initializeModals() {
             }
         });
     }
+
+    // Camera Modal
+    const cameraModal = document.getElementById('cameraModal');
+    if (cameraModal) {
+        cameraModal.addEventListener('click', (e) => {
+            if (e.target === cameraModal) {
+                stopCamera();
+            }
+        });
+    }
 }
 
 function openMobileMenu() {
@@ -375,6 +386,62 @@ function initializeEventListeners() {
                 deletePatient(patientToEdit.id);
             }
         });
+    }
+
+    // Gemini API features for shopping list
+    const uploadImageFile = document.getElementById('uploadImageFile');
+    const uploadImageBtn = document.getElementById('uploadImageBtn');
+    const openCameraBtn = document.getElementById('openCameraBtn');
+    const analyzeBtn = document.getElementById('analyzeBtn');
+
+    if (uploadImageBtn) {
+        uploadImageBtn.addEventListener('click', () => {
+            uploadImageFile.click();
+        });
+    }
+
+    if (uploadImageFile) {
+        uploadImageFile.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    const imageData = event.target.result;
+                    const imagePreview = document.getElementById('imagePreview');
+                    imagePreview.src = imageData;
+                    imagePreview.classList.remove('hidden');
+                    analyzeBtn.classList.remove('hidden');
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+    }
+
+    if (openCameraBtn) {
+        openCameraBtn.addEventListener('click', startCamera);
+    }
+
+    if (analyzeBtn) {
+        analyzeBtn.addEventListener('click', () => {
+            const imagePreview = document.getElementById('imagePreview');
+            const patientSelect = document.getElementById('geminiPatientSelect');
+            const patientId = patientSelect.value;
+            if (imagePreview.src && patientId) {
+                analyzeImageWithGemini(imagePreview.src, patientId);
+            } else {
+                alert('Kérjük, válasszon ki egy képet és egy pácienst.');
+            }
+        });
+    }
+
+    // Camera modal buttons
+    const takePhotoBtn = document.getElementById('takePhotoBtn');
+    const cancelPhotoBtn = document.getElementById('cancelPhotoBtn');
+    if (takePhotoBtn) {
+        takePhotoBtn.addEventListener('click', capturePhoto);
+    }
+    if (cancelPhotoBtn) {
+        cancelPhotoBtn.addEventListener('click', stopCamera);
     }
 }
 
@@ -618,7 +685,7 @@ function clearPatientForm() {
 }
 
 function updatePatientSelects() {
-    const selects = ['shoppingPatient', 'documentPatient', 'notePatient'];
+    const selects = ['shoppingPatient', 'documentPatient', 'notePatient', 'geminiPatientSelect'];
 
     selects.forEach(selectId => {
         const select = document.getElementById(selectId);
@@ -1699,4 +1766,149 @@ function exportToCsv() {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+}
+
+// Camera and Gemini API integration
+async function startCamera() {
+    const cameraModal = document.getElementById('cameraModal');
+    const video = document.getElementById('cameraFeed');
+    const message = document.getElementById('cameraMessage');
+    const takePhotoBtn = document.getElementById('takePhotoBtn');
+
+    try {
+        const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+        video.srcObject = stream;
+        cameraStream = stream;
+        cameraModal.style.display = 'flex';
+        video.classList.remove('hidden');
+        takePhotoBtn.classList.remove('hidden');
+        message.classList.add('hidden');
+    } catch (err) {
+        console.error("Hiba a kamera elérésekor:", err);
+        message.classList.remove('hidden');
+        video.classList.add('hidden');
+        takePhotoBtn.classList.add('hidden');
+        cameraModal.style.display = 'flex';
+    }
+}
+
+function stopCamera() {
+    const cameraModal = document.getElementById('cameraModal');
+    if (cameraStream) {
+        cameraStream.getTracks().forEach(track => track.stop());
+        cameraStream = null;
+    }
+    cameraModal.style.display = 'none';
+}
+
+function capturePhoto() {
+    const video = document.getElementById('cameraFeed');
+    const imagePreview = document.getElementById('imagePreview');
+    const analyzeBtn = document.getElementById('analyzeBtn');
+
+    const canvas = document.createElement('canvas');
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    const ctx = canvas.getContext('2d');
+    
+    // Draw the image mirrored as the video feed is
+    ctx.translate(canvas.width, 0);
+    ctx.scale(-1, 1);
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+    
+    const imageData = canvas.toDataURL('image/png');
+    imagePreview.src = imageData;
+    imagePreview.classList.remove('hidden');
+    analyzeBtn.classList.remove('hidden');
+    stopCamera();
+}
+
+async function analyzeImageWithGemini(imageData, patientId) {
+    const loadingIndicator = document.getElementById('loadingIndicator');
+    loadingIndicator.classList.remove('hidden');
+    document.getElementById('analyzeBtn').disabled = true;
+
+    // Convert data URL to base64 string
+    const base64ImageData = imageData.split(',')[1];
+
+    const prompt = 'Please identify the items on this handwritten shopping list and respond with a comma-separated list of the items, in Hungarian. Example: tej,kenyér,tojás. Do not include any other text.';
+
+    let retryCount = 0;
+    const maxRetries = 3;
+    const baseDelay = 1000;
+
+    async function callApiWithRetry() {
+        try {
+            const payload = {
+                contents: [{
+                    parts: [{ text: prompt }, {
+                        inlineData: {
+                            mimeType: "image/png",
+                            data: base64ImageData
+                        }
+                    }]
+                }],
+            };
+
+            const apiKey = "";
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
+
+            const response = await fetch(apiUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            if (!response.ok) {
+                if (response.status === 429 && retryCount < maxRetries) {
+                    const delay = baseDelay * Math.pow(2, retryCount) + Math.random() * 1000;
+                    retryCount++;
+                    console.warn(`API rate limit exceeded, retrying in ${delay}ms...`);
+                    await new Promise(res => setTimeout(res, delay));
+                    return await callApiWithRetry();
+                }
+                throw new Error(`API call failed with status: ${response.status}`);
+            }
+
+            const result = await response.json();
+
+            if (result.candidates && result.candidates.length > 0 &&
+                result.candidates[0].content && result.candidates[0].content.parts &&
+                result.candidates[0].content.parts.length > 0) {
+                const text = result.candidates[0].content.parts[0].text;
+                const items = text.split(',').map(item => item.trim());
+                addItemsToShoppingList(items, patientId);
+            } else {
+                throw new Error('Unexpected API response format');
+            }
+        } catch (error) {
+            console.error('Hiba az elemzés során:', error);
+            alert('Hiba történt az elemzés során. Kérjük, próbálja meg újra.');
+        } finally {
+            loadingIndicator.classList.add('hidden');
+            document.getElementById('analyzeBtn').disabled = false;
+        }
+    }
+
+    callApiWithRetry();
+}
+
+function addItemsToShoppingList(items, patientId) {
+    if (!items || items.length === 0) return;
+
+    items.forEach(item => {
+        if (item) {
+            const newItem = {
+                id: Date.now() + Math.random(), // Add random for unique IDs
+                item: item,
+                patientId: parseInt(patientId),
+                completed: false
+            };
+            shoppingItems.push(newItem);
+        }
+    });
+
+    localStorage.setItem('shoppingItems', JSON.stringify(shoppingItems));
+    renderShoppingList();
+    alert('A tételek sikeresen hozzáadva a bevásárlólistához!');
 }
