@@ -15,8 +15,9 @@ module.exports = async (req, res) => {
     }
 
     try {
+        // A helyes modellnév használata a "gemini-pro-vision" helyett
         const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
-        const model = genAI.getGenerativeModel({ model: "gemini-pro-vision" });
+        const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash-preview-05-20" });
 
         const imagePart = {
             inlineData: {
