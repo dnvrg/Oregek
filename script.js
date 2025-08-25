@@ -1410,7 +1410,7 @@ function initializeCalculator() {
             const saveDate = currentCalculationDate ? new Date(currentCalculationDate) : new Date();
             const dayNames = ['Vasárnap', 'Hétfő', 'Kedd', 'Szerda', 'Csütörtök', 'Péntek', 'Szombat'];
             const dayName = dayNames[saveDate.getDay()];
-            const formattedDate = `${dayName}__${saveDate.getFullYear()}-${String(saveDate.getMonth() + 1).padStart(2, '0')}-${String(saveDate.getDate()).padStart(2, '0')}__${String(saveDate.getHours()).padStart(2, '0')}:${String(saveDate.getMinutes()).padStart(2, '0')}`;
+            const formattedDate = `${saveDate.getFullYear()}-${String(saveDate.getMonth() + 1).padStart(2, '0')}-${String(saveDate.getDate()).padStart(2, '0')}`;
             saveNameInput.value = formattedDate;
 
             saveModal.classList.add('show');
