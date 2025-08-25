@@ -399,6 +399,9 @@ function handlePatientSubmit(e) {
         id: patientToEdit ? patientToEdit.id : Date.now(),
         name: nameInput.value.trim(),
         phone: phoneInput.value.trim(),
+        birthdate: document.getElementById('birthdate').value.trim(),
+        birthplace: document.getElementById('birthplace').value.trim(),
+        mothersName: document.getElementById('mothersName').value.trim(),
         address: document.getElementById('address').value.trim(),
         intercom: document.getElementById('intercom').value.trim(),
         taj: document.getElementById('taj').value.trim(),
@@ -465,6 +468,9 @@ function renderPatients(searchQuery = '') {
             ? `<a href="tel:${patient.emergencyPhone}">${patient.emergencyPhone}</a>`
             : 'Nincs megadva';
 
+        // Format birth date
+        const formattedBirthdate = patient.birthdate ? patient.birthdate.split('-').join('/') : 'Nincs megadva';
+
         card.innerHTML = `
             <div class="patient-card-header">
                 <div class="patient-name">${patient.name}</div>
@@ -476,16 +482,28 @@ function renderPatients(searchQuery = '') {
             </div>
             <div class="patient-info">
                 <div class="patient-info-item">
-                    <span class="patient-info-label">Telefonszám:</span>
-                    <span class="patient-info-value">${patient.phone}</span>
-                </div>
-                <div class="patient-info-item">
                     <span class="patient-info-label">Cím:</span>
                     <span class="patient-info-value">${patient.address || 'Nincs megadva'}</span>
                 </div>
                 <div class="patient-info-item">
                     <span class="patient-info-label">Kapukód:</span>
                     <span class="patient-info-value">${patient.intercom || 'Nincs megadva'}</span>
+                </div>
+                <div class="patient-info-item">
+                    <span class="patient-info-label">Születési hely:</span>
+                    <span class="patient-info-value">${patient.birthplace || 'Nincs megadva'}</span>
+                </div>
+                <div class="patient-info-item">
+                    <span class="patient-info-label">Születési idő:</span>
+                    <span class="patient-info-value">${formattedBirthdate}</span>
+                </div>
+                <div class="patient-info-item">
+                    <span class="patient-info-label">Anyja neve:</span>
+                    <span class="patient-info-value">${patient.mothersName || 'Nincs megadva'}</span>
+                </div>
+                <div class="patient-info-item">
+                    <span class="patient-info-label">Telefonszám:</span>
+                    <span class="patient-info-value">${patient.phone}</span>
                 </div>
                 <div class="patient-info-item">
                     <span class="patient-info-label">TAJ:</span>
@@ -536,6 +554,9 @@ function editPatient(id) {
 
     document.getElementById('name').value = patientToEdit.name;
     document.getElementById('phone').value = patientToEdit.phone;
+    document.getElementById('birthdate').value = patientToEdit.birthdate || '';
+    document.getElementById('birthplace').value = patientToEdit.birthplace || '';
+    document.getElementById('mothersName').value = patientToEdit.mothersName || '';
     document.getElementById('address').value = patientToEdit.address || '';
     document.getElementById('intercom').value = patientToEdit.intercom || '';
     document.getElementById('taj').value = patientToEdit.taj || '';
