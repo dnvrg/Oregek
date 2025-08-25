@@ -144,6 +144,30 @@
                     </form>
                 </div>
                 
+                <div class="gemini-feature-section">
+                    <h3>Gemini AI - Lista elemzés képről</h3>
+                    <p>Készítsen fotót egy kézzel írott bevásárlólistáról, és hagyja, hogy az AI automatikusan hozzáadja a tételeket a listához.</p>
+                    <div class="inline-form">
+                        <div class="form-group-note">
+                             <label for="geminiPatientSelect">Páciens</label>
+                            <select id="geminiPatientSelect" class="form-select gemini-patient-select" required>
+                                <option value="">Válasszon pácienst</option>
+                            </select>
+                        </div>
+                        <button id="openCameraBtn" class="btn btn-secondary"><i class="fas fa-camera"></i> Kamera megnyitása</button>
+                        <input type="file" id="uploadImageFile" accept="image/*" style="display: none;">
+                        <button id="uploadImageBtn" class="btn btn-secondary"><i class="fas fa-upload"></i> Kép feltöltése</button>
+                    </div>
+                    <div class="flex flex-col items-center mt-4">
+                        <img id="imagePreview" class="camera-preview hidden" alt="Kép előnézete">
+                        <button id="analyzeBtn" class="btn btn-primary mt-4 hidden"><i class="fas fa-magic"></i> Lista elemzés</button>
+                        <div id="loadingIndicator" class="loading-indicator hidden">
+                            <i class="fas fa-spinner fa-spin"></i>
+                            <span>Elemzés folyamatban...</span>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="content-body">
                     <div id="shoppingList">
                         </div>
@@ -456,6 +480,18 @@
                     </div>
                 </div>
             </div>
+            
+            <div id="cameraModal" class="camera-modal">
+                <div class="camera-modal-content">
+                    <video id="cameraFeed" class="camera-stream" autoplay playsinline></video>
+                    <div class="camera-actions">
+                        <button id="takePhotoBtn" class="btn btn-primary"><i class="fas fa-camera"></i> Kép készítése</button>
+                        <button id="cancelPhotoBtn" class="btn btn-secondary"><i class="fas fa-times"></i> Mégse</button>
+                    </div>
+                    <p id="cameraMessage" class="camera-message hidden">A kamera funkció nem támogatott ezen az eszközön vagy böngészőben.</p>
+                </div>
+            </div>
+
 
     <script src="script.js"></script>
 </body>
