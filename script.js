@@ -1830,18 +1830,24 @@ async function analyzeImageWithGemini(imageData, patientId) {
 
     // Convert data URL to base64 string
     const base64ImageData = imageData.split(',')[1];
+    const prompt = 'Please identify the items on this handwritten shopping list and respond with a comma-separated list of the items, in Hungarian. Example: tej,kenyér,tojás. Do not include any other text.';
 
     try {
-        const analyzeShoppingList = firebase.functions().httpsCallable('analyzeShoppingList');
-        const result = await analyzeShoppingList({ image: base64ImageData });
+        const response = await fetch('/api/gemini-proxy', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ image: base64ImageData, prompt: prompt })
+        });
 
-        if (result.data && result.data.text) {
-            const text = result.data.text;
-            const items = text.split(',').map(item => item.trim());
-            addItemsToShoppingList(items, patientId);
-        } else {
-            throw new Error('Unexpected function response format');
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || 'API call failed');
         }
+
+        const result = await response.json();
+        const items = result.text.split(',').map(item => item.trim());
+        addItemsToShoppingList(items, patientId);
+
     } catch (error) {
         console.error('Hiba az elemzés során:', error);
         alert('Hiba történt az elemzés során. Kérjük, próbálja meg újra.');
