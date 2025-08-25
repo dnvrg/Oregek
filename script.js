@@ -21,9 +21,6 @@ let patientToEdit = null;
 let isRenameMode = false;
 let renameId = null;
 
-// New global variables for the calculation modal
-let currentLoadedCalculationId = null;
-
 // New global variable to track the date of the loaded calculation
 let currentCalculationDate = null;
 
@@ -204,6 +201,7 @@ function initializeModals() {
     const addPatientBtn = document.getElementById('addPatientBtn');
     const closeModalBtn = document.getElementById('closeModal');
     const cancelBtn = document.getElementById('cancelBtn');
+    const deletePatientBtn = document.getElementById('deletePatientBtn');
 
     if (addPatientBtn) {
         addPatientBtn.addEventListener('click', openPatientModal);
@@ -221,6 +219,14 @@ function initializeModals() {
         patientModal.addEventListener('click', (e) => {
             if (e.target === patientModal) {
                 closePatientModal();
+            }
+        });
+    }
+    
+    if (deletePatientBtn) {
+        deletePatientBtn.addEventListener('click', () => {
+            if (patientToEdit) {
+                deletePatient(patientToEdit.id);
             }
         });
     }
@@ -543,7 +549,7 @@ function editPatient(id) {
     });
 
     document.getElementById('modalTitle').textContent = 'Páciens szerkesztése';
-    document.getElementById('deletePatientBtn').classList.add('hidden');
+    document.getElementById('deletePatientBtn').classList.remove('hidden');
     document.getElementById('patientModal').classList.add('show');
 }
 
@@ -1242,6 +1248,29 @@ function handleFileUpload(event) {
     reader.readAsText(file);
 }
 
+function deleteAllInfo() {
+    if (confirm('Biztosan törölni szeretné az ÖSSZES adatot? Ez a művelet nem vonható vissza!')) {
+        localStorage.clear();
+        patients = [];
+        shoppingItems = [];
+        documents = [];
+        notes = [];
+        savedCalculations = [];
+        savedCalendarData = [];
+        
+        renderPatients();
+        renderShoppingList();
+        renderDocuments();
+        renderNotes();
+        updatePatientSelects();
+        generateCalendar();
+        clearTable();
+        renderSavedCalculationsList();
+        
+        alert('Az összes adat törölve!');
+    }
+}
+
 // Enhanced Calculator functionality with daily restriction
 function initializeCalculator() {
     const tableBody = document.getElementById('table-body');
@@ -1423,7 +1452,8 @@ function createCalculatorRow(rowData) {
     patientSelect.className = 'form-select patient-select';
 
     // Populate the select with all patients
-    const optionsHTML = patients.map(patient => `<option value="${patient.id}">${patient.name}</option>`).join('');
+    const sortedPatients = [...patients].sort((a, b) => a.name.localeCompare(b.name, 'hu'));
+    const optionsHTML = sortedPatients.map(patient => `<option value="${patient.id}">${patient.name}</option>`).join('');
     patientSelect.innerHTML = `<option value="">Válasszon pácienst</option>${optionsHTML}`;
 
     newRow.innerHTML = `
@@ -1501,17 +1531,9 @@ function getTableData() {
 // Updated save function to handle specific dates
 function saveCalculation(name, dateToSave) {
     const saveDate = dateToSave ? new Date(dateToSave) : new Date();
-    const saveDateString = saveDate.toISOString().split('T')[0];
     
     // First, update the calendar data
     syncCalculatorToCalendar(saveDate);
-
-    // Remove any existing calculation for the specified date
-    savedCalculations = savedCalculations.filter(calc => {
-        const calcDate = new Date(calc.created);
-        const calcDateString = calcDate.toISOString().split('T')[0];
-        return calcDateString !== saveDateString;
-    });
 
     // Then, save the new calculation data
     const calculationData = getTableData();
@@ -1548,38 +1570,24 @@ function renameCalculation(id, newName) {
 // This is the core function for loading saved data and syncing it to the calendar
 function loadCalculation(id) {
     const itemToLoad = savedCalculations.find(item => item.id === id);
-    const tableBody = document.getElementById('table-body');
+    if (!itemToLoad) return;
+    
+    // Set the global variable to the date of the loaded calculation
+    currentCalculationDate = itemToLoad.created;
 
-    if (itemToLoad && tableBody) {
-        tableBody.innerHTML = '';
+    loadTableWithData(itemToLoad.data);
 
-        // Set the global variable to the date of the loaded calculation
-        currentCalculationDate = itemToLoad.created;
-
-        if (itemToLoad.data.length === 0) {
-            // Create empty rows
-            for (let i = 0; i < 12; i++) {
-                tableBody.appendChild(createCalculatorRow({}));
-            }
-        } else {
-            // Create and populate the table rows
-            itemToLoad.data.forEach(rowData => {
-                tableBody.appendChild(createCalculatorRow(rowData));
-            });
-        }
-
-        const now = new Date().toISOString();
-        const itemIndex = savedCalculations.findIndex(item => item.id === id);
-        if (itemIndex > -1) {
-            savedCalculations[itemIndex].lastEdited = now;
-            localStorage.setItem('savedCalculations', JSON.stringify(savedCalculations));
-        }
-
-        // After loading, update the calculations and sync to the calendar
-        updateAllCalculations();
-        syncCalculatorToCalendar(currentCalculationDate);
-        renderSavedCalculationsList();
+    const now = new Date().toISOString();
+    const itemIndex = savedCalculations.findIndex(item => item.id === id);
+    if (itemIndex > -1) {
+        savedCalculations[itemIndex].lastEdited = now;
+        localStorage.setItem('savedCalculations', JSON.stringify(savedCalculations));
     }
+
+    // After loading, update the calculations and sync to the calendar
+    updateAllCalculations();
+    syncCalculatorToCalendar(currentCalculationDate);
+    renderSavedCalculationsList();
 }
 
 function deleteCalculation(id) {
