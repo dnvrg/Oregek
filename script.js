@@ -21,6 +21,9 @@ let patientToEdit = null;
 let isRenameMode = false;
 let renameId = null;
 
+// New global variables for the calculation modal
+let currentLoadedCalculationId = null;
+
 // New global variable to track the date of the loaded calculation
 let currentCalculationDate = null;
 
@@ -73,11 +76,9 @@ document.addEventListener('DOMContentLoaded', function() {
     // Initialize calculator
     initializeCalculator();
 
-    // --- FIX START ---
     // On page load, explicitly sync calendar data for today to ensure it's always visible
     const today = new Date().toISOString();
     syncCalculatorToCalendar(today);
-    // --- FIX END ---
 
     console.log('Application initialized successfully');
 });
@@ -542,7 +543,7 @@ function editPatient(id) {
     });
 
     document.getElementById('modalTitle').textContent = 'Páciens szerkesztése';
-    document.getElementById('deletePatientBtn').classList.remove('hidden');
+    document.getElementById('deletePatientBtn').classList.add('hidden');
     document.getElementById('patientModal').classList.add('show');
 }
 
@@ -598,11 +599,15 @@ function updatePatientSelects() {
 
         const currentValue = select.value;
 
+        // Clear existing options
         while (select.children.length > 1) {
             select.removeChild(select.lastChild);
         }
+        
+        // Sort patients alphabetically
+        const sortedPatients = [...patients].sort((a, b) => a.name.localeCompare(b.name, 'hu'));
 
-        patients.forEach(patient => {
+        sortedPatients.forEach(patient => {
             const option = document.createElement('option');
             option.value = patient.id;
             option.textContent = patient.name;
@@ -616,10 +621,12 @@ function updatePatientSelects() {
 }
 
 function updateCalculatorPatientSelects() {
-    const patientSelects = document.querySelectorAll('#calculation-table .patient-select');
+    const patientSelects = document.querySelectorAll('.patient-select');
     patientSelects.forEach(select => {
         const currentValue = select.value;
-        const optionsHTML = patients.map(patient => `<option value="${patient.id}">${patient.name}</option>`).join('');
+        // Sort patients alphabetically
+        const sortedPatients = [...patients].sort((a, b) => a.name.localeCompare(b.name, 'hu'));
+        const optionsHTML = sortedPatients.map(patient => `<option value="${patient.id}">${patient.name}</option>`).join('');
         select.innerHTML = `<option value="">Válasszon pácienst</option>${optionsHTML}`;
         select.value = currentValue;
     });
@@ -850,48 +857,30 @@ function handleShoppingSubmit(e) {
 function renderShoppingList(searchQuery = '') {
     const container = document.getElementById('shoppingList');
     if (!container) return;
+    renderGroupedCards(shoppingItems, 'shoppingList', createShoppingCard, searchQuery);
+}
 
-    container.innerHTML = '';
-    const query = searchQuery.toLowerCase();
-
-    const filteredItems = shoppingItems.filter(item =>
-        item.item.toLowerCase().includes(query) ||
-        (patients.find(p => p.id === item.patientId)?.name.toLowerCase().includes(query))
-    );
-
-    if (filteredItems.length === 0) {
-        container.innerHTML = '<div class="empty-state">Nincsenek tételek a keresési feltételeknek megfelelően.</div>';
-        return;
-    }
-
-    const gridContainer = document.createElement('div');
-    gridContainer.className = 'card-grid';
-
-    filteredItems.forEach(item => {
-        const patient = patients.find(p => p.id === item.patientId);
-        const patientName = patient ? patient.name : 'Általános';
-        const patientColor = patient ? patient.color : '#8b5cf6';
-
-        const card = document.createElement('div');
-        card.className = 'card';
-        card.style.borderLeftColor = patientColor;
-        card.innerHTML = `
-            <div class="card-header">
-                <div class="card-title">${item.item}</div>
-                <div class="card-actions">
-                    <button class="icon-btn btn-danger" onclick="deleteShoppingItem(${item.id})">
-                        <i class="fas fa-trash"></i>
-                    </button>
-                </div>
+function createShoppingCard(item) {
+    const patient = patients.find(p => p.id === item.patientId);
+    const patientName = patient ? patient.name : 'Általános';
+    const patientColor = patient ? patient.color : '#8b5cf6';
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.style.borderLeftColor = patientColor;
+    card.innerHTML = `
+        <div class="card-header">
+            <div class="card-title">${item.item}</div>
+            <div class="card-actions">
+                <button class="icon-btn btn-danger" onclick="deleteShoppingItem(${item.id})">
+                    <i class="fas fa-trash"></i>
+                </button>
             </div>
-            <div>
-                <p class="text-sm text-gray-600">Páciens: ${patientName}</p>
-            </div>
-        `;
-        gridContainer.appendChild(card);
-    });
-
-    container.appendChild(gridContainer);
+        </div>
+        <div>
+            <p class="text-sm text-gray-600">Páciens: ${patientName}</p>
+        </div>
+    `;
+    return card;
 }
 
 function deleteShoppingItem(id) {
@@ -954,56 +943,38 @@ function handleDocumentSubmit(e) {
 function renderDocuments(searchQuery = '') {
     const container = document.getElementById('documentsList');
     if (!container) return;
+    renderGroupedCards(documents, 'documentsList', createDocumentCard, searchQuery);
+}
 
-    container.innerHTML = '';
-    const query = searchQuery.toLowerCase();
-
-    const filteredDocs = documents.filter(doc =>
-        doc.name.toLowerCase().includes(query) ||
-        (patients.find(p => p.id === doc.patientId)?.name.toLowerCase().includes(query))
-    );
-
-    if (filteredDocs.length === 0) {
-        container.innerHTML = '<div class="empty-state">Nincsenek dokumentumok a keresési feltételeknek megfelelően.</div>';
-        return;
-    }
-
-    const gridContainer = document.createElement('div');
-        gridContainer.className = 'card-grid';
-
-    filteredDocs.forEach(doc => {
-        const patient = patients.find(p => p.id === doc.patientId);
-        const patientName = patient ? patient.name : 'Ismeretlen páciens';
-        const patientColor = patient ? patient.color : '#8b5cf6';
-        const fileSize = doc.size ? formatFileSize(doc.size) : 'Ismeretlen méret';
-
-        const card = document.createElement('div');
-        card.className = 'card';
-        card.style.borderLeftColor = patientColor;
-        card.innerHTML = `
-            <div class="card-header">
-                <div class="card-title">${doc.name}</div>
-                <div class="card-actions">
-                    <button class="icon-btn" onclick="viewDocument(${doc.id})" title="Megtekintés">
-                        <i class="fas fa-eye"></i>
-                    </button>
-                    <button class="icon-btn" onclick="downloadDocument(${doc.id})" title="Letöltés">
-                        <i class="fas fa-download"></i>
-                    </button>
-                    <button class="icon-btn btn-danger" onclick="deleteDocument(${doc.id})" title="Törlés">
-                        <i class="fas fa-trash"></i>
-                    </button>
-                </div>
+function createDocumentCard(doc) {
+    const patient = patients.find(p => p.id === doc.patientId);
+    const patientName = patient ? patient.name : 'Ismeretlen páciens';
+    const patientColor = patient ? patient.color : '#8b5cf6';
+    const fileSize = doc.size ? formatFileSize(doc.size) : 'Ismeretlen méret';
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.style.borderLeftColor = patientColor;
+    card.innerHTML = `
+        <div class="card-header">
+            <div class="card-title">${doc.name}</div>
+            <div class="card-actions">
+                <button class="icon-btn" onclick="viewDocument(${doc.id})" title="Megtekintés">
+                    <i class="fas fa-eye"></i>
+                </button>
+                <button class="icon-btn" onclick="downloadDocument(${doc.id})" title="Letöltés">
+                    <i class="fas fa-download"></i>
+                </button>
+                <button class="icon-btn btn-danger" onclick="deleteDocument(${doc.id})" title="Törlés">
+                    <i class="fas fa-trash"></i>
+                </button>
             </div>
-            <div>
-                <p class="text-sm text-gray-600">Páciens: ${patientName}</p>
-                <p class="text-xs text-gray-500">Méret: ${fileSize} | Feltöltve: ${doc.uploadDate}</p>
-            </div>
-        `;
-        gridContainer.appendChild(card);
-    });
-
-    container.appendChild(gridContainer);
+        </div>
+        <div>
+            <p class="text-sm text-gray-600">Páciens: ${patientName}</p>
+            <p class="text-xs text-gray-500">Méret: ${fileSize} | Feltöltve: ${doc.uploadDate}</p>
+        </div>
+    `;
+    return card;
 }
 
 function formatFileSize(bytes) {
@@ -1074,50 +1045,32 @@ function handleNoteSubmit(e) {
 function renderNotes(searchQuery = '') {
     const container = document.getElementById('notesList');
     if (!container) return;
+    renderGroupedCards(notes, 'notesList', createNoteCard, searchQuery);
+}
 
-    container.innerHTML = '';
-    const query = searchQuery.toLowerCase();
-
-    const filteredNotes = notes.filter(note =>
-        note.content.toLowerCase().includes(query) ||
-        (patients.find(p => p.id === note.patientId)?.name.toLowerCase().includes(query))
-    );
-
-    if (filteredNotes.length === 0) {
-        container.innerHTML = '<div class="empty-state">Nincsenek jegyzetek a keresési feltételeknek megfelelően.</div>';
-        return;
-    }
-
-    const gridContainer = document.createElement('div');
-    gridContainer.className = 'card-grid';
-
-    filteredNotes.forEach(note => {
-        const patient = patients.find(p => p.id === note.patientId);
-        const patientName = patient ? patient.name : 'Általános';
-        const patientColor = patient ? patient.color : '#8b5cf6';
-
-        const card = document.createElement('div');
-        card.className = 'card';
-        card.style.borderLeftColor = patientColor;
-        card.innerHTML = `
-            <div class="card-header">
-                <div class="card-title">Jegyzet</div>
-                <div class="card-actions">
-                    <button class="icon-btn btn-danger" onclick="deleteNote(${note.id})" title="Törlés">
-                        <i class="fas fa-trash"></i>
-                    </button>
-                </div>
+function createNoteCard(note) {
+    const patient = patients.find(p => p.id === note.patientId);
+    const patientName = patient ? patient.name : 'Általános';
+    const patientColor = patient ? patient.color : '#8b5cf6';
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.style.borderLeftColor = patientColor;
+    card.innerHTML = `
+        <div class="card-header">
+            <div class="card-title">Jegyzet</div>
+            <div class="card-actions">
+                <button class="icon-btn btn-danger" onclick="deleteNote(${note.id})" title="Törlés">
+                    <i class="fas fa-trash"></i>
+                </button>
             </div>
-            <div>
-                <p class="text-sm text-gray-600">Páciens: ${patientName}</p>
-                <p class="text-xs text-gray-500">Dátum: ${note.date}</p>
-                <p class="mt-2 text-gray-700">${note.content}</p>
-            </div>
-        `;
-        gridContainer.appendChild(card);
-    });
-
-    container.appendChild(gridContainer);
+        </div>
+        <div>
+            <p class="text-sm text-gray-600">Páciens: ${patientName}</p>
+            <p class="text-xs text-gray-500">Dátum: ${note.date}</p>
+            <p class="mt-2 text-gray-700">${note.content}</p>
+        </div>
+    `;
+    return card;
 }
 
 function deleteNote(id) {
@@ -1125,6 +1078,86 @@ function deleteNote(id) {
         notes = notes.filter(n => n.id !== id);
         localStorage.setItem('notes', JSON.stringify(notes));
         renderNotes();
+    }
+}
+
+// Generic function to render grouped cards
+function renderGroupedCards(items, containerId, cardRenderer, searchQuery = '') {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+
+    container.innerHTML = '';
+    const query = searchQuery.toLowerCase();
+    
+    // Group items by patientId
+    const groupedItems = items.reduce((acc, item) => {
+        const patientId = item.patientId || 'general';
+        if (!acc[patientId]) {
+            acc[patientId] = [];
+        }
+        acc[patientId].push(item);
+        return acc;
+    }, {});
+    
+    // Get patient IDs and sort them by patient name ascending alphabetically
+    const patientIds = Object.keys(groupedItems).sort((a, b) => {
+        const patientA = patients.find(p => String(p.id) === a);
+        const patientB = patients.find(p => String(p.id) === b);
+        const nameA = patientA ? patientA.name : 'Általános';
+        const nameB = patientB ? patientB.name : 'Általános';
+        return nameA.localeCompare(nameB, 'hu'); // Ascending sort
+    });
+
+    if (items.length === 0) {
+        container.innerHTML = '<div class="empty-state">Nincsenek tételek a keresési feltételeknek megfelelően.</div>';
+        return;
+    }
+    
+    // Iterate through sorted patient groups and render
+    patientIds.forEach(patientId => {
+        const patient = patients.find(p => String(p.id) === patientId);
+        const patientName = patient ? patient.name : 'Általános';
+        
+        // Filter items within the group
+        const filteredGroupItems = groupedItems[patientId].filter(item => {
+            const matchesPatientName = patientName.toLowerCase().includes(query);
+            let matchesContent = false;
+            
+            if (item.item) { // For shopping list
+                matchesContent = item.item.toLowerCase().includes(query);
+            } else if (item.name) { // For documents
+                matchesContent = item.name.toLowerCase().includes(query);
+            } else if (item.content) { // For notes
+                matchesContent = item.content.toLowerCase().includes(query);
+            }
+            
+            return matchesPatientName || matchesContent;
+        });
+
+        // Only render the group if there are matching items
+        if (filteredGroupItems.length > 0) {
+            const groupWrapper = document.createElement('div');
+            groupWrapper.className = 'patient-group';
+            
+            const heading = document.createElement('h3');
+            heading.className = 'patient-group-heading';
+            heading.textContent = patientName;
+            groupWrapper.appendChild(heading);
+            
+            const gridContainer = document.createElement('div');
+            gridContainer.className = 'card-grid';
+            
+            filteredGroupItems.forEach(item => {
+                gridContainer.appendChild(cardRenderer(item));
+            });
+            
+            groupWrapper.appendChild(gridContainer);
+            container.appendChild(groupWrapper);
+        }
+    });
+
+    if (container.children.length === 0) {
+        container.innerHTML = '<div class="empty-state">Nincsenek tételek a keresési feltételeknek megfelelően.</div>';
     }
 }
 
