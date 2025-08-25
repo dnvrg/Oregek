@@ -376,7 +376,6 @@
         </div>
     </div>
     
-    <!-- New Day Detail Modal -->
     <div id="dayDetailModal" class="modal-overlay">
         <div class="modal-content">
             <div class="modal-header">
@@ -388,6 +387,54 @@
             <div class="modal-body">
                 <div id="dayDetailsContent" class="card-grid">
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="calculationDetailModal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="calculationDetailTitle">Mentett számítás</h3>
+                <button id="closeCalculationDetailModal" class="modal-close">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p>A táblázat szerkesztése után kattintson a "Mentés" gombra a változások elmentéséhez.</p>
+                <div class="table-container">
+                    <table id="detail-calculation-table" class="calculation-table">
+                        <thead>
+                            <tr>
+                                <th>Név</th>
+                                <th>G1</th>
+                                <th>G2</th>
+                                <th>G+U</th>
+                                <th>Óra</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody id="detail-table-body">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-actions">
+                <button id="add-row-detail-btn" class="btn btn-purple">
+                    <i class="fas fa-plus"></i>
+                    <span>Sor hozzáadása</span>
+                </button>
+                <button id="delete-calc-btn" class="btn btn-danger">
+                    <i class="fas fa-trash"></i>
+                    <span>Számítás törlése</span>
+                </button>
+                <button id="load-calc-btn" class="btn btn-secondary">
+                    <i class="fas fa-sync"></i>
+                    <span>Betöltés a fő táblába</span>
+                </button>
+                <button id="save-calc-btn" class="btn btn-primary">
+                    <i class="fas fa-save"></i>
+                    <span>Mentés</span>
+                </button>
             </div>
         </div>
     </div>
