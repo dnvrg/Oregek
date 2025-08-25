@@ -24,55 +24,8 @@ jobs:
         with:
           node-version: '18'
       
-      - name: Create proxy file
-        run: |
-          mkdir -p api
-          echo '
-          const { GoogleGenerativeAI } = require("@google/generative-ai");
-          
-          const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
-          
-          module.exports = async (req, res) => {
-              if (req.method !== "POST") {
-                  return res.status(405).json({ error: "Method not allowed" });
-              }
-
-              const { image, prompt } = req.body;
-
-              if (!image || !prompt) {
-                  return res.status(400).json({ error: "Image and prompt are required" });
-              }
-
-              try {
-                  const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
-                  const model = genAI.getGenerativeModel({ model: "gemini-pro-vision" });
-
-                  const imagePart = {
-                      inlineData: {
-                          data: image,
-                          mimeType: "image/png"
-                      }
-                  };
-
-                  const result = await model.generateContent([prompt, imagePart]);
-                  const response = await result.response;
-                  const text = response.text();
-
-                  res.status(200).json({ text: text });
-              } catch (error) {
-                  console.error("Error calling Gemini API:", error);
-                  res.status(500).json({ error: "Error processing the image with Gemini API." });
-              }
-          };
-          ' > api/gemini-proxy.js
-        env:
-          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-
       - name: Install dependencies
-        run: |
-          cd api
-          npm init -y
-          npm install @google/generative-ai
+        run: npm install --prefix api
       
       - name: Setup Pages
         uses: actions/configure-pages@v5
