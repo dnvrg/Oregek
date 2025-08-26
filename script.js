@@ -1528,7 +1528,7 @@ function renderGroupedItems(items, containerId, itemRenderer, searchQuery = '', 
                         } else {
                             // If item does not exist, add it
                             const newItem = {
-                                id: Date.now(),
+                                id: Date.now() + Math.random(),
                                 item: newItemName,
                                 patientId: targetPatientId,
                                 completed: false
