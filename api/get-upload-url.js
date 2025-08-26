@@ -17,12 +17,15 @@ export default async function handler(request, response) {
             password: process.env.MEGA_PASSWORD
         }).ready;
 
-        // Mega.js doesn't have a direct "get pre-signed URL" method.
-        // A common pattern is to create an upload stream or promise and use its URL.
-        // Here, we simulate getting a direct upload URL.
-        // Note: The actual implementation might vary based on the Mega API.
-        // This example assumes a synchronous URL is returned.
-        const uploadUrl = mega.upload(fileName).url;
+        const upload = mega.upload({
+            name: fileName,
+            size: fileSize
+        });
+
+        const uploadUrl = mega.getUploadLink({
+            name: fileName,
+            size: fileSize
+        });
 
         return response.status(200).json({ uploadUrl: uploadUrl });
     } catch (error) {
