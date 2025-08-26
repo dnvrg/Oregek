@@ -1400,6 +1400,49 @@ function renderGroupedItems(items, containerId, itemRenderer, searchQuery = '', 
             });
             
             groupWrapper.appendChild(listElement);
+
+            // Add new item form if it's the shopping list
+            if (containerId === 'shoppingList') {
+                const addForm = document.createElement('form');
+                addForm.className = 'inline-form mt-4';
+                addForm.dataset.patientId = patientId;
+                addForm.innerHTML = `
+                    <input type="text" placeholder="Új tétel hozzáadása..." required class="form-input flex-1">
+                    <button type="submit" class="btn btn-primary">Hozzáad</button>
+                `;
+                groupWrapper.appendChild(addForm);
+
+                addForm.addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    const input = e.target.querySelector('input');
+                    const newItemName = input.value.trim();
+                    const targetPatientId = parseInt(e.target.dataset.patientId);
+
+                    if (newItemName) {
+                        const existingItem = shoppingItems.find(item => item.item.toLowerCase() === newItemName.toLowerCase() && item.patientId === targetPatientId);
+                        
+                        if (existingItem) {
+                            // If item exists and is completed, uncheck it
+                            if (existingItem.completed) {
+                                existingItem.completed = false;
+                            }
+                        } else {
+                            // If item does not exist, add it
+                            const newItem = {
+                                id: Date.now(),
+                                item: newItemName,
+                                patientId: targetPatientId,
+                                completed: false
+                            };
+                            shoppingItems.push(newItem);
+                        }
+
+                        localStorage.setItem('shoppingItems', JSON.stringify(shoppingItems));
+                        renderShoppingList(searchQuery);
+                    }
+                });
+            }
+
             container.appendChild(groupWrapper);
         }
     });
@@ -1938,7 +1981,9 @@ async function startCamera() {
     const video = document.getElementById('cameraFeed');
     const message = document.getElementById('cameraMessage');
     const takePhotoBtn = document.getElementById('takePhotoBtn');
-
+    
+    video.classList.remove('hidden');
+    
     try {
         const stream = await navigator.mediaDevices.getUserMedia({
             video: {
@@ -1949,7 +1994,6 @@ async function startCamera() {
         video.srcObject = stream;
         cameraStream = stream;
         cameraModal.style.display = 'flex';
-        video.classList.remove('hidden');
         takePhotoBtn.classList.remove('hidden');
         message.classList.add('hidden');
     } catch (err) {
@@ -1980,9 +2024,7 @@ function capturePhoto() {
     canvas.height = video.videoHeight;
     const ctx = canvas.getContext('2d');
     
-    // Draw the image mirrored as the video feed is
-    ctx.translate(canvas.width, 0);
-    ctx.scale(-1, 1);
+    // Draw the image without mirroring
     ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
     
     const imageData = canvas.toDataURL('image/png');
