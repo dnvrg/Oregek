@@ -1,7 +1,13 @@
-const { Storage } = require('megajs');
-const { head, del } = require('@vercel/blob');
-const formidable = require('formidable');
-const { createReadStream } = require('fs');
+import { Storage } from 'megajs';
+import { head, del } from '@vercel/blob';
+import formidable from 'formidable';
+import { createReadStream } from 'fs';
+
+export const config = {
+  api: {
+    bodyParser: false,
+  },
+};
 
 export default async function handler(request, response) {
   if (request.method !== 'POST') {
@@ -43,8 +49,6 @@ export default async function handler(request, response) {
       uploadStream.on('error', reject);
     });
 
-    // We don't need to delete from Vercel Blob here, as we are not using it as an intermediary storage.
-
     const document = {
       id: Date.now(),
       name: file.originalFilename,
@@ -61,10 +65,3 @@ export default async function handler(request, response) {
     return response.status(500).json({ message: 'Internal Server Error', error: error.message });
   }
 }
-
-// Disable Vercel's default body parser to handle multipart form data
-export const config = {
-  api: {
-    bodyParser: false,
-  },
-};
