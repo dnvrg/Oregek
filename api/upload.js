@@ -17,51 +17,56 @@ export default async function handler(request, response) {
   const form = formidable();
 
   try {
-    const [fields, files] = await new Promise((resolve, reject) => {
-      form.parse(request, (err, fields, files) => {
-        if (err) reject(err);
-        resolve([fields, files]);
-      });
-    });
+    const form = formidable();
 
-    if (!files.documentFile || !fields.patientId) {
-      return response.status(400).json({ message: 'Missing file or patient ID' });
+    const [fields, files] = await new Promise((resolve, reject) => {
+        form.parse(req, (err, fields, files) => {
+            if (err) reject(err);
+            resolve([fields, files]);
+        });
+    });
+    
+    // Check if the file was sent as a stream
+    if (!files.documentFile || !files.documentFile[0]) {
+        return res.status(400).json({ message: 'Missing file or patient ID' });
     }
 
     const file = files.documentFile[0];
     const patientId = fields.patientId[0];
+    const fileName = file.originalFilename;
+    const fileSize = file.size;
+    const filePath = file.filepath;
 
     const mega = await new Storage({
-      email: process.env.MEGA_EMAIL,
-      password: process.env.MEGA_PASSWORD
+        email: process.env.MEGA_EMAIL,
+        password: process.env.MEGA_PASSWORD
     }).ready;
 
     const uploadStream = mega.upload({
-      name: file.originalFilename,
-      size: file.size
+        name: fileName,
+        size: fileSize
     });
 
-    const fileStream = createReadStream(file.filepath);
+    const fileStream = createReadStream(filePath);
+    
     fileStream.pipe(uploadStream);
 
     await new Promise((resolve, reject) => {
-      uploadStream.on('complete', resolve);
-      uploadStream.on('error', reject);
+        uploadStream.on('complete', resolve);
+        uploadStream.on('error', reject);
     });
 
+    // The rest of your code for creating the document object remains the same
     const document = {
       id: Date.now(),
-      name: file.originalFilename,
+      name: fileName,
       patientId: parseInt(patientId),
-      data: `MEGA File URL for ${file.originalFilename}`,
+      data: `MEGA File URL for ${fileName}`,
       type: file.mimetype,
-      size: file.size,
+      size: fileSize,
       uploadDate: new Date().toLocaleString()
     };
     
-    return response.status(200).json({ message: 'File uploaded successfully!', document });
-  } catch (error) {
-    console.error('Upload Error:', error);
-    return response.status(500).json({ message: 'Internal Server Error', error: error.message });
+    return res.status(200).json({ message: 'File uploaded successfully!', document });
   }
 }
