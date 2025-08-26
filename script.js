@@ -1982,6 +1982,7 @@ async function startCamera() {
     const message = document.getElementById('cameraMessage');
     const takePhotoBtn = document.getElementById('takePhotoBtn');
     
+    // Remove the CSS class that flips the video feed
     video.classList.remove('hidden');
     
     try {
@@ -1994,6 +1995,8 @@ async function startCamera() {
         video.srcObject = stream;
         cameraStream = stream;
         cameraModal.style.display = 'flex';
+        // Ensure the video feed is not mirrored
+        video.style.transform = 'none';
         takePhotoBtn.classList.remove('hidden');
         message.classList.add('hidden');
     } catch (err) {
