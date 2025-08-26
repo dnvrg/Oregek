@@ -1041,46 +1041,91 @@ function getVisitsForDate(date) {
 function handleShoppingSubmit(e) {
     e.preventDefault();
 
-    const item = {
-        id: Date.now(),
-        item: document.getElementById('shoppingItem').value,
-        patientId: parseInt(document.getElementById('shoppingPatient').value),
-        completed: false
-    };
+    const newItemName = document.getElementById('shoppingItem').value.trim();
+    const patientId = parseInt(document.getElementById('shoppingPatient').value);
 
-    shoppingItems.push(item);
+    if (!newItemName || !patientId) {
+        showCustomMessage('Kérjük, adjon meg egy tételt és válasszon pácienst.', 'error');
+        return;
+    }
+
+    const existingItem = shoppingItems.find(item => item.item.toLowerCase() === newItemName.toLowerCase() && item.patientId === patientId);
+
+    if (existingItem) {
+        if (existingItem.completed) {
+            existingItem.completed = false;
+        }
+    } else {
+        const newItem = {
+            id: Date.now(),
+            item: newItemName,
+            patientId: patientId,
+            completed: false
+        };
+        shoppingItems.push(newItem);
+    }
+
     localStorage.setItem('shoppingItems', JSON.stringify(shoppingItems));
     renderShoppingList();
     document.getElementById('shoppingForm').reset();
 }
 
+
 function renderShoppingList(searchQuery = '') {
     const container = document.getElementById('shoppingList');
     if (!container) return;
-    renderGroupedCards(shoppingItems, 'shoppingList', createShoppingCard, searchQuery);
+    renderGroupedItems(shoppingItems, 'shoppingList', createShoppingListItem, searchQuery, 'shopping-list-container');
 }
 
-function createShoppingCard(item) {
+function createShoppingListItem(item) {
+    const listItem = document.createElement('li');
+    listItem.className = `shopping-list-item ${item.completed ? 'completed' : ''}`;
+    
+    // Find patient color for the list item border
     const patient = patients.find(p => p.id === item.patientId);
-    const patientName = patient ? patient.name : 'Általános';
-    const patientColor = patient ? patient.color : '#8b5cf6';
-    const card = document.createElement('div');
-    card.className = 'card';
-    card.style.borderLeftColor = patientColor;
-    card.innerHTML = `
-        <div class="card-header">
-            <div class="card-title">${item.item}</div>
-            <div class="card-actions">
-                <button class="icon-btn btn-danger" onclick="deleteShoppingItem(${item.id})">
-                    <i class="fas fa-trash"></i>
-                </button>
-            </div>
-        </div>
-        <div>
-            <p class="text-sm text-gray-600">Páciens: ${patientName}</p>
+    if (patient) {
+        listItem.style.borderLeftColor = patient.color;
+    }
+
+    listItem.innerHTML = `
+        <input type="checkbox" class="item-checkbox" ${item.completed ? 'checked' : ''} data-id="${item.id}">
+        <input type="text" class="item-name" value="${item.item}" data-id="${item.id}">
+        <div class="shopping-item-actions">
+            <button class="icon-btn btn-danger" onclick="deleteShoppingItem(${item.id})">
+                <i class="fas fa-trash"></i>
+            </button>
         </div>
     `;
-    return card;
+
+    // Add event listener for checkbox change
+    listItem.querySelector('.item-checkbox').addEventListener('change', (e) => {
+        toggleShoppingItemCompletion(item.id, e.target.checked);
+    });
+
+    // Add event listener for input blur (when user finishes editing)
+    listItem.querySelector('.item-name').addEventListener('blur', (e) => {
+        updateShoppingItemName(item.id, e.target.value);
+    });
+    
+    return listItem;
+}
+
+function updateShoppingItemName(id, newName) {
+    const itemToUpdate = shoppingItems.find(item => item.id === id);
+    if (itemToUpdate) {
+        itemToUpdate.item = newName.trim();
+        localStorage.setItem('shoppingItems', JSON.stringify(shoppingItems));
+        renderShoppingList();
+    }
+}
+
+function toggleShoppingItemCompletion(id, isCompleted) {
+    const itemToUpdate = shoppingItems.find(item => item.id === id);
+    if (itemToUpdate) {
+        itemToUpdate.completed = isCompleted;
+        localStorage.setItem('shoppingItems', JSON.stringify(shoppingItems));
+        renderShoppingList();
+    }
 }
 
 function deleteShoppingItem(id) {
@@ -1143,7 +1188,7 @@ function handleDocumentSubmit(e) {
 function renderDocuments(searchQuery = '') {
     const container = document.getElementById('documentsList');
     if (!container) return;
-    renderGroupedCards(documents, 'documentsList', createDocumentCard, searchQuery);
+    renderGroupedItems(documents, 'documentsList', createDocumentCard, searchQuery);
 }
 
 function createDocumentCard(doc) {
@@ -1246,7 +1291,7 @@ function handleNoteSubmit(e) {
 function renderNotes(searchQuery = '') {
     const container = document.getElementById('notesList');
     if (!container) return;
-    renderGroupedCards(notes, 'notesList', createNoteCard, searchQuery);
+    renderGroupedItems(notes, 'notesList', createNoteCard, searchQuery);
 }
 
 function createNoteCard(note) {
@@ -1283,8 +1328,8 @@ function deleteNote(id) {
     });
 }
 
-// Generic function to render grouped cards
-function renderGroupedCards(items, containerId, cardRenderer, searchQuery = '') {
+// Generic function to render grouped items (for lists and cards)
+function renderGroupedItems(items, containerId, itemRenderer, searchQuery = '', containerClass = 'card-grid') {
     const container = document.getElementById(containerId);
     if (!container) return;
 
@@ -1339,21 +1384,22 @@ function renderGroupedCards(items, containerId, cardRenderer, searchQuery = '') 
         // Only render the group if there are matching items
         if (filteredGroupItems.length > 0) {
             const groupWrapper = document.createElement('div');
-            groupWrapper.className = 'patient-group';
+            groupWrapper.className = `patient-list-group ${containerClass}`;
             
             const heading = document.createElement('h3');
-            heading.className = 'patient-group-heading';
+            heading.className = 'patient-list-heading';
             heading.textContent = patientName;
             groupWrapper.appendChild(heading);
-            
-            const gridContainer = document.createElement('div');
-            gridContainer.className = 'card-grid';
-            
+
+            // Create a list for the items
+            const listElement = document.createElement('ul');
+            listElement.className = 'shopping-list-items';
+
             filteredGroupItems.forEach(item => {
-                gridContainer.appendChild(cardRenderer(item));
+                listElement.appendChild(itemRenderer(item));
             });
             
-            groupWrapper.appendChild(gridContainer);
+            groupWrapper.appendChild(listElement);
             container.appendChild(groupWrapper);
         }
     });
@@ -1362,6 +1408,7 @@ function renderGroupedCards(items, containerId, cardRenderer, searchQuery = '') 
         container.innerHTML = '<div class="empty-state">Nincsenek tételek a keresési feltételeknek megfelelően.</div>';
     }
 }
+
 
 // Data management
 function downloadAllData() {
@@ -1893,7 +1940,12 @@ async function startCamera() {
     const takePhotoBtn = document.getElementById('takePhotoBtn');
 
     try {
-        const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+        const stream = await navigator.mediaDevices.getUserMedia({
+            video: {
+                facingMode: { ideal: 'environment' }
+            },
+            audio: false
+        });
         video.srcObject = stream;
         cameraStream = stream;
         cameraModal.style.display = 'flex';
@@ -1977,24 +2029,42 @@ async function analyzeImageWithGemini(imageData, patientId) {
 
 function addConfirmedItemsToShoppingList() {
     const listItems = document.querySelectorAll('#geminiItemsList .gemini-item-input');
-    const patientId = document.getElementById('geminiConfirmModal').dataset.patientId;
+    const patientId = parseInt(document.getElementById('geminiConfirmModal').dataset.patientId);
     
+    let newItemsAdded = 0;
+    const itemsToAdd = [];
+
     listItems.forEach(input => {
         const itemText = input.value.trim();
         if (itemText) {
-            const newItem = {
-                id: Date.now() + Math.random(),
-                item: itemText,
-                patientId: parseInt(patientId),
-                completed: false
-            };
-            shoppingItems.push(newItem);
+            const existingItem = shoppingItems.find(item => item.item.toLowerCase() === itemText.toLowerCase() && item.patientId === patientId);
+
+            if (existingItem) {
+                if (existingItem.completed) {
+                    existingItem.completed = false;
+                }
+            } else {
+                itemsToAdd.push({
+                    id: Date.now() + Math.random(),
+                    item: itemText,
+                    patientId: patientId,
+                    completed: false
+                });
+                newItemsAdded++;
+            }
         }
     });
 
+    if (itemsToAdd.length > 0) {
+        shoppingItems.push(...itemsToAdd);
+    }
+
     localStorage.setItem('shoppingItems', JSON.stringify(shoppingItems));
     renderShoppingList();
-    showCustomMessage('A tételek sikeresen hozzáadva a bevásárlólistához!', 'success');
+    
+    if (newItemsAdded > 0) {
+        showCustomMessage(`${newItemsAdded} új tétel került hozzáadásra.`, 'success');
+    }
 }
 
 // Custom Modal functions (replacing alert and confirm)
