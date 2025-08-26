@@ -131,6 +131,10 @@
                             <input type="text" id="shoppingSearchInput" placeholder="Keresés listában...">
                             <i class="fas fa-search search-icon"></i>
                         </div>
+                        <button id="openGeminiModalBtn" class="btn btn-primary">
+                            <i class="fas fa-magic"></i>
+                            <span>AI elemzés</span>
+                        </button>
                     </div>
                 </header>
                 
@@ -144,30 +148,6 @@
                     </form>
                 </div>
                 
-                <div class="gemini-feature-section">
-                    <h3>Gemini AI - Lista elemzés képről</h3>
-                    <p>Készítsen fotót egy kézzel írott bevásárlólistáról, és hagyja, hogy az AI automatikusan hozzáadja a tételeket a listához.</p>
-                    <div class="inline-form">
-                        <div class="form-group-note">
-                             <label for="geminiPatientSelect">Páciens</label>
-                            <select id="geminiPatientSelect" class="form-select gemini-patient-select" required>
-                                <option value="">Válasszon pácienst</option>
-                            </select>
-                        </div>
-                        <button id="openCameraBtn" class="btn btn-secondary"><i class="fas fa-camera"></i> Kamera megnyitása</button>
-                        <input type="file" id="uploadImageFile" accept="image/*" style="display: none;">
-                        <button id="uploadImageBtn" class="btn btn-secondary"><i class="fas fa-upload"></i> Kép feltöltése</button>
-                    </div>
-                    <div class="flex flex-col items-center mt-4">
-                        <img id="imagePreview" class="camera-preview hidden" alt="Kép előnézete">
-                        <button id="analyzeBtn" class="btn btn-primary mt-4 hidden"><i class="fas fa-magic"></i> Lista elemzés</button>
-                        <div id="loadingIndicator" class="loading-indicator hidden">
-                            <i class="fas fa-spinner fa-spin"></i>
-                            <span>Elemzés folyamatban...</span>
-                        </div>
-                    </div>
-                </div>
-
                 <div class="content-body">
                     <div id="shoppingList">
                     </div>
@@ -336,7 +316,7 @@
                             <div class="form-group">
                                 <label for="mothersName">Anyja neve</label>
                                 <input type="text" id="mothersName" class="form-input">
-                            </d>
+                            </div>
                         </div>
                         
                         <div class="form-grid">
@@ -492,7 +472,96 @@
                 </div>
             </div>
 
+            <div id="geminiMainModal" class="modal-overlay">
+                <div class="modal-content modal-md">
+                    <div class="modal-header">
+                        <h3>Gemini AI - Lista elemzés képről</h3>
+                        <button id="closeGeminiMainModal" class="modal-close">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <p>Készítsen fotót egy kézzel írott bevásárlólistáról, és hagyja, hogy az AI automatikusan hozzáadja a tételeket a listához.</p>
+                        <div class="inline-form mb-4">
+                            <div class="form-group-note">
+                                <label for="geminiPatientSelect">Páciens</label>
+                                <select id="geminiPatientSelect" class="form-select gemini-patient-select" required>
+                                    <option value="">Válasszon pácienst</option>
+                                </select>
+                            </div>
+                            <button id="openCameraBtn" class="btn btn-secondary"><i class="fas fa-camera"></i> Kamera megnyitása</button>
+                            <input type="file" id="uploadImageFile" accept="image/*" style="display: none;">
+                            <button id="uploadImageBtn" class="btn btn-secondary"><i class="fas fa-upload"></i> Kép feltöltése</button>
+                        </div>
+                        <div class="flex flex-col items-center mt-4">
+                            <img id="imagePreview" class="camera-preview hidden" alt="Kép előnézete">
+                            <button id="analyzeBtn" class="btn btn-primary mt-4 hidden"><i class="fas fa-magic"></i> Lista elemzés</button>
+                            <div id="loadingIndicator" class="loading-indicator hidden">
+                                <i class="fas fa-spinner fa-spin"></i>
+                                <span>Elemzés folyamatban...</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="geminiConfirmModal" class="modal-overlay">
+                <div class="modal-content modal-sm">
+                    <div class="modal-header">
+                        <h3>Bevásárlólista Elemzés</h3>
+                        <button id="closeGeminiConfirmModal" class="modal-close">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <p>Az AI a következő tételeket azonosította a listán a(z) <span id="geminiPatientName" class="font-semibold"></span> páciens számára. Kérjük, erősítse meg vagy szerkessze a listát.</p>
+                        <div id="geminiItemsList" class="gemini-list-container">
+                            </div>
+                    </div>
+                    <div class="modal-actions">
+                        <button id="geminiCancelBtn" class="btn btn-secondary">Mégsem</button>
+                        <button id="geminiConfirmBtn" class="btn btn-primary">Hozzáadás</button>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="infoModal" class="modal-overlay">
+                <div class="modal-content modal-xs">
+                    <div class="modal-body text-center">
+                        <p id="infoMessage" class="modal-message"></p>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="successModal" class="modal-overlay">
+                <div class="modal-content modal-xs success-modal-content">
+                    <div class="modal-body text-center">
+                        <p id="successMessage" class="modal-message"></p>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="errorModal" class="modal-overlay">
+                <div class="modal-content modal-xs error-modal-content">
+                    <div class="modal-body text-center">
+                        <p id="errorMessage" class="modal-message"></p>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="confirmModal" class="modal-overlay">
+                <div class="modal-content modal-xs">
+                    <div class="modal-body text-center">
+                        <p id="confirmMessage" class="modal-message"></p>
+                        <div class="modal-actions justify-center">
+                            <button class="btn btn-secondary cancel-btn">Mégsem</button>
+                            <button class="btn btn-primary confirm-btn">Igen</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
 
     <script src="script.js"></script>
 </body>
-</html> 
+</html>
