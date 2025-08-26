@@ -1,56 +1,48 @@
 const { Storage } = require('megajs');
-const formidable = require('formidable');
-const { createReadStream } = require('fs');
+const { head, del } = require('@vercel/blob');
 
 export default async function handler(request, response) {
   if (request.method !== 'POST') {
     return response.status(405).json({ message: 'Method Not Allowed' });
   }
 
-  const form = formidable();
+  const { url, originalFilename, patientId, size } = await request.json();
+
+  if (!url || !originalFilename || !patientId || !size) {
+    return response.status(400).json({ message: 'Missing file URL or metadata.' });
+  }
 
   try {
-    const [fields, files] = await new Promise((resolve, reject) => {
-      form.parse(request, (err, fields, files) => {
-        if (err) reject(err);
-        resolve([fields, files]);
-      });
-    });
-
-    if (!files.documentFile || !fields.patientId) {
-      return response.status(400).json({ message: 'Missing file or patient ID' });
-    }
-
-    const file = files.documentFile[0];
-    const patientId = fields.patientId[0];
+    // Check if the blob exists and is accessible
+    await head(url);
 
     const mega = await new Storage({
       email: process.env.MEGA_EMAIL,
       password: process.env.MEGA_PASSWORD
     }).ready;
 
+    const fileResponse = await fetch(url);
     const uploadStream = mega.upload({
-      name: file.originalFilename,
-      size: file.size
+      name: originalFilename,
+      size: size
     });
 
-    const fileStream = createReadStream(file.filepath);
-    fileStream.pipe(uploadStream);
-
     await new Promise((resolve, reject) => {
+      fileResponse.body.pipe(uploadStream);
       uploadStream.on('complete', resolve);
       uploadStream.on('error', reject);
     });
 
-    // You would typically save the MEGA file URL here.
-    // For this example, we just return a success message and a mock document object.
+    // Delete the file from Vercel Blob after successful upload to MEGA
+    await del(url);
+
     const document = {
       id: Date.now(),
-      name: file.originalFilename,
+      name: originalFilename,
       patientId: parseInt(patientId),
-      data: 'MEGA File URL',
-      type: file.mimetype,
-      size: file.size,
+      data: `MEGA File URL for ${originalFilename}`, // You would get the actual MEGA URL here
+      type: fileResponse.headers.get('content-type'),
+      size: size,
       uploadDate: new Date().toLocaleString()
     };
     
@@ -60,10 +52,3 @@ export default async function handler(request, response) {
     return response.status(500).json({ message: 'Internal Server Error', error: error.message });
   }
 }
-
-// Disable Vercel's default body parser to handle multipart form data
-export const config = {
-  api: {
-    bodyParser: false,
-  },
-};
