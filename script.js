@@ -1143,6 +1143,7 @@ function handleDocumentSubmit(e) {
     const patientId = document.getElementById('documentPatient').value;
 
     if (!file || !patientId) {
+        showCustomMessage('Kérjük, válasszon ki egy fájlt és egy pácienst.', 'error');
         return;
     }
 
@@ -1151,38 +1152,36 @@ function handleDocumentSubmit(e) {
     submitBtn.textContent = 'Feltöltés...';
     submitBtn.disabled = true;
 
-    const reader = new FileReader();
-    reader.onload = function(e) {
-        try {
-            const documentObj = {
-                id: Date.now(),
-                name: file.name,
-                patientId: parseInt(patientId),
-                data: e.target.result,
-                type: file.type,
-                size: file.size,
-                uploadDate: new Date().toLocaleString()
-            };
+    const formData = new FormData();
+    formData.append('documentFile', file);
+    formData.append('patientId', patientId);
 
-            documents.push(documentObj);
-            localStorage.setItem('documents', JSON.stringify(documents));
-            renderDocuments();
-
-            document.getElementById('documentForm').reset();
-        } catch (error) {
-            console.error('Error saving document:', error);
-        } finally {
-            submitBtn.textContent = originalText;
-            submitBtn.disabled = false;
+    fetch('/api/upload', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => {
+        if (!response.ok) {
+            return response.json().then(err => { throw new Error(err.message || 'Fájl feltöltése sikertelen.') });
         }
-    };
-
-    reader.onerror = function() {
+        return response.json();
+    })
+    .then(result => {
+        // Handle success response from the serverless function
+        documents.push(result.document);
+        localStorage.setItem('documents', JSON.stringify(documents));
+        renderDocuments();
+        document.getElementById('documentForm').reset();
+        showCustomMessage('A dokumentum sikeresen feltöltve!', 'success');
+    })
+    .catch(error => {
+        console.error('Fájl feltöltési hiba:', error);
+        showCustomMessage(`Hiba: ${error.message}`, 'error');
+    })
+    .finally(() => {
         submitBtn.textContent = originalText;
         submitBtn.disabled = false;
-    };
-
-    reader.readAsDataURL(file);
+    });
 }
 
 function renderDocuments(searchQuery = '') {
