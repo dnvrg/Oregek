@@ -1,7 +1,7 @@
 {
   "name": "api",
   "version": "1.0.0",
-  "description": "Serverless function for Gemini API proxy",
+  "description": "Serverless functions for a full-stack application",
   "main": "gemini-proxy.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
