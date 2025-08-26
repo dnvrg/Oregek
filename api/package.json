@@ -9,6 +9,7 @@
   "dependencies": {
     "@google/generative-ai": "^0.8.0",
     "megajs": "^1.0.0",
-    "formidable": "^3.5.1"
+    "formidable": "^3.5.1",
+    "@vercel/blob": "^0.23.1"
   }
 }
