@@ -1,5 +1,4 @@
 import { Storage } from 'megajs';
-import { head, del } from '@vercel/blob';
 import formidable from 'formidable';
 import { createReadStream } from 'fs';
 
@@ -17,46 +16,43 @@ export default async function handler(request, response) {
   const form = formidable();
 
   try {
-    const form = formidable();
-
     const [fields, files] = await new Promise((resolve, reject) => {
-        form.parse(req, (err, fields, files) => {
-            if (err) reject(err);
-            resolve([fields, files]);
-        });
+      form.parse(request, (err, fields, files) => {
+        if (err) reject(err);
+        resolve([fields, files]);
+      });
     });
-    
-    // Check if the file was sent as a stream
-    if (!files.documentFile || !files.documentFile[0]) {
-        return res.status(400).json({ message: 'Missing file or patient ID' });
-    }
 
+    // Use a single variable for files to avoid confusion
     const file = files.documentFile[0];
     const patientId = fields.patientId[0];
+
+    if (!file || !patientId) {
+      return response.status(400).json({ message: 'Missing file or patient ID' });
+    }
+
     const fileName = file.originalFilename;
     const fileSize = file.size;
     const filePath = file.filepath;
 
     const mega = await new Storage({
-        email: process.env.MEGA_EMAIL,
-        password: process.env.MEGA_PASSWORD
+      email: process.env.MEGA_EMAIL,
+      password: process.env.MEGA_PASSWORD
     }).ready;
 
     const uploadStream = mega.upload({
-        name: fileName,
-        size: fileSize
+      name: fileName,
+      size: fileSize
     });
 
     const fileStream = createReadStream(filePath);
-    
-    fileStream.pipe(uploadStream);
 
     await new Promise((resolve, reject) => {
-        uploadStream.on('complete', resolve);
-        uploadStream.on('error', reject);
+      fileStream.pipe(uploadStream);
+      uploadStream.on('complete', resolve);
+      uploadStream.on('error', reject);
     });
 
-    // The rest of your code for creating the document object remains the same
     const document = {
       id: Date.now(),
       name: fileName,
@@ -66,7 +62,10 @@ export default async function handler(request, response) {
       size: fileSize,
       uploadDate: new Date().toLocaleString()
     };
-    
-    return res.status(200).json({ message: 'File uploaded successfully!', document });
+
+    return response.status(200).json({ message: 'File uploaded successfully!', document });
+  } catch (error) {
+    console.error("Error during file upload:", error);
+    return response.status(500).json({ error: 'Fájl feltöltése sikertelen.' });
   }
 }
