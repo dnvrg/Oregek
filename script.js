@@ -771,7 +771,6 @@ function deletePatient(id) {
         renderDocuments();
         renderNotes();
         generateCalendar();
-        closePatientModal();
         updateCalculatorPatientSelects();
         showCustomMessage('A páciens sikeresen törölve.', 'success');
     });
@@ -1152,23 +1151,46 @@ function handleDocumentSubmit(e) {
     submitBtn.textContent = 'Feltöltés...';
     submitBtn.disabled = true;
 
-    const formData = new FormData();
-    formData.append('documentFile', file);
-    formData.append('patientId', patientId);
-
-    fetch('/api/upload', {
+    // Step 1: Request a direct upload URL from the server
+    fetch('/api/get-upload-url', {
         method: 'POST',
-        body: formData
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ fileName: file.name, patientId: patientId, fileSize: file.size })
     })
     .then(response => {
         if (!response.ok) {
-            return response.json().then(err => { throw new Error(err.message || 'Fájl feltöltése sikertelen.') });
+            return response.json().then(err => { throw new Error(err.message || 'URL lekérés sikertelen.') });
         }
         return response.json();
     })
-    .then(result => {
-        // Handle success response from the serverless function
-        documents.push(result.document);
+    .then(data => {
+        const uploadUrl = data.uploadUrl;
+        
+        // Step 2: Upload the file directly to Mega using the returned URL
+        return fetch(uploadUrl, {
+            method: 'PUT', // or POST, depending on Mega's API
+            body: file,
+            headers: {
+                'Content-Type': file.type,
+                'Content-Length': file.size
+            }
+        });
+    })
+    .then(uploadResponse => {
+        if (!uploadResponse.ok) {
+            return uploadResponse.json().then(err => { throw new Error(err.message || 'Fájl feltöltése sikertelen.') });
+        }
+        // The upload was successful, now save the document metadata
+        const document = {
+            id: Date.now(),
+            name: file.name,
+            patientId: parseInt(patientId),
+            data: uploadResponse.url, // Save the URL of the uploaded file
+            type: file.type,
+            size: file.size,
+            uploadDate: new Date().toLocaleString()
+        };
+        documents.push(document);
         localStorage.setItem('documents', JSON.stringify(documents));
         renderDocuments();
         document.getElementById('documentForm').reset();
