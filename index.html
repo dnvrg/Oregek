@@ -131,25 +131,28 @@
                             <input type="text" id="shoppingSearchInput" placeholder="Keresés listában...">
                             <i class="fas fa-search search-icon"></i>
                         </div>
-                        <button id="openGeminiModalBtn" class="btn btn-primary">
-                            <i class="fas fa-magic"></i>
-                            <span>AI elemzés</span>
-                        </button>
                     </div>
                 </header>
                 
-                <div class="form-section">
-                    <form id="shoppingForm" class="inline-form">
-                        <input type="text" id="shoppingItem" placeholder="Új tétel hozzáadása..." required class="form-input flex-1">
-                        <select id="shoppingPatient" class="form-select">
-                            <option value="">Válasszon pácienst</option>
-                        </select>
-                        <button type="submit" class="btn btn-primary">Hozzáad</button>
-                    </form>
+                <div class="form-section shopping-form-section">
+                    <div class="shopping-input-group">
+                        <form id="shoppingForm" class="inline-form">
+                            <input type="text" id="shoppingItem" placeholder="Új tétel hozzáadása..." required class="form-input">
+                            <select id="shoppingPatient" class="form-select">
+                                <option value="">Válasszon pácienst</option>
+                            </select>
+                            <button type="submit" class="btn btn-primary">Hozzáad</button>
+                        </form>
+                    </div>
+                    <div class="separator-line"></div>
+                    <button id="openGeminiModalBtn" class="btn btn-lg btn-primary ai-button">
+                        <i class="fas fa-magic"></i>
+                        <span>AI elemzés</span>
+                    </button>
                 </div>
                 
                 <div class="content-body">
-                    <div id="shoppingList">
+                    <div id="shoppingList" class="shopping-list-container">
                     </div>
                 </div>
             </div>
