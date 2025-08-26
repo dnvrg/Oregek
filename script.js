@@ -1167,7 +1167,6 @@ function handleDocumentSubmit(e) {
         return response.json();
     })
     .then(result => {
-        // Handle success response from the serverless function
         documents.push(result.document);
         localStorage.setItem('documents', JSON.stringify(documents));
         renderDocuments();
@@ -1185,11 +1184,79 @@ function handleDocumentSubmit(e) {
 }
 
 function renderDocuments(searchQuery = '') {
-    const container = document.getElementById('documentsList');
-    if (!container) return;
-    renderGroupedItems(documents, 'documentsList', createDocumentCard, searchQuery);
+    const desktopContainer = document.getElementById('documentsListDesktop');
+    const mobileContainer = document.getElementById('documentsListMobile');
+    if (!desktopContainer || !mobileContainer) return;
+
+    desktopContainer.innerHTML = '';
+    mobileContainer.innerHTML = '';
+
+    const query = searchQuery.toLowerCase();
+    
+    // Group items by patientId
+    const groupedItems = documents.reduce((acc, item) => {
+        const patientId = item.patientId || 'general';
+        if (!acc[patientId]) {
+            acc[patientId] = [];
+        }
+        acc[patientId].push(item);
+        return acc;
+    }, {});
+    
+    // Get patient IDs and sort them by patient name ascending alphabetically
+    const patientIds = Object.keys(groupedItems).sort((a, b) => {
+        const patientA = patients.find(p => String(p.id) === a);
+        const patientB = patients.find(p => String(p.id) === b);
+        const nameA = patientA ? patientA.name : 'Általános';
+        const nameB = patientB ? patientB.name : 'Általános';
+        return nameA.localeCompare(nameB, 'hu');
+    });
+
+    if (documents.length === 0) {
+        const emptyState = '<div class="empty-state">Nincsenek dokumentumok a keresési feltételeknek megfelelően.</div>';
+        desktopContainer.innerHTML = emptyState;
+        mobileContainer.innerHTML = emptyState;
+        return;
+    }
+    
+    patientIds.forEach(patientId => {
+        const patient = patients.find(p => String(p.id) === patientId);
+        const patientName = patient ? patient.name : 'Általános';
+        
+        const filteredGroupItems = groupedItems[patientId].filter(doc => {
+            const matchesPatientName = patientName.toLowerCase().includes(query);
+            const matchesContent = doc.name.toLowerCase().includes(query);
+            return matchesPatientName || matchesContent;
+        });
+
+        if (filteredGroupItems.length > 0) {
+            const desktopGroupWrapper = document.createElement('div');
+            desktopGroupWrapper.className = `patient-list-group card-grid`;
+            desktopGroupWrapper.innerHTML = `<h3 class="patient-list-heading">${patientName}</h3>`;
+            
+            const mobileGroupWrapper = document.createElement('div');
+            mobileGroupWrapper.className = `patient-list-group documents-list-mobile`;
+            mobileGroupWrapper.innerHTML = `<h3 class="patient-list-heading">${patientName}</h3>`;
+
+            filteredGroupItems.forEach(doc => {
+                desktopGroupWrapper.appendChild(createDocumentCard(doc));
+                mobileGroupWrapper.appendChild(createCompactDocumentCard(doc));
+            });
+            
+            desktopContainer.appendChild(desktopGroupWrapper);
+            mobileContainer.appendChild(mobileGroupWrapper);
+        }
+    });
+
+    // Handle case where no items match the filter
+    if (desktopContainer.children.length === 0) {
+        const emptyState = '<div class="empty-state">Nincsenek dokumentumok a keresési feltételeknek megfelelően.</div>';
+        desktopContainer.innerHTML = emptyState;
+        mobileContainer.innerHTML = emptyState;
+    }
 }
 
+// Existing function, now for desktop view
 function createDocumentCard(doc) {
     const patient = patients.find(p => p.id === doc.patientId);
     const patientName = patient ? patient.name : 'Ismeretlen páciens';
@@ -1216,6 +1283,39 @@ function createDocumentCard(doc) {
         <div>
             <p class="text-sm text-gray-600">Páciens: ${patientName}</p>
             <p class="text-xs text-gray-500">Méret: ${fileSize} | Feltöltve: ${doc.uploadDate}</p>
+        </div>
+    `;
+    return card;
+}
+
+// New compact card function for mobile view
+function createCompactDocumentCard(doc) {
+    const patient = patients.find(p => p.id === doc.patientId);
+    const patientColor = patient ? patient.color : '#8b5cf6';
+    const fileSize = doc.size ? formatFileSize(doc.size) : 'Ismeretlen méret';
+    const card = document.createElement('div');
+    card.className = 'document-compact-card';
+    card.style.borderLeft = `3px solid ${patientColor}`;
+    card.innerHTML = `
+        <div class="icon-container">
+            <i class="fas fa-file-alt"></i>
+        </div>
+        <div class="document-info">
+            <div class="document-name">${doc.name}</div>
+            <div class="document-meta">
+                <span>Méret: ${fileSize}</span> | <span>Feltöltve: ${doc.uploadDate}</span>
+            </div>
+        </div>
+        <div class="card-actions">
+            <button class="icon-btn" onclick="viewDocument(${doc.id})" title="Megtekintés">
+                <i class="fas fa-eye"></i>
+            </button>
+            <button class="icon-btn" onclick="downloadDocument(${doc.id})" title="Letöltés">
+                <i class="fas fa-download"></i>
+            </button>
+            <button class="icon-btn btn-danger" onclick="deleteDocument(${doc.id})" title="Törlés">
+                <i class="fas fa-trash"></i>
+            </button>
         </div>
     `;
     return card;
