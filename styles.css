@@ -1801,3 +1801,270 @@ body {
         display: none;
     }
 }
+.notes-app-container {
+    font-family: 'Inter', sans-serif;
+    background: #f8f8f8; /* A very light gray for a softer background */
+    margin: 0;
+    padding: 20px;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    min-height: 100vh;
+}
+
+/* Main app container styling - now a single column layout */
+.notes-app-container .notes-app-container {
+    display: flex;
+    width: 100%;
+    max-width: 1200px;
+    gap: 20px;
+    flex-direction: column;
+}
+
+/* Patient dropdown container at the top */
+.notes-app-container .patient-dropdown-container {
+    position: relative;
+    width: 100%;
+    /* Removed background, padding, and box-shadow to match the dropdown header's size */
+    margin-bottom: 20px;
+}
+
+.notes-app-container .patient-dropdown-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    cursor: pointer;
+    padding: 10px 15px;
+    background: #e0aaff; /* Updated background color */
+    color: black; /* Changed to black for better readability */
+    border-radius: 12px;
+    font-weight: bold;
+    transition: background-color 0.2s;
+}
+
+.notes-app-container .patient-dropdown-header:hover {
+    background-color: #a956e2;
+}
+
+.notes-app-container .patient-dropdown-header.open {
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
+}
+
+.notes-app-container .dropdown-list {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: #e0aaff; /* Updated background color */
+    border-radius: 0 0 12px 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    z-index: 10;
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+.notes-app-container .dropdown-list.open {
+    display: block;
+}
+
+.notes-app-container .dropdown-list-item {
+    padding: 10px 15px;
+    cursor: pointer;
+    color: black; /* Changed to black for better readability */
+    transition: background-color 0.2s;
+}
+
+.notes-app-container .dropdown-list-item:hover {
+    background-color: #a956e2;
+}
+
+/* Notes grid on the right - now full width */
+.notes-app-container .notes-grid-container {
+    flex-grow: 1; /* Allows it to take up remaining space */
+    padding: 20px;
+}
+
+.notes-app-container .notes-grid-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+/* Pinned notes section styling */
+.notes-app-container .pinned-notes-section {
+    margin-bottom: 40px;
+}
+
+.notes-app-container .pinned-notes-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+}
+
+/* Changed to flexbox for left-to-right wrapping layout */
+.notes-app-container .notes-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+}
+
+.notes-app-container .note-card {
+    background: #fff;
+    border-radius: 12px;
+    padding: 1rem;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    transition: transform 0.2s, box-shadow 0.2s;
+    cursor: pointer;
+    /* Flex-basis for responsive layout */
+    flex: 1 1 calc(33.333% - 14px);
+    min-width: 200px;
+    position: relative;
+    margin-bottom: 0; /* Removed margin from card to avoid double spacing with grid gap */
+}
+
+.notes-app-container .pinned-notes-row .note-card {
+    flex-basis: calc(33.333% - 14px); /* Three columns with a gap */
+    min-width: 200px; /* Ensure notes don't get too small */
+}
+
+@media (max-width: 768px) {
+    .notes-app-container .pinned-notes-row .note-card {
+        flex-basis: calc(50% - 10px);
+    }
+}
+
+@media (max-width: 640px) {
+    .notes-app-container .note-card {
+        flex-basis: 100%;
+    }
+}
+
+
+.notes-app-container .note-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+}
+
+.notes-app-container .note-card.active-note-card {
+    z-index: 20;
+}
+
+/* Note colors - new distinct pastel colors */
+.notes-app-container .note-color-pastel-yellow { background-color: #fffacd; }
+.notes-app-container .note-color-pastel-green { background-color: #b3ffb3; }
+.notes-app-container .note-color-pastel-pink { background-color: #ffb3e6; }
+.notes-app-container .note-color-pastel-rosey-brown { background-color: #b39b9b; }
+.notes-app-container .note-color-pastel-orange { background-color: #ffcc99; }
+.notes-app-container .note-color-pastel-blue { background-color: #b3e6ff; }
+.notes-app-container .note-color-pastel-aqua { background-color: #66e6d6; }
+.notes-app-container .note-color-pastel-lavender { background-color: #d6b3ff; }
+
+.notes-app-container .title-container {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+.notes-app-container .title-input {
+    width: 100%;
+    border: none;
+    background: transparent;
+    font-family: inherit;
+    resize: none;
+    outline: none;
+    overflow: hidden;
+    font-weight: bold;
+    font-size: 1rem;
+}
+
+.notes-app-container .content-input {
+    width: 100%;
+    border: none;
+    background: transparent;
+    font-family: inherit;
+    resize: none;
+    outline: none;
+    overflow: hidden;
+    font-size: 0.875rem;
+    line-height: 1.25;
+    min-height: 50px;
+}
+
+.notes-app-container .note-actions {
+    display: flex;
+    gap: 8px; /* Space between icons */
+}
+
+.notes-app-container .note-card .note-actions {
+    opacity: 0;
+    transition: opacity 0.2s;
+}
+
+.notes-app-container .note-card:hover .note-actions {
+    opacity: 1;
+}
+
+.notes-app-container .note-actions i {
+    cursor: pointer;
+    color: #6b7280; /* text-gray-500 */
+    transition: color 0.2s;
+}
+
+.notes-app-container .note-actions i:hover {
+    color: #374151; /* text-gray-800 */
+}
+
+/* Styling for the pinned icon */
+.notes-app-container .note-actions i.pinned {
+    color: #3b82f6; /* Blue for pinned notes */
+}
+
+.notes-app-container .settings-menu {
+    display: none;
+    flex-direction: column;
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    padding: 10px;
+    position: absolute;
+    right: 10px;
+    top: 40px;
+    z-index: 30;
+}
+
+/* New class to ensure the menu shows on first click */
+.notes-app-container .settings-menu.show-menu {
+    display: flex;
+}
+
+.notes-app-container .settings-menu .color-options-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+    margin-bottom: 10px;
+}
+
+.notes-app-container .settings-menu .color-option {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    cursor: pointer;
+    border: 2px solid transparent;
+}
+
+.notes-app-container .settings-menu .color-option:hover {
+    border-color: #333;
+}
+
+.notes-app-container .settings-menu .delete-note-btn {
+    width: 100%;
+    text-align: center;
+    padding: 8px;
+    margin-top: 5px;
+    border-radius: 8px;
+    font-weight: 500;
+}
