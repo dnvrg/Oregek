@@ -78,6 +78,9 @@ document.addEventListener('DOMContentLoaded', function() {
     const today = new Date().toISOString();
     syncCalculatorToCalendar(today);
 
+    // Initial render of the notes UI
+    initializeMedicalNotesApp();
+
     console.log('Application initialized successfully');
 });
 
@@ -152,7 +155,7 @@ function showTab(tabId) {
             renderDocuments();
             break;
         case 'notes':
-            renderNotes();
+            initializeMedicalNotesApp();
             break;
         case 'calculator':
             updateAllCalculations();
@@ -539,7 +542,8 @@ function initializeEventListeners() {
     const notesSearchInput = document.getElementById('notesSearchInput');
     if (notesSearchInput) {
         notesSearchInput.addEventListener('input', (e) => {
-            renderNotes(e.target.value);
+            // New search functionality for the updated notes UI
+            renderNotes();
         });
     }
 
@@ -641,11 +645,6 @@ function initializeEventListeners() {
             showCustomMessage(`Hiba: ${error.message}`, 'error');
             uploadMessage.classList.add('hidden');
         });
-    }
-
-    const noteForm = document.getElementById('noteForm');
-    if (noteForm) {
-        noteForm.addEventListener('submit', handleNoteSubmit);
     }
 
     // File upload
@@ -1401,60 +1400,353 @@ function deleteDocument(id) {
 }
 
 // Notes functionality
-function handleNoteSubmit(e) {
-    e.preventDefault();
+function initializeMedicalNotesApp() {
+    const patientDropdownToggle = document.getElementById('patient-dropdown-toggle');
+    const patientDropdownList = document.getElementById('patient-dropdown-list');
+    const dropdownArrow = document.getElementById('dropdown-arrow');
+    const selectedPatientNameDisplay = document.getElementById('selected-patient-name');
+    const notesGrid = document.getElementById('notes-grid');
+    const pinnedNotesRow = document.getElementById('pinned-notes-row');
+    const pinnedNotesHeader = document.getElementById('pinned-notes-header');
+    const notesDivider = document.getElementById('notes-divider');
+    const patientNameHeader = document.getElementById('patient-name-header');
+    const addNoteBtn = document.getElementById('add-note-btn');
+    const notesSearchInput = document.getElementById('notesSearchInput');
 
-    const note = {
-        id: Date.now(),
-        content: document.getElementById('noteContent').value,
-        patientId: parseInt(document.getElementById('notePatient').value),
-        date: new Date().toLocaleString()
-    };
+    const noteColors = ['pastel-yellow', 'pastel-green', 'pastel-pink', 'pastel-rosey-brown', 'pastel-orange', 'pastel-blue', 'pastel-aqua', 'pastel-lavender'];
+    let currentColorIndex = 0;
+    
+    // Check if the current notes data structure is the old one
+    if (notes.length > 0 && notes[0].hasOwnProperty('content')) {
+        // Transform old 'notes' array into the new 'patients' structure
+        notes = notes.map(note => ({
+            id: note.id,
+            title: '',
+            content: note.content,
+            color: getNextNoteColor(),
+            isPinned: false
+        }));
+        
+        // Add a "Jegyzetek" property to each patient
+        patients.forEach(patient => {
+            patient.notes = [];
+        });
+        
+        // Assign notes to patients based on patientId
+        notes.forEach(note => {
+            const patient = patients.find(p => p.id === note.patientId);
+            if (patient) {
+                patient.notes.push(note);
+            }
+        });
+        
+        // Save the new structure
+        localStorage.setItem('patients', JSON.stringify(patients));
+        // Clear the old notes data to avoid conflicts
+        localStorage.removeItem('notes');
+        
+        // Re-load the data to use the new structure
+        patients = JSON.parse(localStorage.getItem('patients')) || [];
+        notes = []; // Clear old notes
+    }
+    
+    let selectedPatientId = patients.length > 0 ? patients[0].id : null;
+    if (patients.length > 0) {
+        selectedPatientNameDisplay.textContent = patients[0].name;
+    } else {
+        selectedPatientNameDisplay.textContent = 'Nincs páciens';
+    }
 
-    notes.push(note);
-    localStorage.setItem('notes', JSON.stringify(notes));
-    renderNotes();
-    document.getElementById('noteForm').reset();
-}
 
-function renderNotes(searchQuery = '') {
-    const container = document.getElementById('notesList');
-    if (!container) return;
-    renderGroupedItems(notes, 'notesList', createNoteCard, searchQuery);
-}
+    function savePatientsToLocalStorage() {
+        localStorage.setItem('patients', JSON.stringify(patients));
+    }
 
-function createNoteCard(note) {
-    const patient = patients.find(p => p.id === note.patientId);
-    const patientName = patient ? patient.name : 'Általános';
-    const patientColor = patient ? patient.color : '#8b5cf6';
-    const card = document.createElement('div');
-    card.className = 'card';
-    card.style.borderLeftColor = patientColor;
-    card.innerHTML = `
-        <div class="card-header">
-            <div class="card-title">Jegyzet</div>
-            <div class="card-actions">
-                <button class="icon-btn btn-danger" onclick="deleteNote(${note.id})" title="Törlés">
-                    <i class="fas fa-trash"></i>
+    function getNextNoteColor() {
+        const color = noteColors[currentColorIndex];
+        currentColorIndex = (currentColorIndex + 1) % noteColors.length;
+        return color;
+    }
+
+    function renderPatientsDropdown() {
+        patientDropdownList.innerHTML = '';
+        patients.forEach(patient => {
+            const patientElement = document.createElement('div');
+            patientElement.classList.add('dropdown-list-item');
+            patientElement.dataset.patientId = patient.id;
+            patientElement.textContent = patient.name;
+            patientDropdownList.appendChild(patientElement);
+        });
+        attachPatientEventListeners();
+    }
+
+    function renderNotes(searchQuery = '') {
+        const query = searchQuery.toLowerCase();
+        const patient = patients.find(p => p.id == selectedPatientId);
+        if (patient) {
+            patientNameHeader.textContent = `${patient.name} jegyzetei`;
+            notesGrid.innerHTML = '';
+            pinnedNotesRow.innerHTML = '';
+            addNoteBtn.classList.remove('hidden');
+
+            selectedPatientNameDisplay.textContent = patient.name;
+
+            const filteredNotes = patient.notes.filter(note => 
+                note.title.toLowerCase().includes(query) ||
+                note.content.toLowerCase().includes(query)
+            );
+            
+            const pinnedNotes = filteredNotes.filter(note => note.isPinned);
+            const unpinnedNotes = filteredNotes.filter(note => !note.isPinned);
+
+            // Sort both lists by creation time (newest first)
+            pinnedNotes.sort((a, b) => b.id - a.id);
+            unpinnedNotes.sort((a, b) => b.id - a.id);
+            
+            if (pinnedNotes.length > 0) {
+                pinnedNotesHeader.classList.remove('hidden');
+                notesDivider.classList.remove('hidden');
+                pinnedNotes.forEach(note => {
+                    const noteElement = createNoteCard(note);
+                    pinnedNotesRow.appendChild(noteElement);
+                });
+            } else {
+                pinnedNotesHeader.classList.add('hidden');
+                notesDivider.classList.add('hidden');
+            }
+            
+            unpinnedNotes.forEach(note => {
+                const noteElement = createNoteCard(note);
+                notesGrid.appendChild(noteElement);
+            });
+            
+            document.querySelectorAll('.content-input').forEach(textarea => {
+                autoResize.call(textarea);
+            });
+        }
+    }
+
+    function createNoteCard(note) {
+        const noteElement = document.createElement('div');
+        noteElement.classList.add('note-card', `note-color-${note.color}`);
+        noteElement.dataset.noteId = note.id;
+        noteElement.innerHTML = `
+            <div class="title-container">
+                <input type="text" class="title-input" value="${note.title}">
+                <div class="note-actions">
+                    <i class="fas fa-thumbtack pin-note-btn ${note.isPinned ? 'pinned' : ''}"></i>
+                    <i class="fas fa-cog note-settings-btn"></i>
+                </div>
+            </div>
+            <textarea class="content-input">${note.content}</textarea>
+            <div class="settings-menu">
+                <div class="color-options-row">
+                    ${noteColors.slice(0, 4).map(color => `<div class="color-option note-color-${color}" data-color="${color}"></div>`).join('')}
+                </div>
+                <div class="color-options-row">
+                    ${noteColors.slice(4, 8).map(color => `<div class="color-option note-color-${color}" data-color="${color}"></div>`).join('')}
+                </div>
+                <button class="delete-note-btn bg-red-100 text-red-500 hover:bg-red-200 transition-colors">
+                    <i class="fas fa-trash-alt mr-2"></i>Törlés
                 </button>
             </div>
-        </div>
-        <div>
-            <p class="text-sm text-gray-600">Páciens: ${patientName}</p>
-            <p class="text-xs text-gray-500">Dátum: ${note.date}</p>
-            <p class="mt-2 text-gray-700">${note.content}</p>
-        </div>
-    `;
-    return card;
-}
+        `;
 
-function deleteNote(id) {
-    // Use a custom confirmation modal instead of alert/confirm
-    showCustomConfirm('Biztosan törölni szeretné ezt a jegyzetet?', () => {
-        notes = notes.filter(n => n.id !== id);
-        localStorage.setItem('notes', JSON.stringify(notes));
-        renderNotes();
+        const titleInput = noteElement.querySelector('.title-input');
+        const contentInput = noteElement.querySelector('.content-input');
+        const settingsBtn = noteElement.querySelector('.note-settings-btn');
+        const pinBtn = noteElement.querySelector('.pin-note-btn');
+        const settingsMenu = noteElement.querySelector('.settings-menu');
+        const colorOptions = noteElement.querySelectorAll('.color-option');
+        const deleteBtn = noteElement.querySelector('.delete-note-btn');
+
+        titleInput.addEventListener('blur', (event) => {
+            event.stopPropagation();
+            saveChanges(note.id);
+        });
+        contentInput.addEventListener('blur', (event) => {
+            event.stopPropagation();
+            saveChanges(note.id);
+        });
+        contentInput.addEventListener('input', autoResize);
+        
+        settingsBtn.addEventListener('click', (event) => {
+            event.stopPropagation();
+            // Close any other open menus
+            document.querySelectorAll('.settings-menu').forEach(menu => {
+                if (menu !== settingsMenu) {
+                    menu.classList.remove('show-menu');
+                    menu.closest('.note-card').classList.remove('active-note-card');
+                }
+            });
+            
+            settingsMenu.classList.toggle('show-menu');
+            noteElement.classList.toggle('active-note-card');
+        });
+        
+        // Pin/Unpin note functionality
+        pinBtn.addEventListener('click', (event) => {
+            event.stopPropagation();
+            pinNote(note.id);
+        });
+
+        colorOptions.forEach(option => {
+            option.addEventListener('click', (event) => {
+                event.stopPropagation();
+                const noteToUpdate = patients.find(p => p.id == selectedPatientId)?.notes.find(n => n.id == note.id);
+                if (noteToUpdate) {
+                    noteToUpdate.color = option.dataset.color;
+                    renderNotes(notesSearchInput.value);
+                    savePatientsToLocalStorage();
+                }
+            });
+        });
+        
+        deleteBtn.addEventListener('click', (event) => {
+            event.stopPropagation();
+            const noteId = event.currentTarget.closest('.note-card').dataset.noteId;
+            
+            // Custom message box instead of confirm()
+            showCustomConfirm('Biztosan törölni szeretné ezt a jegyzetet?', () => {
+                deleteNote(noteId);
+            });
+        });
+        
+        return noteElement;
+    }
+    
+    function autoResize() {
+        this.style.height = 'auto';
+        this.style.height = (this.scrollHeight) + 'px';
+    }
+
+    function attachPatientEventListeners() {
+        document.querySelectorAll('.dropdown-list-item').forEach(item => {
+            item.addEventListener('click', (event) => {
+                const patientId = event.currentTarget.dataset.patientId;
+                selectedPatientId = patientId;
+                renderNotes(notesSearchInput.value);
+                closeDropdown();
+            });
+        });
+    }
+
+    function saveChanges(noteId) {
+        const patient = patients.find(p => p.id == selectedPatientId);
+        if (!patient) return;
+
+        const noteCard = document.querySelector(`[data-note-id="${noteId}"]`);
+        if (noteCard) {
+            const note = patient.notes.find(n => n.id == noteId);
+            if (note) {
+                note.title = noteCard.querySelector('.title-input').value;
+                note.content = noteCard.querySelector('.content-input').value;
+                savePatientsToLocalStorage();
+            }
+        }
+    }
+    
+    function deleteNote(noteId) {
+        const patient = patients.find(p => p.id == selectedPatientId);
+        if (patient) {
+            patient.notes = patient.notes.filter(n => n.id != noteId);
+            renderNotes(notesSearchInput.value);
+            savePatientsToLocalStorage();
+        }
+    }
+
+    function pinNote(noteId) {
+        const patient = patients.find(p => p.id == selectedPatientId);
+        if (!patient) return;
+
+        const noteIndex = patient.notes.findIndex(n => n.id == noteId);
+        if (noteIndex > -1) {
+            const noteToPin = patient.notes[noteIndex];
+
+            if (noteToPin.isPinned) {
+                // Unpin the note and move it to the end of the array
+                noteToPin.isPinned = false;
+                patient.notes.splice(noteIndex, 1);
+                patient.notes.push(noteToPin);
+            } else {
+                // Pin the note and move it to the beginning of the array
+                noteToPin.isPinned = true;
+                patient.notes.splice(noteIndex, 1);
+                patient.notes.unshift(noteToPin);
+            }
+            
+            renderNotes(notesSearchInput.value);
+            savePatientsToLocalStorage();
+        }
+    }
+
+    function toggleDropdown() {
+        patientDropdownList.classList.toggle('open');
+        patientDropdownToggle.classList.toggle('open');
+        dropdownArrow.classList.toggle('rotate-180');
+    }
+
+    function closeDropdown() {
+        patientDropdownList.classList.remove('open');
+        patientDropdownToggle.classList.remove('open');
+        dropdownArrow.classList.remove('rotate-180');
+    }
+    
+    if (patientDropdownToggle) {
+        patientDropdownToggle.addEventListener('click', (event) => {
+            event.stopPropagation();
+            toggleDropdown();
+        });
+    }
+
+    if (notesSearchInput) {
+        notesSearchInput.addEventListener('input', (e) => {
+            renderNotes(e.target.value);
+        });
+    }
+
+    // Global click handler to close all menus and dropdowns
+    document.addEventListener('click', (event) => {
+        // Close settings menus
+        document.querySelectorAll('.settings-menu').forEach(menu => {
+            if (!menu.parentElement.contains(event.target)) {
+                menu.classList.remove('show-menu');
+                menu.closest('.note-card').classList.remove('active-note-card');
+            }
+        });
+        
+        // Close patient dropdown if clicking outside
+        if (patientDropdownToggle && patientDropdownList && !patientDropdownToggle.contains(event.target) && !patientDropdownList.contains(event.target)) {
+            closeDropdown();
+        }
     });
+
+    if (addNoteBtn) {
+        addNoteBtn.addEventListener('click', () => {
+            if (selectedPatientId) {
+                const patient = patients.find(p => p.id == selectedPatientId);
+                const newNote = {
+                    id: Date.now(),
+                    title: 'Új jegyzet',
+                    content: '',
+                    color: getNextNoteColor(),
+                    isPinned: false // New notes are not pinned by default
+                };
+                // The unshift() method adds the new note to the beginning of the notes array.
+                // This causes the new note to appear at the top-left of the notes grid.
+                if (patient) {
+                    patient.notes.unshift(newNote);
+                    renderNotes(notesSearchInput.value);
+                    savePatientsToLocalStorage();
+                }
+            }
+        });
+    }
+    
+    renderPatientsDropdown();
+    if (selectedPatientId) {
+        renderNotes(notesSearchInput.value);
+    }
 }
 
 // Generic function to render grouped items (for lists and cards)
