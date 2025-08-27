@@ -282,6 +282,16 @@ function initializeModals() {
             closeGeminiConfirmModal();
         });
     }
+
+    // Document popup modal
+    const popupOverlay = document.getElementById('popupOverlay');
+    if (popupOverlay) {
+        popupOverlay.addEventListener('click', (e) => {
+            if (e.target === popupOverlay) {
+                closeDocumentPopup();
+            }
+        });
+    }
 }
 
 function openMobileMenu() {
@@ -419,6 +429,79 @@ function closeGeminiConfirmModal() {
     }
 }
 
+function openDocumentPopup(doc) {
+    const popupOverlay = document.getElementById('popupOverlay');
+    const popupTitle = document.getElementById('file-name');
+    const popupDate = document.getElementById('popup-date');
+    const popupPatient = document.getElementById('popup-patient');
+    const popupSize = document.getElementById('popup-size');
+    const editInput = document.getElementById('edit-input');
+    const deleteBtn = document.getElementById('delete-doc-btn');
+    const viewBtn = document.getElementById('view-doc-btn');
+    const downloadBtn = document.getElementById('download-doc-btn');
+
+    if (!doc || !popupOverlay) return;
+    
+    const patient = patients.find(p => p.id === doc.patientId);
+    const patientName = patient ? patient.name : 'Ismeretlen';
+
+    // Set popup content
+    popupTitle.textContent = doc.name;
+    editInput.value = doc.name;
+    popupDate.textContent = doc.uploadDate;
+    popupPatient.textContent = patientName;
+    popupSize.textContent = formatFileSize(doc.size);
+    
+    // Set data attributes for event listeners
+    popupOverlay.dataset.docId = doc.id;
+    popupOverlay.dataset.docName = doc.name;
+
+    // Reset UI state
+    popupTitle.classList.remove('hidden');
+    editInput.classList.add('hidden');
+
+    // Add event listeners for the specific document
+    deleteBtn.onclick = () => deleteDocument(doc.id);
+    viewBtn.onclick = () => viewDocument(doc.id);
+    downloadBtn.onclick = () => downloadDocument(doc.id);
+    
+    popupTitle.onclick = () => {
+        popupTitle.classList.add('hidden');
+        editInput.classList.remove('hidden');
+        editInput.focus();
+    };
+
+    editInput.onblur = () => saveDocumentTitle(doc.id, editInput.value);
+    editInput.onkeydown = (e) => {
+        if (e.key === 'Enter') {
+            saveDocumentTitle(doc.id, editInput.value);
+        }
+    };
+    
+    popupOverlay.style.display = 'flex';
+}
+
+function closeDocumentPopup() {
+    const popupOverlay = document.getElementById('popupOverlay');
+    if (popupOverlay) {
+        popupOverlay.style.display = 'none';
+        document.getElementById('file-name').classList.remove('hidden');
+        document.getElementById('edit-input').classList.add('hidden');
+    }
+}
+
+function saveDocumentTitle(docId, newTitle) {
+    const docToUpdate = documents.find(d => d.id === docId);
+    if (docToUpdate) {
+        docToUpdate.name = newTitle;
+        localStorage.setItem('documents', JSON.stringify(documents));
+        renderDocuments();
+        showCustomMessage('Dokumentum címe sikeresen módosítva!', 'success');
+    }
+    closeDocumentPopup();
+}
+
+
 // Event Listeners
 function initializeEventListeners() {
     // Search inputs
@@ -461,9 +544,94 @@ function initializeEventListeners() {
         shoppingForm.addEventListener('submit', handleShoppingSubmit);
     }
 
-    const documentForm = document.getElementById('documentForm');
-    if (documentForm) {
-        documentForm.addEventListener('submit', handleDocumentSubmit);
+    // New document upload listeners
+    const dropArea = document.getElementById('drop-area');
+    const fileBtn = document.getElementById('file-btn');
+    const fileInput = document.getElementById('documentFile');
+    const documentPatientSelect = document.getElementById('documentPatient');
+
+    if (fileBtn) {
+        fileBtn.addEventListener('click', () => {
+            fileInput.click();
+        });
+    }
+
+    if (fileInput) {
+        fileInput.addEventListener('change', (e) => {
+            handleDocumentFiles(e.target.files);
+        });
+    }
+
+    if (dropArea) {
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            dropArea.addEventListener(eventName, preventDefaults, false);
+        });
+        ['dragenter', 'dragover'].forEach(eventName => {
+            dropArea.addEventListener(eventName, () => {
+                dropArea.classList.add('border-purple-500');
+            }, false);
+        });
+        ['dragleave', 'drop'].forEach(eventName => {
+            dropArea.addEventListener(eventName, () => {
+                dropArea.classList.remove('border-purple-500');
+            }, false);
+        });
+        dropArea.addEventListener('drop', (e) => {
+            const dt = e.dataTransfer;
+            const files = dt.files;
+            handleDocumentFiles(files);
+        }, false);
+    }
+    
+    function preventDefaults(e) {
+        e.preventDefault();
+        e.stopPropagation();
+    }
+
+    function handleDocumentFiles(files) {
+        const patientId = documentPatientSelect.value;
+        if (!patientId) {
+            showCustomMessage('Kérjük, válasszon ki egy pácienst a feltöltéshez.', 'error');
+            return;
+        }
+
+        const uploadMessage = document.getElementById('upload-message');
+        uploadMessage.textContent = 'Feltöltés folyamatban...';
+        uploadMessage.classList.remove('hidden');
+
+        const formData = new FormData();
+        formData.append('patientId', patientId);
+        
+        // Append all files to the same FormData object
+        for (const file of files) {
+            formData.append('documentFile', file);
+        }
+
+        fetch('/api/upload', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => {
+            if (!response.ok) {
+                return response.json().then(err => { throw new Error(err.message || 'Fájl feltöltése sikertelen.') });
+            }
+            return response.json();
+        })
+        .then(result => {
+            if (result.document) {
+                documents.push(result.document);
+                localStorage.setItem('documents', JSON.stringify(documents));
+            }
+            renderDocuments();
+            fileInput.value = '';
+            showCustomMessage('A dokumentum(ok) sikeresen feltöltve!', 'success');
+            uploadMessage.classList.add('hidden');
+        })
+        .catch(error => {
+            console.error('Fájl feltöltési hiba:', error);
+            showCustomMessage(`Hiba: ${error.message}`, 'error');
+            uploadMessage.classList.add('hidden');
+        });
     }
 
     const noteForm = document.getElementById('noteForm');
@@ -1135,190 +1303,42 @@ function deleteShoppingItem(id) {
 }
 
 // Document management
-function handleDocumentSubmit(e) {
-    e.preventDefault();
-
-    const fileInput = document.getElementById('documentFile');
-    const file = fileInput.files[0];
-    const patientId = document.getElementById('documentPatient').value;
-
-    if (!file || !patientId) {
-        showCustomMessage('Kérjük, válasszon ki egy fájlt és egy pácienst.', 'error');
-        return;
-    }
-
-    const submitBtn = e.target.querySelector('button[type="submit"]');
-    const originalText = submitBtn.textContent;
-    submitBtn.textContent = 'Feltöltés...';
-    submitBtn.disabled = true;
-
-    const formData = new FormData();
-    formData.append('documentFile', file);
-    formData.append('patientId', patientId);
-
-    fetch('/api/upload', {
-        method: 'POST',
-        body: formData
-    })
-    .then(response => {
-        if (!response.ok) {
-            return response.json().then(err => { throw new Error(err.message || 'Fájl feltöltése sikertelen.') });
-        }
-        return response.json();
-    })
-    .then(result => {
-        documents.push(result.document);
-        localStorage.setItem('documents', JSON.stringify(documents));
-        renderDocuments();
-        document.getElementById('documentForm').reset();
-        showCustomMessage('A dokumentum sikeresen feltöltve!', 'success');
-    })
-    .catch(error => {
-        console.error('Fájl feltöltési hiba:', error);
-        showCustomMessage(`Hiba: ${error.message}`, 'error');
-    })
-    .finally(() => {
-        submitBtn.textContent = originalText;
-        submitBtn.disabled = false;
-    });
-}
-
 function renderDocuments(searchQuery = '') {
-    const desktopContainer = document.getElementById('documentsListDesktop');
-    const mobileContainer = document.getElementById('documentsListMobile');
-    if (!desktopContainer || !mobileContainer) return;
-
-    desktopContainer.innerHTML = '';
-    mobileContainer.innerHTML = '';
-
+    const container = document.querySelector('.documents-grid');
+    if (!container) return;
+    
+    container.innerHTML = '';
     const query = searchQuery.toLowerCase();
     
-    // Group items by patientId
-    const groupedItems = documents.reduce((acc, item) => {
-        const patientId = item.patientId || 'general';
-        if (!acc[patientId]) {
-            acc[patientId] = [];
-        }
-        acc[patientId].push(item);
-        return acc;
-    }, {});
-    
-    // Get patient IDs and sort them by patient name ascending alphabetically
-    const patientIds = Object.keys(groupedItems).sort((a, b) => {
-        const patientA = patients.find(p => String(p.id) === a);
-        const patientB = patients.find(p => String(p.id) === b);
-        const nameA = patientA ? patientA.name : 'Általános';
-        const nameB = patientB ? patientB.name : 'Általános';
-        return nameA.localeCompare(nameB, 'hu');
+    const filteredDocuments = documents.filter(doc => {
+        const patient = patients.find(p => p.id === doc.patientId);
+        const patientName = patient ? patient.name : 'Általános';
+        return doc.name.toLowerCase().includes(query) || patientName.toLowerCase().includes(query);
     });
 
-    if (documents.length === 0) {
-        const emptyState = '<div class="empty-state">Nincsenek dokumentumok a keresési feltételeknek megfelelően.</div>';
-        desktopContainer.innerHTML = emptyState;
-        mobileContainer.innerHTML = emptyState;
+    if (filteredDocuments.length === 0) {
+        container.innerHTML = '<div class="empty-state">Nincsenek dokumentumok a keresési feltételeknek megfelelően.</div>';
         return;
     }
-    
-    patientIds.forEach(patientId => {
-        const patient = patients.find(p => String(p.id) === patientId);
-        const patientName = patient ? patient.name : 'Általános';
-        
-        const filteredGroupItems = groupedItems[patientId].filter(doc => {
-            const matchesPatientName = patientName.toLowerCase().includes(query);
-            const matchesContent = doc.name.toLowerCase().includes(query);
-            return matchesPatientName || matchesContent;
-        });
 
-        if (filteredGroupItems.length > 0) {
-            const desktopGroupWrapper = document.createElement('div');
-            desktopGroupWrapper.className = `patient-list-group card-grid`;
-            desktopGroupWrapper.innerHTML = `<h3 class="patient-list-heading">${patientName}</h3>`;
-            
-            const mobileGroupWrapper = document.createElement('div');
-            mobileGroupWrapper.className = `patient-list-group documents-list-mobile`;
-            mobileGroupWrapper.innerHTML = `<h3 class="patient-list-heading">${patientName}</h3>`;
-
-            filteredGroupItems.forEach(doc => {
-                desktopGroupWrapper.appendChild(createDocumentCard(doc));
-                mobileGroupWrapper.appendChild(createCompactDocumentCard(doc));
-            });
-            
-            desktopContainer.appendChild(desktopGroupWrapper);
-            mobileContainer.appendChild(mobileGroupWrapper);
-        }
+    filteredDocuments.forEach(doc => {
+        const patient = patients.find(p => p.id === doc.patientId);
+        const patientName = patient ? patient.name : 'Ismeretlen páciens';
+        const card = document.createElement('div');
+        card.className = 'doc-card';
+        card.innerHTML = `
+            <div class="doc-left">
+                <div class="doc-icon">📄</div>
+                <div class="doc-text">
+                    <div class="doc-title">${doc.name}</div>
+                    <div class="doc-meta">Feltöltve: ${doc.uploadDate}</div>
+                </div>
+            </div>
+            <div class="doc-size">${formatFileSize(doc.size)}</div>
+        `;
+        card.addEventListener('click', () => openDocumentPopup(doc));
+        container.appendChild(card);
     });
-
-    // Handle case where no items match the filter
-    if (desktopContainer.children.length === 0) {
-        const emptyState = '<div class="empty-state">Nincsenek dokumentumok a keresési feltételeknek megfelelően.</div>';
-        desktopContainer.innerHTML = emptyState;
-        mobileContainer.innerHTML = emptyState;
-    }
-}
-
-// Existing function, now for desktop view
-function createDocumentCard(doc) {
-    const patient = patients.find(p => p.id === doc.patientId);
-    const patientName = patient ? patient.name : 'Ismeretlen páciens';
-    const patientColor = patient ? patient.color : '#8b5cf6';
-    const fileSize = doc.size ? formatFileSize(doc.size) : 'Ismeretlen méret';
-    const card = document.createElement('div');
-    card.className = 'card';
-    card.style.borderLeftColor = patientColor;
-    card.innerHTML = `
-        <div class="card-header">
-            <div class="card-title">${doc.name}</div>
-            <div class="card-actions">
-                <button class="icon-btn" onclick="viewDocument(${doc.id})" title="Megtekintés">
-                    <i class="fas fa-eye"></i>
-                </button>
-                <button class="icon-btn" onclick="downloadDocument(${doc.id})" title="Letöltés">
-                    <i class="fas fa-download"></i>
-                </button>
-                <button class="icon-btn btn-danger" onclick="deleteDocument(${doc.id})" title="Törlés">
-                    <i class="fas fa-trash"></i>
-                </button>
-            </div>
-        </div>
-        <div>
-            <p class="text-sm text-gray-600">Páciens: ${patientName}</p>
-            <p class="text-xs text-gray-500">Méret: ${fileSize} | Feltöltve: ${doc.uploadDate}</p>
-        </div>
-    `;
-    return card;
-}
-
-// New compact card function for mobile view
-function createCompactDocumentCard(doc) {
-    const patient = patients.find(p => p.id === doc.patientId);
-    const patientColor = patient ? patient.color : '#8b5cf6';
-    const fileSize = doc.size ? formatFileSize(doc.size) : 'Ismeretlen méret';
-    const card = document.createElement('div');
-    card.className = 'document-compact-card';
-    card.style.borderLeft = `3px solid ${patientColor}`;
-    card.innerHTML = `
-        <div class="icon-container">
-            <i class="fas fa-file-alt"></i>
-        </div>
-        <div class="document-info">
-            <div class="document-name">${doc.name}</div>
-            <div class="document-meta">
-                <span>Méret: ${fileSize}</span> | <span>Feltöltve: ${doc.uploadDate}</span>
-            </div>
-        </div>
-        <div class="card-actions">
-            <button class="icon-btn" onclick="viewDocument(${doc.id})" title="Megtekintés">
-                <i class="fas fa-eye"></i>
-            </button>
-            <button class="icon-btn" onclick="downloadDocument(${doc.id})" title="Letöltés">
-                <i class="fas fa-download"></i>
-            </button>
-            <button class="icon-btn btn-danger" onclick="deleteDocument(${doc.id})" title="Törlés">
-                <i class="fas fa-trash"></i>
-            </button>
-        </div>
-    `;
-    return card;
 }
 
 function formatFileSize(bytes) {
@@ -1367,6 +1387,8 @@ function deleteDocument(id) {
         documents = documents.filter(d => d.id !== id);
         localStorage.setItem('documents', JSON.stringify(documents));
         renderDocuments();
+        closeDocumentPopup();
+        showCustomMessage('A dokumentum sikeresen törölve.', 'success');
     });
 }
 
@@ -1981,6 +2003,17 @@ function loadCalculation(id) {
     syncCalculatorToCalendar(currentCalculationDate);
     renderSavedCalculationsList();
 }
+
+function loadTableWithData(data) {
+    const tableBody = document.getElementById('table-body');
+    if (!tableBody) return;
+    tableBody.innerHTML = '';
+    data.forEach(rowData => {
+        tableBody.appendChild(createCalculatorRow(rowData));
+    });
+    updateAllCalculations();
+}
+
 
 function deleteCalculation(id) {
     // Use a custom confirmation modal instead of alert/confirm
