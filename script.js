@@ -444,11 +444,12 @@ function openDocumentPopup(doc) {
     
     const patient = patients.find(p => p.id === doc.patientId);
     const patientName = patient ? patient.name : 'Ismeretlen';
+    const formattedDate = formatCustomDate(doc.uploadDate);
 
     // Set popup content
     popupTitle.textContent = doc.name;
     editInput.value = doc.name;
-    popupDate.textContent = doc.uploadDate;
+    popupDate.textContent = formattedDate;
     popupPatient.textContent = patientName;
     popupSize.textContent = formatFileSize(doc.size);
     
@@ -498,6 +499,16 @@ function saveDocumentTitle(docId, newTitle) {
         renderDocuments();
     }
     closeDocumentPopup();
+}
+
+function formatCustomDate(dateString) {
+    const date = new Date(dateString);
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    const hours = String(date.getHours()).padStart(2, '0');
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+    return `${year}/${month}/${day} ${hours}:${minutes}`;
 }
 
 
@@ -1321,6 +1332,8 @@ function renderDocuments(searchQuery = '') {
 
     filteredDocuments.forEach(doc => {
         const docTitle = doc.name.length > 20 ? doc.name.substring(0, 20) + '...' : doc.name;
+        // Format the date here
+        const formattedDate = formatCustomDate(doc.uploadDate);
         const card = document.createElement('div');
         card.className = 'doc-card';
         card.innerHTML = `
@@ -1328,7 +1341,7 @@ function renderDocuments(searchQuery = '') {
                 <div class="doc-icon">📄</div>
                 <div class="doc-text">
                     <div class="doc-title" title="${doc.name}">${docTitle}</div>
-                    <div class="doc-meta">Feltöltve: ${doc.uploadDate}</div>
+                    <div class="doc-meta">Feltöltve: ${formattedDate}</div>
                 </div>
             </div>
         `;
