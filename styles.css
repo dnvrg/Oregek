@@ -1885,6 +1885,7 @@ body {
 .notes-app-container .notes-grid-container {
     flex-grow: 1; /* Allows it to take up remaining space */
     padding: 20px;
+    position: relative;
 }
 
 .notes-app-container .notes-grid-header {
@@ -1892,6 +1893,14 @@ body {
     justify-content: space-between;
     align-items: center;
     margin-bottom: 20px;
+}
+
+/* Add a new rule for the add button to position it permanently */
+.notes-app-container #add-note-btn {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    z-index: 10;
 }
 
 /* Pinned notes section styling */
