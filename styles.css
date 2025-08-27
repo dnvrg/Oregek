@@ -1901,7 +1901,6 @@ body {
     position: absolute;
     top: 20px;
     right: 20px;
-    z-index: 10;
 }
 
 /* Pinned notes section styling */
