@@ -436,7 +436,6 @@ function openDocumentPopup(doc) {
     const popupPatient = document.getElementById('popup-patient');
     const popupSize = document.getElementById('popup-size');
     const editInput = document.getElementById('edit-input');
-    // Get the parent element of the icon to make the whole button clickable
     const deleteBtn = document.getElementById('delete-doc-btn').parentElement;
     const viewBtn = document.getElementById('view-doc-btn');
     const downloadBtn = document.getElementById('download-doc-btn');
@@ -1321,19 +1320,17 @@ function renderDocuments(searchQuery = '') {
     }
 
     filteredDocuments.forEach(doc => {
-        const patient = patients.find(p => p.id === doc.patientId);
-        const patientName = patient ? patient.name : 'Ismeretlen páciens';
+        const docTitle = doc.name.length > 20 ? doc.name.substring(0, 20) + '...' : doc.name;
         const card = document.createElement('div');
         card.className = 'doc-card';
         card.innerHTML = `
             <div class="doc-left">
                 <div class="doc-icon">📄</div>
                 <div class="doc-text">
-                    <div class="doc-title">${doc.name}</div>
+                    <div class="doc-title" title="${doc.name}">${docTitle}</div>
                     <div class="doc-meta">Feltöltve: ${doc.uploadDate}</div>
                 </div>
             </div>
-            <div class="doc-size">${formatFileSize(doc.size)}</div>
         `;
         card.addEventListener('click', () => openDocumentPopup(doc));
         container.appendChild(card);
