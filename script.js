@@ -496,7 +496,6 @@ function saveDocumentTitle(docId, newTitle) {
         docToUpdate.name = newTitle;
         localStorage.setItem('documents', JSON.stringify(documents));
         renderDocuments();
-        showCustomMessage('Dokumentum címe sikeresen módosítva!', 'success');
     }
     closeDocumentPopup();
 }
@@ -624,7 +623,6 @@ function initializeEventListeners() {
             }
             renderDocuments();
             fileInput.value = '';
-            showCustomMessage('A dokumentum(ok) sikeresen feltöltve!', 'success');
             uploadMessage.classList.add('hidden');
         })
         .catch(error => {
@@ -1388,7 +1386,6 @@ function deleteDocument(id) {
         localStorage.setItem('documents', JSON.stringify(documents));
         renderDocuments();
         closeDocumentPopup();
-        showCustomMessage('A dokumentum sikeresen törölve.', 'success');
     });
 }
 
