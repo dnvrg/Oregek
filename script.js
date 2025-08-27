@@ -947,7 +947,6 @@ function deletePatient(id) {
         renderDocuments();
         renderNotes();
         generateCalendar();
-        closePatientModal();
         updateCalculatorPatientSelects();
         showCustomMessage('A páciens sikeresen törölve.', 'success');
     });
