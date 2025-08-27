@@ -436,7 +436,8 @@ function openDocumentPopup(doc) {
     const popupPatient = document.getElementById('popup-patient');
     const popupSize = document.getElementById('popup-size');
     const editInput = document.getElementById('edit-input');
-    const deleteBtn = document.getElementById('delete-doc-btn');
+    // Get the parent element of the icon to make the whole button clickable
+    const deleteBtn = document.getElementById('delete-doc-btn').parentElement;
     const viewBtn = document.getElementById('view-doc-btn');
     const downloadBtn = document.getElementById('download-doc-btn');
 
@@ -1475,7 +1476,6 @@ function renderGroupedItems(items, containerId, itemRenderer, searchQuery = '', 
 
     if (items.length === 0) {
         container.innerHTML = '<div class="empty-state">Nincsenek tételek a keresési feltételeknek megfelelően.</div>';
-        return;
     }
     
     // Iterate through sorted patient groups and render
@@ -1641,9 +1641,6 @@ function handleFileUpload(event) {
             renderNotes();
             updatePatientSelects();
             generateCalendar();
-
-            // Use a custom modal instead of alert
-            showCustomMessage('Az adatok sikeresen feltöltve!', 'success');
 
         } catch (error) {
             console.error('Error uploading file:', error);
