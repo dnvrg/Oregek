@@ -2180,8 +2180,8 @@ html.dark .p-8.rounded-\[2rem\].shadow-xl.w-full.mx-auto.bg-lilac-50.border-2.bo
 /* New Compact Card style for Documents */
 .doc-card {
     background: #fff;
-    border-radius: 14px;
-    padding: 1rem;
+    border-radius: 24px;
+    padding: 1.5rem;
     box-shadow: 0 2px 8px rgba(0,0,0,0.05);
     display: flex;
     align-items: center;
@@ -2207,7 +2207,7 @@ html.dark .p-8.rounded-\[2rem\].shadow-xl.w-full.mx-auto.bg-lilac-50.border-2.bo
     font-size: 1.5rem;
     width: 40px;
     height: 40px;
-    border-radius: 10px;
+    border-radius: 12px;
     display: flex;
     align-items: center;
     justify-content: center;
