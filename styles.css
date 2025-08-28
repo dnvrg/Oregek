@@ -462,6 +462,13 @@ body {
     white-space: nowrap;
 }
 
+.btn-lg {
+    padding: 1rem 1.25rem;
+    font-size: 1rem;
+    font-weight: 600;
+    border-radius: 1.5rem;
+}
+
 .btn-primary {
     background: var(--purple-500);
     color: white;
@@ -844,6 +851,88 @@ body {
     border-left: 3px solid var(--purple-500);
 }
 
+/* New list styles for shopping list */
+.shopping-list-container {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.patient-list-group {
+    background-color: white;
+    border-radius: var(--radius-xl);
+    padding: 1.5rem;
+    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--gray-200);
+}
+
+.patient-list-heading {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: var(--gray-900);
+    margin-bottom: 1rem;
+    padding-left: 0.75rem;
+    border-left: 3px solid var(--purple-500);
+}
+
+.shopping-list-items {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.shopping-list-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 1rem;
+    background-color: var(--gray-50);
+    border-radius: var(--radius-lg);
+    transition: var(--transition);
+}
+
+.shopping-list-item:hover {
+    background-color: var(--gray-100);
+}
+
+.shopping-list-item.completed .item-name {
+    text-decoration: line-through;
+    color: var(--gray-500);
+}
+
+.item-name {
+    flex-grow: 1;
+    font-size: 1rem;
+    font-weight: 500;
+    color: var(--gray-800);
+    background: none;
+    border: none;
+    padding: 0;
+    margin: 0;
+    min-width: 0;
+}
+
+.item-name:focus {
+    outline: none;
+    border-bottom: 1px solid var(--purple-500);
+}
+
+.item-checkbox {
+    width: 1.25rem;
+    height: 1.25rem;
+    cursor: pointer;
+}
+
+.shopping-item-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+
+/* Old styles, kept for other sections */
 .shopping-item, .document-item {
     display: flex;
     align-items: center;
@@ -876,10 +965,7 @@ body {
     color: var(--gray-600);
 }
 
-.shopping-item-actions, .document-item-actions {
-    display: flex;
-    gap: 0.5rem;
-}
+
 
 /* Notes */
 .note-item {
@@ -1056,7 +1142,7 @@ body {
     position: fixed;
     inset: 0;
     background: rgba(0, 0, 0, 0.5);
-    z-index: 50;
+    z-index: 1010;
     align-items: center;
     justify-content: center;
     padding: 1rem;
@@ -1078,6 +1164,16 @@ body {
 
 .modal-sm {
     max-width: 28rem;
+}
+
+.modal-xs {
+    max-width: 20rem;
+    text-align: center;
+}
+
+/* New modal size for the Gemini feature */
+.modal-md {
+    max-width: 32rem;
 }
 
 .modal-header {
@@ -1209,6 +1305,29 @@ body {
     border-top: 1px solid var(--gray-200);
 }
 
+.modal-message {
+    font-size: 1rem;
+    font-weight: 500;
+}
+
+.success-modal-content {
+    background-color: var(--success-500);
+    color: white;
+}
+
+.success-modal-content .modal-message {
+    color: white;
+}
+
+.error-modal-content {
+    background-color: var(--danger-500);
+    color: white;
+}
+
+.error-modal-content .modal-message {
+    color: white;
+}
+
 /* Utility Classes */
 .hidden {
     display: none !important;
@@ -1238,7 +1357,79 @@ body {
     .mobile-menu-overlay.show {
         display: block;
     }
+
+    .shopping-form-section {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .shopping-input-group {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 1rem;
+        margin-bottom: 1rem;
+    }
+
+    .shopping-input-group .inline-form {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .shopping-input-group .inline-form > * {
+        width: 100%;
+    }
+
+    .separator-line {
+        display: none;
+    }
+
+    .ai-button {
+        width: 100%;
+    }
 }
+
+@media (min-width: 1024px) {
+    .shopping-form-section {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1.5rem;
+    }
+
+    .shopping-input-group {
+        display: flex;
+        align-items: flex-end;
+        gap: 1rem;
+        flex-wrap: wrap;
+    }
+
+    .shopping-input-group .inline-form {
+        display: flex;
+        gap: 1rem;
+        align-items: flex-end;
+    }
+
+    .shopping-input-group .form-input,
+    .shopping-input-group .form-select {
+        width: 15rem;
+    }
+
+    .separator-line {
+        width: 1px;
+        background-color: var(--gray-300);
+        align-self: stretch;
+    }
+
+    .ai-button {
+        width: 15rem;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0;
+    }
+}
+
 
 @media (max-width: 768px) {
     .content-header {
@@ -1423,6 +1614,24 @@ body {
     color: var(--gray-800);
 }
 
+.gemini-list-item-editable {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: var(--gray-50);
+    padding: 0.75rem 1rem;
+    border-radius: var(--radius-lg);
+    font-size: 0.875rem;
+}
+
+.gemini-item-input {
+    background-color: white;
+    padding: 0.5rem;
+    border-radius: 0.5rem;
+    border: 1px solid var(--gray-300);
+    flex: 1;
+}
+
 .camera-modal {
     display: none;
     position: fixed;
@@ -1468,4 +1677,127 @@ body {
 .camera-message {
     margin-top: 1rem;
     color: #ccc;
+}
+/* New Compact Card style for Documents */
+.doc-card {
+    background: #fff;
+    border-radius: 14px;
+    padding: 1rem;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    transition: box-shadow 0.2s, transform 0.2s;
+    cursor: pointer;
+}
+
+.doc-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.doc-left {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+}
+
+.doc-icon {
+    background: #d6c6f2; /* lilac */
+    color: #333;
+    font-size: 1.5rem;
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.doc-text {
+    display: flex;
+    flex-direction: column;
+}
+
+.doc-title {
+    font-size: 0.95rem;
+    font-weight: 600;
+    margin: 0;
+    color: #222;
+}
+
+.doc-meta {
+    font-size: 0.8rem;
+    color: #777;
+    margin-top: 0.2rem;
+}
+
+.doc-size {
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: #555;
+}
+
+/* Popup Styles */
+.popup-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.4);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.popup {
+    background: #fff;
+    border-radius: 2rem;
+    padding: 2rem;
+    width: 350px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    animation: fadeIn 0.3s ease;
+}
+
+.popup h3 {
+    margin: 0 0 10px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #333;
+}
+
+.popup p {
+    font-size: 0.9rem;
+    color: #666;
+    margin: 5px 0;
+}
+
+/* Responsive adjustments for document tab */
+.documents-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 1rem;
+}
+
+@media (max-width: 640px) {
+    .documents-grid {
+        grid-template-columns: 1fr;
+    }
+    .popup {
+        width: 90%;
+        margin: 1rem;
+    }
+}
+@media (min-width: 769px) {
+    .documents-list-desktop {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+        gap: 1.5rem;
+    }
+
+    .documents-list-mobile {
+        display: none;
+    }
 }
