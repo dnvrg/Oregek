@@ -4,13 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Idősgondozási Menedzser</title>
-    <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Inter font from Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <!-- Font Awesome for icons -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
 </head>
@@ -164,7 +161,6 @@
             </div>
 
             <div id="documents" class="tab-content">
-                <!-- Start of the new UI -->
                 <header class="content-header">
                     <div class="header-info">
                         <h2>Dokumentumok</h2>
@@ -179,7 +175,6 @@
                 </header>
                 
                 <div class="content-body">
-                    <!-- Upload Container -->
                     <div class="bg-white p-6 rounded-3xl shadow-xl w-full mx-auto mb-6">
                         <h2 class="text-2xl font-semibold text-gray-800 mb-4">Feltöltés</h2>
                         <div id="drop-area" class="flex flex-col items-center justify-center p-8 text-center border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-purple-400 transition-colors duration-200">
@@ -199,16 +194,13 @@
                         <div id="upload-message" class="mt-4 text-sm font-medium text-center hidden"></div>
                     </div>
                     
-                    <!-- Documents Grid Container -->
                     <div class="p-8 rounded-[2rem] shadow-xl w-full mx-auto bg-lilac-50 border-2 border-lilac-200">
                         <h2 class="text-2xl font-semibold text-gray-800 mb-6">Feltöltött dokumentumok</h2>
                         <div class="documents-grid">
-                            <!-- Document cards will be dynamically inserted here by JavaScript -->
-                        </div>
+                            </div>
                     </div>
                 </div>
-                <!-- End of the new UI -->
-            </div>
+                </div>
 
             <div id="notes" class="tab-content">
                 <header class="content-header">
@@ -225,23 +217,19 @@
                 </header>
                 
                 <div class="form-section">
-                    <form id="noteForm" class="note-form">
-                        <div class="form-group-inline">
-                            <div class="form-group-note">
-                                <label for="notePatient">Páciens</label>
-                                <select id="notePatient" class="form-select"></select>
-                            </div>
+                    <div class="notes-header">
+                        <div class="form-group-note">
+                            <label for="notePatient">Páciens</label>
+                            <select id="notePatient" class="form-select"></select>
                         </div>
-                        <div class="form-group-note-content">
-                            <label for="noteContent">Jegyzet</label>
-                            <textarea id="noteContent" required placeholder="Írja ide a jegyzetet..." rows="3" class="form-textarea"></textarea>
-                        </div>
-                        <button type="submit" class="btn btn-primary">Jegyzet mentése</button>
-                    </form>
+                        <button id="addNoteBtn" class="btn btn-primary add-note-btn hidden">
+                            <i class="fas fa-plus"></i>
+                        </button>
+                    </div>
                 </div>
                 
                 <div class="content-body">
-                    <div id="notesList">
+                    <div id="notesList" class="notes-grid">
                     </div>
                 </div>
             </div>
@@ -487,7 +475,6 @@
                 </div>
             </div>
             
-            <!-- New Document Details Popup -->
             <div class="popup-overlay" id="popupOverlay">
                 <div class="popup">
                     <div class="flex justify-between items-center mb-6">
@@ -581,6 +568,30 @@
                 </div>
             </div>
             
+            <div id="noteSettingsPopup" class="note-settings-popup">
+                <div class="note-settings-content">
+                    <div class="note-settings-header">
+                        <h3>Beállítások</h3>
+                    </div>
+                    <div class="note-color-picker">
+                        <div class="color-palette">
+                            <span class="color-box" data-color="#fff1f2"></span>
+                            <span class="color-box" data-color="#fdd7e4"></span>
+                            <span class="color-box" data-color="#e2e8f0"></span>
+                            <span class="color-box" data-color="#d1e7dd"></span>
+                            <span class="color-box" data-color="#e0c7ff"></span>
+                            <span class="color-box" data-color="#c4f7f2"></span>
+                            <span class="color-box" data-color="#bae7ff"></span>
+                            <span class="color-box" data-color="#fdf1c3"></span>
+                            <span class="color-box" data-color="#e5e5e5"></span>
+                        </div>
+                    </div>
+                    <button id="deleteNoteBtn" class="btn btn-danger btn-block mt-4">
+                        <i class="fas fa-trash-alt"></i> Törlés
+                    </button>
+                </div>
+            </div>
+
             <div id="infoModal" class="modal-overlay">
                 <div class="modal-content modal-xs">
                     <div class="modal-body text-center">
