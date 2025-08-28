@@ -4,9 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Idősgondozási Menedzser</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
@@ -137,25 +134,42 @@
                     </div>
                 </header>
                 
-                <div class="form-section shopping-form-section">
-                    <div class="shopping-input-group">
-                        <form id="shoppingForm" class="inline-form">
-                            <input type="text" id="shoppingItem" placeholder="Új tétel hozzáadása..." required class="form-input">
-                            <select id="shoppingPatient" class="form-select">
-                                <option value="">Válasszon pácienst</option>
-                            </select>
-                            <button type="submit" class="btn btn-primary">Hozzáad</button>
-                        </form>
-                    </div>
-                    <div class="separator-line"></div>
-                    <button id="openGeminiModalBtn" class="btn btn-lg btn-primary ai-button">
-                        <i class="fas fa-magic"></i>
-                        <span>AI elemzés</span>
-                    </button>
+                <div class="form-section">
+                    <form id="shoppingForm" class="inline-form">
+                        <input type="text" id="shoppingItem" placeholder="Új tétel hozzáadása..." required class="form-input flex-1">
+                        <select id="shoppingPatient" class="form-select">
+                            <option value="">Válasszon pácienst</option>
+                        </select>
+                        <button type="submit" class="btn btn-primary">Hozzáad</button>
+                    </form>
                 </div>
                 
+                <div class="gemini-feature-section">
+                    <h3>Gemini AI - Lista elemzés képről</h3>
+                    <p>Készítsen fotót egy kézzel írott bevásárlólistáról, és hagyja, hogy az AI automatikusan hozzáadja a tételeket a listához.</p>
+                    <div class="inline-form">
+                        <div class="form-group-note">
+                             <label for="geminiPatientSelect">Páciens</label>
+                            <select id="geminiPatientSelect" class="form-select gemini-patient-select" required>
+                                <option value="">Válasszon pácienst</option>
+                            </select>
+                        </div>
+                        <button id="openCameraBtn" class="btn btn-secondary"><i class="fas fa-camera"></i> Kamera megnyitása</button>
+                        <input type="file" id="uploadImageFile" accept="image/*" style="display: none;">
+                        <button id="uploadImageBtn" class="btn btn-secondary"><i class="fas fa-upload"></i> Kép feltöltése</button>
+                    </div>
+                    <div class="flex flex-col items-center mt-4">
+                        <img id="imagePreview" class="camera-preview hidden" alt="Kép előnézete">
+                        <button id="analyzeBtn" class="btn btn-primary mt-4 hidden"><i class="fas fa-magic"></i> Lista elemzés</button>
+                        <div id="loadingIndicator" class="loading-indicator hidden">
+                            <i class="fas fa-spinner fa-spin"></i>
+                            <span>Elemzés folyamatban...</span>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="content-body">
-                    <div id="shoppingList" class="shopping-list-container">
+                    <div id="shoppingList">
                     </div>
                 </div>
             </div>
@@ -174,33 +188,21 @@
                     </div>
                 </header>
                 
+                <div class="form-section">
+                    <form id="documentForm" class="inline-form">
+                        <input type="file" id="documentFile" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png" required class="form-input flex-1">
+                        <select id="documentPatient" required class="form-select">
+                            <option value="">Válasszon pácienst</option>
+                        </select>
+                        <button type="submit" class="btn btn-primary">Feltöltés</button>
+                    </form>
+                </div>
+                
                 <div class="content-body">
-                    <div class="bg-white p-6 rounded-3xl shadow-xl w-full mx-auto mb-6">
-                        <h2 class="text-2xl font-semibold text-gray-800 mb-4">Feltöltés</h2>
-                        <div id="drop-area" class="flex flex-col items-center justify-center p-8 text-center border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-purple-400 transition-colors duration-200">
-                            <button id="file-btn" class="px-6 py-3 bg-[#8B5CF6] text-white rounded-xl font-medium hover:bg-[#7e47e5] transition-colors duration-200">
-                                Fájl(ok) kiválasztása
-                            </button>
-                            <p class="text-gray-500 mt-4">vagy húzza ide a fájlokat</p>
-                            <p class="text-gray-500 text-sm mt-2">Több fájlt is kiválaszthat egyszerre.</p>
-                            <input type="file" id="documentFile" multiple class="hidden">
-                        </div>
-                        <div class="mt-4">
-                            <label for="documentPatient" class="block text-gray-700 font-medium">Feltöltés a következőnek:</label>
-                            <select id="documentPatient" class="w-full mt-1 p-2 border border-gray-300 rounded-md">
-                                <option value="">Válasszon pácienst</option>
-                            </select>
-                        </div>
-                        <div id="upload-message" class="mt-4 text-sm font-medium text-center hidden"></div>
-                    </div>
-                    
-                    <div class="p-8 rounded-[2rem] shadow-xl w-full mx-auto bg-lilac-50 border-2 border-lilac-200">
-                        <h2 class="text-2xl font-semibold text-gray-800 mb-6">Feltöltött dokumentumok</h2>
-                        <div class="documents-grid">
-                            </div>
+                    <div id="documentsList">
                     </div>
                 </div>
-                </div>
+            </div>
 
             <div id="notes" class="tab-content">
                 <header class="content-header">
@@ -215,29 +217,25 @@
                         </div>
                     </div>
                 </header>
-                <div class="notes-app-container">
-                    <div class="patient-dropdown-container">
-                        <div class="patient-dropdown-header" id="patient-dropdown-toggle">
-                            <span id="selected-patient-name">Betegek</span>
-                            <i class="fas fa-chevron-down transform transition-transform duration-300" id="dropdown-arrow"></i>
-                        </div>
-                        <div id="patient-dropdown-list" class="dropdown-list">
+                
+                <div class="form-section">
+                    <form id="noteForm" class="note-form">
+                        <div class="form-group-inline">
+                            <div class="form-group-note">
+                                <label for="notePatient">Páciens</label>
+                                <select id="notePatient" class="form-select"></select>
                             </div>
-                    </div>
-                    
-                    <div class="notes-grid-container">
-                        <div class="notes-grid-header">
-                            <h2 id="patient-name-header" class="text-2xl font-semibold text-gray-800"></h2>
                         </div>
-                        <i class="fas fa-plus text-xl text-gray-500 cursor-pointer hover:text-gray-800" id="add-note-btn"></i>
-                        <div id="pinned-notes-section" class="pinned-notes-section">
-                            <h3 class="text-xl font-semibold text-gray-800 mb-4 hidden" id="pinned-notes-header">Rögzített jegyzetek</h3>
-                            <div id="pinned-notes-row" class="pinned-notes-row">
-                                </div>
+                        <div class="form-group-note-content">
+                            <label for="noteContent">Jegyzet</label>
+                            <textarea id="noteContent" required placeholder="Írja ide a jegyzetet..." rows="3" class="form-textarea"></textarea>
                         </div>
-                        <div id="notes-divider" class="border-b-2 border-gray-300 mt-4 mb-8 hidden"></div>
-                        <div class="notes-grid" id="notes-grid">
-                            </div>
+                        <button type="submit" class="btn btn-primary">Jegyzet mentése</button>
+                    </form>
+                </div>
+                
+                <div class="content-body">
+                    <div id="notesList">
                     </div>
                 </div>
             </div>
@@ -338,7 +336,7 @@
                             <div class="form-group">
                                 <label for="mothersName">Anyja neve</label>
                                 <input type="text" id="mothersName" class="form-input">
-                            </div>
+                            </d>
                         </div>
                         
                         <div class="form-grid">
@@ -483,35 +481,6 @@
                 </div>
             </div>
             
-            <div class="popup-overlay" id="popupOverlay">
-                <div class="popup">
-                    <div class="flex justify-between items-center mb-6">
-                        <div class="flex-grow max-w-[75%]">
-                            <h1 id="file-name" class="text-2xl font-semibold text-gray-800 cursor-pointer hover:text-gray-600 transition-colors duration-200 truncate"></h1>
-                            <input type="text" id="edit-input" class="text-2xl font-semibold text-gray-800 hidden p-1 border border-gray-300 rounded-md w-full" value="">
-                        </div>
-                        <div class="bg-red-100 text-red-500 w-14 h-14 p-4 flex items-center justify-center rounded-lg hover:bg-red-200 transition-colors duration-200 shrink-0">
-                            <i id="delete-doc-btn" class="fas fa-trash-alt text-lg"></i>
-                        </div>
-                    </div>
-                    <div class="text-gray-600 space-y-2 mb-6">
-                        <p><strong>Páciens:</strong> <span id="popup-patient"></span></p>
-                        <p><strong>Dátum:</strong> <span id="popup-date"></span></p>
-                        <p><strong>Méret:</strong> <span id="popup-size"></span></p>
-                    </div>
-                    <div class="space-y-4">
-                        <button id="view-doc-btn" class="w-full flex items-center justify-center gap-2 p-4 rounded-xl text-white bg-[#8B5CF6] hover:bg-[#7e47e5] transition-colors duration-200">
-                            <i class="fas fa-eye text-lg"></i>
-                            <span class="font-medium">Megtekintés</span>
-                        </button>
-                        <button id="download-doc-btn" class="w-full flex items-center justify-center gap-2 p-4 rounded-xl text-[#8B5CF6] bg-gray-100 hover:bg-gray-200 transition-colors duration-200">
-                            <i class="fas fa-download text-lg"></i>
-                            <span class="font-medium">Letöltés</span>
-                        </button>
-                    </div>
-                </div>
-            </div>
-
             <div id="cameraModal" class="camera-modal">
                 <div class="camera-modal-content">
                     <video id="cameraFeed" class="camera-stream" autoplay playsinline></video>
@@ -523,95 +492,7 @@
                 </div>
             </div>
 
-            <div id="geminiMainModal" class="modal-overlay">
-                <div class="modal-content modal-md">
-                    <div class="modal-header">
-                        <h3>Gemini AI - Lista elemzés képről</h3>
-                        <button id="closeGeminiMainModal" class="modal-close">
-                            <i class="fas fa-times"></i>
-                        </button>
-                    </div>
-                    <div class="modal-body">
-                        <p>Készítsen fotót egy kézzel írott bevásárlólistáról, és hagyja, hogy az AI automatikusan hozzáadja a tételeket a listához.</p>
-                        <div class="inline-form mb-4">
-                            <div class="form-group-note">
-                                <label for="geminiPatientSelect">Páciens</label>
-                                <select id="geminiPatientSelect" class="form-select gemini-patient-select" required>
-                                    <option value="">Válasszon pácienst</option>
-                                </select>
-                            </div>
-                            <button id="openCameraBtn" class="btn btn-secondary"><i class="fas fa-camera"></i> Kamera megnyitása</button>
-                            <input type="file" id="uploadImageFile" accept="image/*" style="display: none;">
-                            <button id="uploadImageBtn" class="btn btn-secondary"><i class="fas fa-upload"></i> Kép feltöltése</button>
-                        </div>
-                        <div class="flex flex-col items-center mt-4">
-                            <img id="imagePreview" class="camera-preview hidden" alt="Kép előnézete">
-                            <button id="analyzeBtn" class="btn btn-primary mt-4 hidden"><i class="fas fa-magic"></i> Lista elemzés</button>
-                            <div id="loadingIndicator" class="loading-indicator hidden">
-                                <i class="fas fa-spinner fa-spin"></i>
-                                <span>Elemzés folyamatban...</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div id="geminiConfirmModal" class="modal-overlay">
-                <div class="modal-content modal-sm">
-                    <div class="modal-header">
-                        <h3>Bevásárlólista Elemzés</h3>
-                        <button id="closeGeminiConfirmModal" class="modal-close">
-                            <i class="fas fa-times"></i>
-                        </button>
-                    </div>
-                    <div class="modal-body">
-                        <p>Az AI a következő tételeket azonosította a listán a(z) <span id="geminiPatientName" class="font-semibold"></span> páciens számára. Kérjük, erősítse meg vagy szerkessze a listát.</p>
-                        <div id="geminiItemsList" class="gemini-list-container">
-                            </div>
-                    </div>
-                    <div class="modal-actions">
-                        <button id="geminiCancelBtn" class="btn btn-secondary">Mégsem</button>
-                        <button id="geminiConfirmBtn" class="btn btn-primary">Hozzáadás</button>
-                    </div>
-                </div>
-            </div>
-            
-            <div id="infoModal" class="modal-overlay">
-                <div class="modal-content modal-xs">
-                    <div class="modal-body text-center">
-                        <p id="infoMessage" class="modal-message"></p>
-                    </div>
-                </div>
-            </div>
-            
-            <div id="successModal" class="modal-overlay">
-                <div class="modal-content modal-xs success-modal-content">
-                    <div class="modal-body text-center">
-                        <p id="successMessage" class="modal-message"></p>
-                    </div>
-                </div>
-            </div>
-            
-            <div id="errorModal" class="modal-overlay">
-                <div class="modal-content modal-xs error-modal-content">
-                    <div class="modal-body text-center">
-                        <p id="errorMessage" class="modal-message"></p>
-                    </div>
-                </div>
-            </div>
-            
-            <div id="confirmModal" class="modal-overlay">
-                <div class="modal-content modal-xs">
-                    <div class="modal-body text-center">
-                        <p id="confirmMessage" class="modal-message"></p>
-                        <div class="modal-actions justify-center">
-                            <button class="btn btn-secondary cancel-btn">Mégsem</button>
-                            <button class="btn btn-primary confirm-btn">Igen</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
 
     <script src="script.js"></script>
 </body>
-</html>
+</html> 
