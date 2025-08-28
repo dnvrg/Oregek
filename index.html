@@ -570,9 +570,6 @@
             
             <div id="noteSettingsPopup" class="note-settings-popup">
                 <div class="note-settings-content">
-                    <div class="note-settings-header">
-                        <h3>Beállítások</h3>
-                    </div>
                     <div class="note-color-picker">
                         <div class="color-palette">
                             <span class="color-box" data-color="#b3ffb3"></span>
@@ -583,9 +580,11 @@
                             <span class="color-box" data-color="#66e6d6"></span>
                         </div>
                     </div>
-                    <button id="deleteNoteBtn" class="btn btn-danger btn-block mt-4">
-                        <i class="fas fa-trash-alt"></i> Törlés
-                    </button>
+                    <div class="note-settings-actions">
+                        <button id="deleteNoteBtn" class="btn btn-danger btn-full-width" title="Törlés">
+                            <i class="fas fa-trash-alt"></i> Törlés
+                        </button>
+                    </div>
                 </div>
             </div>
 
