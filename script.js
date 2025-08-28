@@ -642,10 +642,24 @@ function initializeEventListeners() {
             uploadMessage.classList.add('hidden');
         });
     }
+    
+    const notePatientSelect = document.getElementById('notePatient');
+    const addNoteBtn = document.getElementById('addNoteBtn');
 
-    const noteForm = document.getElementById('noteForm');
-    if (noteForm) {
-        noteForm.addEventListener('submit', handleNoteSubmit);
+    if (notePatientSelect) {
+        notePatientSelect.addEventListener('change', () => {
+            // Show the "+" button when a patient is selected
+            if (notePatientSelect.value) {
+                addNoteBtn.classList.remove('hidden');
+            } else {
+                addNoteBtn.classList.add('hidden');
+            }
+            renderNotes();
+        });
+    }
+
+    if (addNoteBtn) {
+        addNoteBtn.addEventListener('click', createNewNote);
     }
 
     // File upload
@@ -725,6 +739,16 @@ function initializeEventListeners() {
     if (cancelPhotoBtn) {
         cancelPhotoBtn.addEventListener('click', stopCamera);
     }
+
+    // Note Settings Pop-up listener
+    document.addEventListener('click', (e) => {
+        const noteSettingsPopup = document.getElementById('noteSettingsPopup');
+        const isClickInside = noteSettingsPopup.contains(e.target) || e.target.closest('.note-sticky');
+        if (noteSettingsPopup.classList.contains('show') && !isClickInside) {
+            noteSettingsPopup.classList.remove('show');
+        }
+    });
+
 }
 
 // Patient Management
@@ -1208,9 +1232,8 @@ function generateMobileCalendar(month, year) {
 function getVisitsForDate(date) {
     return savedCalendarData.filter(visit => {
         const visitDate = new Date(visit.date);
-        return visitDate.getFullYear() === date.getFullYear() &&
-               visitDate.getMonth() === date.getMonth() &&
-               visitDate.getDate() === date.getDate();
+        const visitDayString = visitDate.toISOString().split('T')[0];
+        return visitDayString === date.toISOString().split('T')[0];
     });
 }
 
@@ -1401,51 +1424,164 @@ function deleteDocument(id) {
 }
 
 // Notes functionality
-function handleNoteSubmit(e) {
-    e.preventDefault();
+function createNewNote() {
+    const patientSelect = document.getElementById('notePatient');
+    const patientId = patientSelect.value;
+    const defaultColor = '#fdd7e4';
 
-    const note = {
+    if (!patientId) {
+        showCustomMessage('Kérjük, válasszon ki egy pácienst a jegyzet létrehozásához.', 'error');
+        return;
+    }
+
+    const newNote = {
         id: Date.now(),
-        content: document.getElementById('noteContent').value,
-        patientId: parseInt(document.getElementById('notePatient').value),
-        date: new Date().toLocaleString()
+        content: '',
+        patientId: parseInt(patientId),
+        color: defaultColor,
+        isPinned: false,
     };
-
-    notes.push(note);
+    
+    notes.push(newNote);
     localStorage.setItem('notes', JSON.stringify(notes));
     renderNotes();
-    document.getElementById('noteForm').reset();
 }
 
 function renderNotes(searchQuery = '') {
     const container = document.getElementById('notesList');
+    const patientSelect = document.getElementById('notePatient');
+    const selectedPatientId = patientSelect.value;
+    const query = searchQuery.toLowerCase();
+
     if (!container) return;
-    renderGroupedItems(notes, 'notesList', createNoteCard, searchQuery);
+    
+    // Clear previous notes
+    container.innerHTML = '';
+    
+    if (!selectedPatientId) {
+        container.innerHTML = '<div class="empty-state">Kérjük, válasszon ki egy pácienst a jegyzetek megtekintéséhez.</div>';
+        return;
+    }
+
+    const filteredNotes = notes.filter(note => 
+        String(note.patientId) === selectedPatientId && note.content.toLowerCase().includes(query)
+    );
+
+    // Sort notes: pinned notes first, then by id descending (newest first)
+    filteredNotes.sort((a, b) => {
+        if (a.isPinned && !b.isPinned) return -1;
+        if (!a.isPinned && b.isPinned) return 1;
+        return b.id - a.id;
+    });
+
+    if (filteredNotes.length === 0) {
+        container.innerHTML = '<div class="empty-state">Nincsenek jegyzetek ehhez a pácienshez. Kattintson a "+" gombra egy új hozzáadásához.</div>';
+    } else {
+        filteredNotes.forEach(note => {
+            const card = createNoteCard(note);
+            container.appendChild(card);
+        });
+    }
 }
 
 function createNoteCard(note) {
     const patient = patients.find(p => p.id === note.patientId);
-    const patientName = patient ? patient.name : 'Általános';
     const patientColor = patient ? patient.color : '#8b5cf6';
     const card = document.createElement('div');
-    card.className = 'card';
+    
+    // Add a random slight rotation for visual effect, only if not pinned
+    const randomRotation = note.isPinned ? 0 : (Math.random() - 0.5) * 4; // -2deg to 2deg
+    
+    card.className = `note-sticky ${note.isPinned ? 'pinned' : ''}`;
     card.style.borderLeftColor = patientColor;
+    card.style.backgroundColor = note.color; // Use the saved note color
+    card.style.setProperty('--rotation', `${randomRotation}deg`); // Apply rotation
+    
+    const contentClass = note.content.trim() ? '' : 'empty';
+
     card.innerHTML = `
-        <div class="card-header">
-            <div class="card-title">Jegyzet</div>
+        <div class="note-sticky-header">
             <div class="card-actions">
-                <button class="icon-btn btn-danger" onclick="deleteNote(${note.id})" title="Törlés">
-                    <i class="fas fa-trash"></i>
+                <button class="icon-btn pin-btn ${note.isPinned ? 'active' : ''}" data-id="${note.id}" title="Rögzítés">
+                    <i class="fas fa-thumbtack"></i>
+                </button>
+                <button class="icon-btn settings-btn" data-id="${note.id}" title="Beállítások">
+                    <i class="fas fa-cog"></i>
                 </button>
             </div>
         </div>
-        <div>
-            <p class="text-sm text-gray-600">Páciens: ${patientName}</p>
-            <p class="text-xs text-gray-500">Dátum: ${note.date}</p>
-            <p class="mt-2 text-gray-700">${note.content}</p>
+        <div class="note-sticky-content">
+            <div class="note-sticky-text ${contentClass}" contenteditable="true" data-id="${note.id}">${note.content}</div>
         </div>
     `;
+
+    const noteTextElement = card.querySelector('.note-sticky-text');
+    noteTextElement.addEventListener('blur', (e) => saveNoteContent(e.target.dataset.id, e.target.textContent));
+
+    const pinBtn = card.querySelector('.pin-btn');
+    pinBtn.addEventListener('click', (e) => toggleNotePin(e.currentTarget.dataset.id));
+
+    const settingsBtn = card.querySelector('.settings-btn');
+    settingsBtn.addEventListener('click', (e) => openNoteSettingsPopup(e, note.id));
+
     return card;
+}
+
+function openNoteSettingsPopup(event, noteId) {
+    const popup = document.getElementById('noteSettingsPopup');
+    const deleteBtn = document.getElementById('deleteNoteBtn');
+    const palette = popup.querySelector('.note-color-picker .color-palette');
+
+    // Find the note and its current color
+    const note = notes.find(n => n.id === noteId);
+    if (!note) return;
+
+    // Set a data attribute on the popup to reference the note
+    popup.dataset.noteId = noteId;
+
+    // Set up the delete button's onclick
+    deleteBtn.onclick = () => deleteNote(noteId);
+    
+    // Reset selection and highlight the current color
+    palette.querySelectorAll('.color-box').forEach(box => {
+        box.classList.remove('selected');
+        if (box.dataset.color === note.color) {
+            box.classList.add('selected');
+        }
+    });
+
+    // Position the popup near the gear icon
+    const rect = event.currentTarget.getBoundingClientRect();
+    popup.style.top = `${rect.bottom + 10}px`;
+    popup.style.left = `${rect.left}px`;
+    
+    popup.classList.add('show');
+}
+
+function saveNoteContent(id, newContent) {
+    const noteToUpdate = notes.find(note => String(note.id) === id);
+    if (noteToUpdate) {
+        noteToUpdate.content = newContent;
+        localStorage.setItem('notes', JSON.stringify(notes));
+    }
+}
+
+function toggleNotePin(id) {
+    const noteToUpdate = notes.find(note => String(note.id) === id);
+    if (noteToUpdate) {
+        noteToUpdate.isPinned = !noteToUpdate.isPinned;
+        localStorage.setItem('notes', JSON.stringify(notes));
+        renderNotes();
+    }
+}
+
+function updateNoteColor(id, color) {
+    const noteToUpdate = notes.find(note => String(note.id) === id);
+    if (noteToUpdate) {
+        noteToUpdate.color = color;
+        localStorage.setItem('notes', JSON.stringify(notes));
+        renderNotes(); // Re-render to apply the color
+    }
 }
 
 function deleteNote(id) {
@@ -1455,6 +1591,7 @@ function deleteNote(id) {
         localStorage.setItem('notes', JSON.stringify(notes));
         renderNotes();
     });
+    document.getElementById('noteSettingsPopup').classList.remove('show');
 }
 
 // Generic function to render grouped items (for lists and cards)
