@@ -25,7 +25,7 @@ let renameId = null;
 let currentCalculationDate = null;
 let cameraStream = null;
 
-const NOTE_COLORS = ["#fff1f2", "#e2e8f0", "#e0c7ff", "#fdd7e4", "#c4f7f2", "#d1e7dd"];
+const NOTE_COLORS = ["#b3ffb3", "#ffb3e6", "#b39b9b", "#ffcc99", "#b3e6ff", "#66e6d6"];
 let colorIndex = 0;
 
 // Initialize app
@@ -1588,7 +1588,7 @@ function toggleNotePin(id) {
 }
 
 function updateNoteColor(id, color) {
-    const noteToUpdate = notes.find(note => String(note.id) === id);
+    const noteToUpdate = notes.find(note => note.id === id);
     if (noteToUpdate) {
         noteToUpdate.color = color;
         localStorage.setItem('notes', JSON.stringify(notes));
