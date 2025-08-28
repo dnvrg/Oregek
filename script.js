@@ -1468,36 +1468,43 @@ function renderNotes(searchQuery = '') {
         return;
     }
 
-    const filteredNotes = notes.filter(note => 
+    const patientNotes = notes.filter(note => 
         String(note.patientId) === selectedPatientId && note.content.toLowerCase().includes(query)
     );
 
-    // Sort notes: pinned notes first, then by id descending (newest first)
-    filteredNotes.sort((a, b) => {
-        // Pinned notes come before unpinned notes
-        if (a.isPinned !== b.isPinned) {
-            return a.isPinned ? -1 : 1;
-        }
+    // Separate pinned and unpinned notes
+    const pinnedNotes = patientNotes.filter(note => note.isPinned);
+    const unpinnedNotes = patientNotes.filter(note => !note.isPinned);
 
-        // If both are pinned, sort by pinned timestamp descending (newest pinned first)
-        if (a.isPinned) { // and b is also pinned
-            const aTime = a.pinnedTimestamp || 0;
-            const bTime = b.pinnedTimestamp || 0;
-            if (aTime !== bTime) {
-                return bTime - aTime;
-            }
-            // If timestamps are the same or missing, sort by creation date
-            return b.id - a.id;
-        }
-        
-        // If both are unpinned, sort by creation id descending (newest first)
-        return b.id - a.id;
-    });
+    // Sort pinned notes by timestamp (newest first)
+    pinnedNotes.sort((a, b) => (b.pinnedTimestamp || 0) - (a.pinnedTimestamp || 0));
 
-    if (filteredNotes.length === 0) {
+    // Sort unpinned notes by creation id (newest first)
+    unpinnedNotes.sort((a, b) => b.id - a.id);
+
+    if (patientNotes.length === 0) {
         container.innerHTML = '<div class="empty-state">Nincsenek jegyzetek ehhez a pácienshez. Kattintson a "+" gombra egy új hozzáadásához.</div>';
     } else {
-        filteredNotes.forEach(note => {
+        // Render pinned notes
+        pinnedNotes.forEach(note => {
+            const card = createNoteCard(note);
+            container.appendChild(card);
+        });
+
+        // Add a divider if there are both pinned and unpinned notes
+        if (pinnedNotes.length > 0 && unpinnedNotes.length > 0) {
+            const divider = document.createElement('div');
+            divider.className = 'notes-divider';
+            divider.innerHTML = `
+                <span class="notes-divider-line"></span>
+                <span class="notes-divider-text">Többi jegyzet</span>
+                <span class="notes-divider-line"></span>
+            `;
+            container.appendChild(divider);
+        }
+
+        // Render unpinned notes
+        unpinnedNotes.forEach(note => {
             const card = createNoteCard(note);
             container.appendChild(card);
         });
