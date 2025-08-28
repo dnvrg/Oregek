@@ -1474,8 +1474,23 @@ function renderNotes(searchQuery = '') {
 
     // Sort notes: pinned notes first, then by id descending (newest first)
     filteredNotes.sort((a, b) => {
-        if (a.isPinned && !b.isPinned) return -1;
-        if (!a.isPinned && b.isPinned) return 1;
+        // Pinned notes come before unpinned notes
+        if (a.isPinned !== b.isPinned) {
+            return a.isPinned ? -1 : 1;
+        }
+
+        // If both are pinned, sort by pinned timestamp descending (newest pinned first)
+        if (a.isPinned) { // and b is also pinned
+            const aTime = a.pinnedTimestamp || 0;
+            const bTime = b.pinnedTimestamp || 0;
+            if (aTime !== bTime) {
+                return bTime - aTime;
+            }
+            // If timestamps are the same or missing, sort by creation date
+            return b.id - a.id;
+        }
+        
+        // If both are unpinned, sort by creation id descending (newest first)
         return b.id - a.id;
     });
 
@@ -1582,6 +1597,11 @@ function toggleNotePin(id) {
     const noteToUpdate = notes.find(note => String(note.id) === id);
     if (noteToUpdate) {
         noteToUpdate.isPinned = !noteToUpdate.isPinned;
+        if (noteToUpdate.isPinned) {
+            noteToUpdate.pinnedTimestamp = Date.now();
+        } else {
+            delete noteToUpdate.pinnedTimestamp;
+        }
         localStorage.setItem('notes', JSON.stringify(notes));
         renderNotes();
     }
