@@ -24,6 +24,7 @@ let renameId = null;
 // New global variable to track the date of the loaded calculation
 let currentCalculationDate = null;
 let cameraStream = null;
+let selectedPatientId = null;
 
 // Initialize app
 document.addEventListener('DOMContentLoaded', function() {
@@ -993,6 +994,7 @@ function updatePatientSelects() {
     });
 
     updateCalculatorPatientSelects();
+    updateNotesUI();
 }
 
 function updateCalculatorPatientSelects() {
@@ -1454,9 +1456,14 @@ function initializeMedicalNotesApp() {
         notes = []; // Clear old notes
     }
     
-    let selectedPatientId = patients.length > 0 ? patients[0].id : null;
+    // Set selectedPatientId to the first patient if it's not already set
+    if (patients.length > 0 && !selectedPatientId) {
+        selectedPatientId = patients[0].id;
+    }
+
     if (patients.length > 0) {
-        selectedPatientNameDisplay.textContent = patients[0].name;
+        const patient = patients.find(p => p.id === selectedPatientId);
+        selectedPatientNameDisplay.textContent = patient ? patient.name : 'Válasszon pácienst';
     } else {
         selectedPatientNameDisplay.textContent = 'Nincs páciens';
     }
@@ -1487,46 +1494,54 @@ function initializeMedicalNotesApp() {
     function renderNotes(searchQuery = '') {
         const query = searchQuery.toLowerCase();
         const patient = patients.find(p => p.id == selectedPatientId);
-        if (patient) {
-            patientNameHeader.textContent = `${patient.name} jegyzetei`;
-            notesGrid.innerHTML = '';
+
+        if (!patient) {
+            patientNameHeader.textContent = '';
+            notesGrid.innerHTML = '<div class="empty-state">Kérjük, válasszon egy pácienst a jegyzetek megtekintéséhez, vagy hozzon létre egy újat a Páciensek fülön.</div>';
             pinnedNotesRow.innerHTML = '';
-            
-            selectedPatientNameDisplay.textContent = patient.name;
-
-            const filteredNotes = patient.notes.filter(note => 
-                note.title.toLowerCase().includes(query) ||
-                note.content.toLowerCase().includes(query)
-            );
-            
-            const pinnedNotes = filteredNotes.filter(note => note.isPinned);
-            const unpinnedNotes = filteredNotes.filter(note => !note.isPinned);
-
-            // Sort both lists by creation time (newest first)
-            pinnedNotes.sort((a, b) => b.id - a.id);
-            unpinnedNotes.sort((a, b) => b.id - a.id);
-            
-            if (pinnedNotes.length > 0) {
-                pinnedNotesHeader.classList.remove('hidden');
-                notesDivider.classList.remove('hidden');
-                pinnedNotes.forEach(note => {
-                    const noteElement = createNoteCard(note);
-                    pinnedNotesRow.appendChild(noteElement);
-                });
-            } else {
-                pinnedNotesHeader.classList.add('hidden');
-                notesDivider.classList.add('hidden');
-            }
-            
-            unpinnedNotes.forEach(note => {
-                const noteElement = createNoteCard(note);
-                notesGrid.appendChild(noteElement);
-            });
-            
-            document.querySelectorAll('.content-input').forEach(textarea => {
-                autoResize.call(textarea);
-            });
+            pinnedNotesHeader.classList.add('hidden');
+            notesDivider.classList.add('hidden');
+            return;
         }
+
+        patientNameHeader.textContent = `${patient.name} jegyzetei`;
+        notesGrid.innerHTML = '';
+        pinnedNotesRow.innerHTML = '';
+            
+        selectedPatientNameDisplay.textContent = patient.name;
+
+        const filteredNotes = patient.notes.filter(note => 
+            note.title.toLowerCase().includes(query) ||
+            note.content.toLowerCase().includes(query)
+        );
+            
+        const pinnedNotes = filteredNotes.filter(note => note.isPinned);
+        const unpinnedNotes = filteredNotes.filter(note => !note.isPinned);
+
+        // Sort both lists by creation time (newest first)
+        pinnedNotes.sort((a, b) => b.id - a.id);
+        unpinnedNotes.sort((a, b) => b.id - a.id);
+            
+        if (pinnedNotes.length > 0) {
+            pinnedNotesHeader.classList.remove('hidden');
+            notesDivider.classList.remove('hidden');
+            pinnedNotes.forEach(note => {
+                const noteElement = createNoteCard(note);
+                pinnedNotesRow.appendChild(noteElement);
+            });
+        } else {
+            pinnedNotesHeader.classList.add('hidden');
+            notesDivider.classList.add('hidden');
+        }
+            
+        unpinnedNotes.forEach(note => {
+            const noteElement = createNoteCard(note);
+            notesGrid.appendChild(noteElement);
+        });
+            
+        document.querySelectorAll('.content-input').forEach(textarea => {
+            autoResize.call(textarea);
+        });
     }
 
     function createNoteCard(note) {
@@ -1627,7 +1642,7 @@ function initializeMedicalNotesApp() {
         document.querySelectorAll('.dropdown-list-item').forEach(item => {
             item.addEventListener('click', (event) => {
                 const patientId = event.currentTarget.dataset.patientId;
-                selectedPatientId = patientId;
+                selectedPatientId = parseInt(patientId);
                 renderNotes(notesSearchInput.value);
                 closeDropdown();
             });
@@ -1738,6 +1753,9 @@ function initializeMedicalNotesApp() {
                 // The unshift() method adds the new note to the beginning of the notes array.
                 // This causes the new note to appear at the top-left of the notes grid.
                 if (patient) {
+                    if (!patient.notes) {
+                        patient.notes = [];
+                    }
                     patient.notes.unshift(newNote);
                     renderNotes(notesSearchInput.value);
                     savePatientsToLocalStorage();
@@ -1749,9 +1767,7 @@ function initializeMedicalNotesApp() {
     }
     
     renderPatientsDropdown();
-    if (selectedPatientId) {
-        renderNotes(notesSearchInput.value);
-    }
+    renderNotes();
 }
 
 // Generic function to render grouped items (for lists and cards)
