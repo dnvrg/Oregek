@@ -24,7 +24,6 @@ let renameId = null;
 // New global variable to track the date of the loaded calculation
 let currentCalculationDate = null;
 let cameraStream = null;
-let selectedPatientId = null;
 
 // Initialize app
 document.addEventListener('DOMContentLoaded', function() {
@@ -78,9 +77,6 @@ document.addEventListener('DOMContentLoaded', function() {
     // On page load, explicitly sync calendar data for today to ensure it's always visible
     const today = new Date().toISOString();
     syncCalculatorToCalendar(today);
-
-    // Initial render of the notes UI
-    initializeMedicalNotesApp();
 
     console.log('Application initialized successfully');
 });
@@ -156,7 +152,7 @@ function showTab(tabId) {
             renderDocuments();
             break;
         case 'notes':
-            initializeMedicalNotesApp();
+            renderNotes();
             break;
         case 'calculator':
             updateAllCalculations();
@@ -171,8 +167,6 @@ function initializeModals() {
     const mobileMenuOverlay = document.getElementById('mobileMenuOverlay');
     const closeDayDetailBtn = document.getElementById('closeDayDetailModal');
     const dayDetailModal = document.getElementById('dayDetailModal');
-    const closeGeminiMainModalBtn = document.getElementById('closeGeminiMainModal');
-    const geminiMainModal = document.getElementById('geminiMainModal');
 
 
     if (mobileMenuBtn) {
@@ -247,55 +241,6 @@ function initializeModals() {
             }
         });
     }
-
-    // Main Gemini Modal
-    if (closeGeminiMainModalBtn) {
-        closeGeminiMainModalBtn.addEventListener('click', closeGeminiMainModal);
-    }
-
-    if (geminiMainModal) {
-        geminiMainModal.addEventListener('click', (e) => {
-            if (e.target === geminiMainModal) {
-                closeGeminiMainModal();
-            }
-        });
-    }
-
-
-    // Gemini confirmation modal
-    const geminiConfirmModal = document.getElementById('geminiConfirmModal');
-    if (geminiConfirmModal) {
-        geminiConfirmModal.addEventListener('click', (e) => {
-            if (e.target === geminiConfirmModal) {
-                closeGeminiConfirmModal();
-            }
-        });
-    }
-    
-    const confirmBtn = document.getElementById('geminiConfirmBtn');
-    if (confirmBtn) {
-        confirmBtn.addEventListener('click', () => {
-            addConfirmedItemsToShoppingList();
-            closeGeminiConfirmModal();
-        });
-    }
-
-    const cancelGeminiBtn = document.getElementById('geminiCancelBtn');
-    if (cancelGeminiBtn) {
-        cancelGeminiBtn.addEventListener('click', () => {
-            closeGeminiConfirmModal();
-        });
-    }
-
-    // Document popup modal
-    const popupOverlay = document.getElementById('popupOverlay');
-    if (popupOverlay) {
-        popupOverlay.addEventListener('click', (e) => {
-            if (e.target === popupOverlay) {
-                closeDocumentPopup();
-            }
-        });
-    }
 }
 
 function openMobileMenu() {
@@ -343,25 +288,6 @@ function closeDayDetailModal() {
     }
 }
 
-function openGeminiMainModal() {
-    const modal = document.getElementById('geminiMainModal');
-    if (modal) {
-        modal.classList.add('show');
-    }
-}
-
-function closeGeminiMainModal() {
-    const modal = document.getElementById('geminiMainModal');
-    if (modal) {
-        modal.classList.remove('show');
-        // Clear any previous state
-        document.getElementById('imagePreview').classList.add('hidden');
-        document.getElementById('analyzeBtn').classList.add('hidden');
-        document.getElementById('loadingIndicator').classList.add('hidden');
-        document.getElementById('uploadImageFile').value = '';
-    }
-}
-
 function renderDayDetails(date) {
     const container = document.getElementById('dayDetailsContent');
     if (!container) return;
@@ -393,128 +319,6 @@ function renderDayDetails(date) {
     }
 }
 
-function openGeminiConfirmModal(items, patientId) {
-    const modal = document.getElementById('geminiConfirmModal');
-    const listContainer = document.getElementById('geminiItemsList');
-    const patientName = patients.find(p => p.id === parseInt(patientId))?.name || 'Általános';
-    const patientSpan = document.getElementById('geminiPatientName');
-
-    if (!modal || !listContainer) return;
-
-    listContainer.innerHTML = '';
-    
-    if (patientSpan) {
-        patientSpan.textContent = patientName;
-        modal.dataset.patientId = patientId;
-    }
-
-    items.forEach(itemText => {
-        const itemDiv = document.createElement('div');
-        itemDiv.className = 'gemini-list-item-editable';
-        itemDiv.innerHTML = `
-            <input type="text" value="${itemText}" class="gemini-item-input flex-1 p-2 border rounded-lg">
-            <button class="icon-btn btn-danger remove-item-btn"><i class="fas fa-trash"></i></button>
-        `;
-        listContainer.appendChild(itemDiv);
-
-        // Add event listener for the remove button
-        itemDiv.querySelector('.remove-item-btn').addEventListener('click', () => {
-            itemDiv.remove();
-        });
-    });
-
-    modal.classList.add('show');
-}
-
-function closeGeminiConfirmModal() {
-    const modal = document.getElementById('geminiConfirmModal');
-    if (modal) {
-        modal.classList.remove('show');
-    }
-}
-
-function openDocumentPopup(doc) {
-    const popupOverlay = document.getElementById('popupOverlay');
-    const popupTitle = document.getElementById('file-name');
-    const popupDate = document.getElementById('popup-date');
-    const popupPatient = document.getElementById('popup-patient');
-    const popupSize = document.getElementById('popup-size');
-    const editInput = document.getElementById('edit-input');
-    const deleteBtn = document.getElementById('delete-doc-btn').parentElement;
-    const viewBtn = document.getElementById('view-doc-btn');
-    const downloadBtn = document.getElementById('download-doc-btn');
-
-    if (!doc || !popupOverlay) return;
-    
-    const patient = patients.find(p => p.id === doc.patientId);
-    const patientName = patient ? patient.name : 'Ismeretlen';
-    const formattedDate = formatCustomDate(doc.uploadDate);
-
-    // Set popup content
-    popupTitle.textContent = doc.name;
-    editInput.value = doc.name;
-    popupDate.textContent = formattedDate;
-    popupPatient.textContent = patientName;
-    popupSize.textContent = formatFileSize(doc.size);
-    
-    // Set data attributes for event listeners
-    popupOverlay.dataset.docId = doc.id;
-    popupOverlay.dataset.docName = doc.name;
-
-    // Reset UI state
-    popupTitle.classList.remove('hidden');
-    editInput.classList.add('hidden');
-
-    // Add event listeners for the specific document
-    deleteBtn.onclick = () => deleteDocument(doc.id);
-    viewBtn.onclick = () => viewDocument(doc.id);
-    downloadBtn.onclick = () => downloadDocument(doc.id);
-    
-    popupTitle.onclick = () => {
-        popupTitle.classList.add('hidden');
-        editInput.classList.remove('hidden');
-        editInput.focus();
-    };
-
-    editInput.onblur = () => saveDocumentTitle(doc.id, editInput.value);
-    editInput.onkeydown = (e) => {
-        if (e.key === 'Enter') {
-            saveDocumentTitle(doc.id, editInput.value);
-        }
-    };
-    
-    popupOverlay.style.display = 'flex';
-}
-
-function closeDocumentPopup() {
-    const popupOverlay = document.getElementById('popupOverlay');
-    if (popupOverlay) {
-        popupOverlay.style.display = 'none';
-        document.getElementById('file-name').classList.remove('hidden');
-        document.getElementById('edit-input').classList.add('hidden');
-    }
-}
-
-function saveDocumentTitle(docId, newTitle) {
-    const docToUpdate = documents.find(d => d.id === docId);
-    if (docToUpdate) {
-        docToUpdate.name = newTitle;
-        localStorage.setItem('documents', JSON.stringify(documents));
-        renderDocuments();
-    }
-    closeDocumentPopup();
-}
-
-function formatCustomDate(dateString) {
-    const date = new Date(dateString);
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
-    const hours = String(date.getHours()).padStart(2, '0');
-    const minutes = String(date.getMinutes()).padStart(2, '0');
-    return `${year}/${month}/${day} ${hours}:${minutes}`;
-}
-
 
 // Event Listeners
 function initializeEventListeners() {
@@ -543,8 +347,7 @@ function initializeEventListeners() {
     const notesSearchInput = document.getElementById('notesSearchInput');
     if (notesSearchInput) {
         notesSearchInput.addEventListener('input', (e) => {
-            // New search functionality for the updated notes UI
-            renderNotes();
+            renderNotes(e.target.value);
         });
     }
 
@@ -559,93 +362,14 @@ function initializeEventListeners() {
         shoppingForm.addEventListener('submit', handleShoppingSubmit);
     }
 
-    // New document upload listeners
-    const dropArea = document.getElementById('drop-area');
-    const fileBtn = document.getElementById('file-btn');
-    const fileInput = document.getElementById('documentFile');
-    const documentPatientSelect = document.getElementById('documentPatient');
-
-    if (fileBtn) {
-        fileBtn.addEventListener('click', () => {
-            fileInput.click();
-        });
+    const documentForm = document.getElementById('documentForm');
+    if (documentForm) {
+        documentForm.addEventListener('submit', handleDocumentSubmit);
     }
 
-    if (fileInput) {
-        fileInput.addEventListener('change', (e) => {
-            handleDocumentFiles(e.target.files);
-        });
-    }
-
-    if (dropArea) {
-        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
-            dropArea.addEventListener(eventName, preventDefaults, false);
-        });
-        ['dragenter', 'dragover'].forEach(eventName => {
-            dropArea.addEventListener(eventName, () => {
-                dropArea.classList.add('border-purple-500');
-            }, false);
-        });
-        ['dragleave', 'drop'].forEach(eventName => {
-            dropArea.addEventListener(eventName, () => {
-                dropArea.classList.remove('border-purple-500');
-            }, false);
-        });
-        dropArea.addEventListener('drop', (e) => {
-            const dt = e.dataTransfer;
-            const files = dt.files;
-            handleDocumentFiles(files);
-        }, false);
-    }
-    
-    function preventDefaults(e) {
-        e.preventDefault();
-        e.stopPropagation();
-    }
-
-    function handleDocumentFiles(files) {
-        const patientId = documentPatientSelect.value;
-        if (!patientId) {
-            showCustomMessage('Kérjük, válasszon ki egy pácienst a feltöltéshez.', 'error');
-            return;
-        }
-
-        const uploadMessage = document.getElementById('upload-message');
-        uploadMessage.textContent = 'Feltöltés folyamatban...';
-        uploadMessage.classList.remove('hidden');
-
-        const formData = new FormData();
-        formData.append('patientId', patientId);
-        
-        // Append all files to the same FormData object
-        for (const file of files) {
-            formData.append('documentFile', file);
-        }
-
-        fetch('/api/upload', {
-            method: 'POST',
-            body: formData
-        })
-        .then(response => {
-            if (!response.ok) {
-                return response.json().then(err => { throw new Error(err.message || 'Fájl feltöltése sikertelen.') });
-            }
-            return response.json();
-        })
-        .then(result => {
-            if (result.document) {
-                documents.push(result.document);
-                localStorage.setItem('documents', JSON.stringify(documents));
-            }
-            renderDocuments();
-            fileInput.value = '';
-            uploadMessage.classList.add('hidden');
-        })
-        .catch(error => {
-            console.error('Fájl feltöltési hiba:', error);
-            showCustomMessage(`Hiba: ${error.message}`, 'error');
-            uploadMessage.classList.add('hidden');
-        });
+    const noteForm = document.getElementById('noteForm');
+    if (noteForm) {
+        noteForm.addEventListener('submit', handleNoteSubmit);
     }
 
     // File upload
@@ -665,15 +389,10 @@ function initializeEventListeners() {
     }
 
     // Gemini API features for shopping list
-    const openGeminiModalBtn = document.getElementById('openGeminiModalBtn');
     const uploadImageFile = document.getElementById('uploadImageFile');
     const uploadImageBtn = document.getElementById('uploadImageBtn');
     const openCameraBtn = document.getElementById('openCameraBtn');
     const analyzeBtn = document.getElementById('analyzeBtn');
-
-    if (openGeminiModalBtn) {
-        openGeminiModalBtn.addEventListener('click', openGeminiMainModal);
-    }
 
     if (uploadImageBtn) {
         uploadImageBtn.addEventListener('click', () => {
@@ -710,8 +429,7 @@ function initializeEventListeners() {
             if (imagePreview.src && patientId) {
                 analyzeImageWithGemini(imagePreview.src, patientId);
             } else {
-                // Using a custom modal instead of alert
-                showCustomMessage('Kérjük, válasszon ki egy képet és egy pácienst.', 'alert');
+                alert('Kérjük, válasszon ki egy képet és egy pácienst.');
             }
         });
     }
@@ -925,8 +643,8 @@ function editPatient(id) {
 
 function deletePatient(id) {
     const patient = patients.find(p => p.id === id);
-    // Use a custom confirmation modal instead of alert/confirm
-    showCustomConfirm(`Biztosan törölni szeretné ${patient ? patient.name : 'ezt a pácienst'}? Ez az akció visszavonhatatlan és minden hozzá kapcsolódó adatot töröl.`, () => {
+    if (confirm(`Biztosan törölni szeretné ${patient ? patient.name : 'ezt a pácienst'}? Ez az akció visszavonhatatlan és minden hozzá kapcsolódó adatot töröl.`)) {
+
         patients = patients.filter(p => p.id !== id);
         shoppingItems = shoppingItems.filter(item => parseInt(item.patientId) !== id);
         documents = documents.filter(doc => parseInt(doc.patientId) !== id);
@@ -948,9 +666,9 @@ function deletePatient(id) {
         renderDocuments();
         renderNotes();
         generateCalendar();
+        closePatientModal();
         updateCalculatorPatientSelects();
-        showCustomMessage('A páciens sikeresen törölve.', 'success');
-    });
+    }
 }
 
 function clearPatientForm() {
@@ -994,7 +712,6 @@ function updatePatientSelects() {
     });
 
     updateCalculatorPatientSelects();
-    updateNotesUI();
 }
 
 function updateCalculatorPatientSelects() {
@@ -1218,91 +935,46 @@ function getVisitsForDate(date) {
 function handleShoppingSubmit(e) {
     e.preventDefault();
 
-    const newItemName = document.getElementById('shoppingItem').value.trim();
-    const patientId = parseInt(document.getElementById('shoppingPatient').value);
+    const item = {
+        id: Date.now(),
+        item: document.getElementById('shoppingItem').value,
+        patientId: parseInt(document.getElementById('shoppingPatient').value),
+        completed: false
+    };
 
-    if (!newItemName || !patientId) {
-        showCustomMessage('Kérjük, adjon meg egy tételt és válasszon pácienst.', 'error');
-        return;
-    }
-
-    const existingItem = shoppingItems.find(item => item.item.toLowerCase() === newItemName.toLowerCase() && item.patientId === patientId);
-
-    if (existingItem) {
-        if (existingItem.completed) {
-            existingItem.completed = false;
-        }
-    } else {
-        const newItem = {
-            id: Date.now(),
-            item: newItemName,
-            patientId: patientId,
-            completed: false
-        };
-        shoppingItems.push(newItem);
-    }
-
+    shoppingItems.push(item);
     localStorage.setItem('shoppingItems', JSON.stringify(shoppingItems));
     renderShoppingList();
     document.getElementById('shoppingForm').reset();
 }
 
-
 function renderShoppingList(searchQuery = '') {
     const container = document.getElementById('shoppingList');
     if (!container) return;
-    renderGroupedItems(shoppingItems, 'shoppingList', createShoppingListItem, searchQuery, 'shopping-list-container');
+    renderGroupedCards(shoppingItems, 'shoppingList', createShoppingCard, searchQuery);
 }
 
-function createShoppingListItem(item) {
-    const listItem = document.createElement('li');
-    listItem.className = `shopping-list-item ${item.completed ? 'completed' : ''}`;
-    
-    // Find patient color for the list item border
+function createShoppingCard(item) {
     const patient = patients.find(p => p.id === item.patientId);
-    if (patient) {
-        listItem.style.borderLeftColor = patient.color;
-    }
-
-    listItem.innerHTML = `
-        <input type="checkbox" class="item-checkbox" ${item.completed ? 'checked' : ''} data-id="${item.id}">
-        <input type="text" class="item-name" value="${item.item}" data-id="${item.id}">
-        <div class="shopping-item-actions">
-            <button class="icon-btn btn-danger" onclick="deleteShoppingItem(${item.id})">
-                <i class="fas fa-trash"></i>
-            </button>
+    const patientName = patient ? patient.name : 'Általános';
+    const patientColor = patient ? patient.color : '#8b5cf6';
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.style.borderLeftColor = patientColor;
+    card.innerHTML = `
+        <div class="card-header">
+            <div class="card-title">${item.item}</div>
+            <div class="card-actions">
+                <button class="icon-btn btn-danger" onclick="deleteShoppingItem(${item.id})">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </div>
+        </div>
+        <div>
+            <p class="text-sm text-gray-600">Páciens: ${patientName}</p>
         </div>
     `;
-
-    // Add event listener for checkbox change
-    listItem.querySelector('.item-checkbox').addEventListener('change', (e) => {
-        toggleShoppingItemCompletion(item.id, e.target.checked);
-    });
-
-    // Add event listener for input blur (when user finishes editing)
-    listItem.querySelector('.item-name').addEventListener('blur', (e) => {
-        updateShoppingItemName(item.id, e.target.value);
-    });
-    
-    return listItem;
-}
-
-function updateShoppingItemName(id, newName) {
-    const itemToUpdate = shoppingItems.find(item => item.id === id);
-    if (itemToUpdate) {
-        itemToUpdate.item = newName.trim();
-        localStorage.setItem('shoppingItems', JSON.stringify(shoppingItems));
-        renderShoppingList();
-    }
-}
-
-function toggleShoppingItemCompletion(id, isCompleted) {
-    const itemToUpdate = shoppingItems.find(item => item.id === id);
-    if (itemToUpdate) {
-        itemToUpdate.completed = isCompleted;
-        localStorage.setItem('shoppingItems', JSON.stringify(shoppingItems));
-        renderShoppingList();
-    }
+    return card;
 }
 
 function deleteShoppingItem(id) {
@@ -1312,42 +984,91 @@ function deleteShoppingItem(id) {
 }
 
 // Document management
-function renderDocuments(searchQuery = '') {
-    const container = document.querySelector('.documents-grid');
-    if (!container) return;
-    
-    container.innerHTML = '';
-    const query = searchQuery.toLowerCase();
-    
-    const filteredDocuments = documents.filter(doc => {
-        const patient = patients.find(p => p.id === doc.patientId);
-        const patientName = patient ? patient.name : 'Általános';
-        return doc.name.toLowerCase().includes(query) || patientName.toLowerCase().includes(query);
-    });
+function handleDocumentSubmit(e) {
+    e.preventDefault();
 
-    if (filteredDocuments.length === 0) {
-        container.innerHTML = '<div class="empty-state">Nincsenek dokumentumok a keresési feltételeknek megfelelően.</div>';
+    const fileInput = document.getElementById('documentFile');
+    const file = fileInput.files[0];
+    const patientId = document.getElementById('documentPatient').value;
+
+    if (!file || !patientId) {
         return;
     }
 
-    filteredDocuments.forEach(doc => {
-        const docTitle = doc.name.length > 20 ? doc.name.substring(0, 20) + '...' : doc.name;
-        // Format the date here
-        const formattedDate = formatCustomDate(doc.uploadDate);
-        const card = document.createElement('div');
-        card.className = 'doc-card';
-        card.innerHTML = `
-            <div class="doc-left">
-                <div class="doc-icon">📄</div>
-                <div class="doc-text">
-                    <div class="doc-title" title="${doc.name}">${docTitle}</div>
-                    <div class="doc-meta">Feltöltve: ${formattedDate}</div>
-                </div>
+    const submitBtn = e.target.querySelector('button[type="submit"]');
+    const originalText = submitBtn.textContent;
+    submitBtn.textContent = 'Feltöltés...';
+    submitBtn.disabled = true;
+
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        try {
+            const documentObj = {
+                id: Date.now(),
+                name: file.name,
+                patientId: parseInt(patientId),
+                data: e.target.result,
+                type: file.type,
+                size: file.size,
+                uploadDate: new Date().toLocaleString()
+            };
+
+            documents.push(documentObj);
+            localStorage.setItem('documents', JSON.stringify(documents));
+            renderDocuments();
+
+            document.getElementById('documentForm').reset();
+        } catch (error) {
+            console.error('Error saving document:', error);
+        } finally {
+            submitBtn.textContent = originalText;
+            submitBtn.disabled = false;
+        }
+    };
+
+    reader.onerror = function() {
+        submitBtn.textContent = originalText;
+        submitBtn.disabled = false;
+    };
+
+    reader.readAsDataURL(file);
+}
+
+function renderDocuments(searchQuery = '') {
+    const container = document.getElementById('documentsList');
+    if (!container) return;
+    renderGroupedCards(documents, 'documentsList', createDocumentCard, searchQuery);
+}
+
+function createDocumentCard(doc) {
+    const patient = patients.find(p => p.id === doc.patientId);
+    const patientName = patient ? patient.name : 'Ismeretlen páciens';
+    const patientColor = patient ? patient.color : '#8b5cf6';
+    const fileSize = doc.size ? formatFileSize(doc.size) : 'Ismeretlen méret';
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.style.borderLeftColor = patientColor;
+    card.innerHTML = `
+        <div class="card-header">
+            <div class="card-title">${doc.name}</div>
+            <div class="card-actions">
+                <button class="icon-btn" onclick="viewDocument(${doc.id})" title="Megtekintés">
+                    <i class="fas fa-eye"></i>
+                </button>
+                <button class="icon-btn" onclick="downloadDocument(${doc.id})" title="Letöltés">
+                    <i class="fas fa-download"></i>
+                </button>
+                <button class="icon-btn btn-danger" onclick="deleteDocument(${doc.id})" title="Törlés">
+                    <i class="fas fa-trash"></i>
+                </button>
             </div>
-        `;
-        card.addEventListener('click', () => openDocumentPopup(doc));
-        container.appendChild(card);
-    });
+        </div>
+        <div>
+            <p class="text-sm text-gray-600">Páciens: ${patientName}</p>
+            <p class="text-xs text-gray-500">Méret: ${fileSize} | Feltöltve: ${doc.uploadDate}</p>
+        </div>
+    `;
+    return card;
 }
 
 function formatFileSize(bytes) {
@@ -1391,402 +1112,71 @@ function downloadDocument(id) {
 }
 
 function deleteDocument(id) {
-    // Use a custom confirmation modal instead of alert/confirm
-    showCustomConfirm('Biztosan törölni szeretné ezt a dokumentumot?', () => {
+    if (confirm('Biztosan törölni szeretné ezt a dokumentumot?')) {
         documents = documents.filter(d => d.id !== id);
         localStorage.setItem('documents', JSON.stringify(documents));
         renderDocuments();
-        closeDocumentPopup();
-    });
+    }
 }
 
 // Notes functionality
-function initializeMedicalNotesApp() {
-    const patientDropdownToggle = document.getElementById('patient-dropdown-toggle');
-    const patientDropdownList = document.getElementById('patient-dropdown-list');
-    const dropdownArrow = document.getElementById('dropdown-arrow');
-    const selectedPatientNameDisplay = document.getElementById('selected-patient-name');
-    const notesGrid = document.getElementById('notes-grid');
-    const pinnedNotesRow = document.getElementById('pinned-notes-row');
-    const pinnedNotesHeader = document.getElementById('pinned-notes-header');
-    const notesDivider = document.getElementById('notes-divider');
-    const patientNameHeader = document.getElementById('patient-name-header');
-    const addNoteBtn = document.getElementById('add-note-btn');
-    const notesSearchInput = document.getElementById('notesSearchInput');
+function handleNoteSubmit(e) {
+    e.preventDefault();
 
-    const noteColors = ['pastel-yellow', 'pastel-green', 'pastel-pink', 'pastel-rosey-brown', 'pastel-orange', 'pastel-blue', 'pastel-aqua', 'pastel-lavender'];
-    let currentColorIndex = 0;
-    
-    // Check if the current notes data structure is the old one
-    if (notes.length > 0 && notes[0].hasOwnProperty('content')) {
-        // Transform old 'notes' array into the new 'patients' structure
-        notes = notes.map(note => ({
-            id: note.id,
-            title: '',
-            content: note.content,
-            color: getNextNoteColor(),
-            isPinned: false
-        }));
-        
-        // Add a "Jegyzetek" property to each patient
-        patients.forEach(patient => {
-            patient.notes = [];
-        });
-        
-        // Assign notes to patients based on patientId
-        notes.forEach(note => {
-            const patient = patients.find(p => p.id === note.patientId);
-            if (patient) {
-                patient.notes.push(note);
-            }
-        });
-        
-        // Save the new structure
-        localStorage.setItem('patients', JSON.stringify(patients));
-        // Clear the old notes data to avoid conflicts
-        localStorage.removeItem('notes');
-        
-        // Re-load the data to use the new structure
-        patients = JSON.parse(localStorage.getItem('patients')) || [];
-        notes = []; // Clear old notes
-    }
-    
-    // Set selectedPatientId to the first patient if it's not already set
-    if (patients.length > 0 && !selectedPatientId) {
-        selectedPatientId = patients[0].id;
-    }
+    const note = {
+        id: Date.now(),
+        content: document.getElementById('noteContent').value,
+        patientId: parseInt(document.getElementById('notePatient').value),
+        date: new Date().toLocaleString()
+    };
 
-    if (patients.length > 0) {
-        const patient = patients.find(p => p.id === selectedPatientId);
-        selectedPatientNameDisplay.textContent = patient ? patient.name : 'Válasszon pácienst';
-    } else {
-        selectedPatientNameDisplay.textContent = 'Nincs páciens';
-    }
-
-
-    function savePatientsToLocalStorage() {
-        localStorage.setItem('patients', JSON.stringify(patients));
-    }
-
-    function getNextNoteColor() {
-        const color = noteColors[currentColorIndex];
-        currentColorIndex = (currentColorIndex + 1) % noteColors.length;
-        return color;
-    }
-
-    function renderPatientsDropdown() {
-        patientDropdownList.innerHTML = '';
-        patients.forEach(patient => {
-            const patientElement = document.createElement('div');
-            patientElement.classList.add('dropdown-list-item');
-            patientElement.dataset.patientId = patient.id;
-            patientElement.textContent = patient.name;
-            patientDropdownList.appendChild(patientElement);
-        });
-        attachPatientEventListeners();
-    }
-
-    function renderNotes(searchQuery = '') {
-        const query = searchQuery.toLowerCase();
-        const patient = patients.find(p => p.id == selectedPatientId);
-
-        if (!patient) {
-            patientNameHeader.textContent = '';
-            notesGrid.innerHTML = '<div class="empty-state">Kérjük, válasszon egy pácienst a jegyzetek megtekintéséhez, vagy hozzon létre egy újat a Páciensek fülön.</div>';
-            pinnedNotesRow.innerHTML = '';
-            pinnedNotesHeader.classList.add('hidden');
-            notesDivider.classList.add('hidden');
-            return;
-        }
-
-        patientNameHeader.textContent = `${patient.name} jegyzetei`;
-        notesGrid.innerHTML = '';
-        pinnedNotesRow.innerHTML = '';
-            
-        selectedPatientNameDisplay.textContent = patient.name;
-
-        const filteredNotes = patient.notes.filter(note => 
-            note.title.toLowerCase().includes(query) ||
-            note.content.toLowerCase().includes(query)
-        );
-            
-        const pinnedNotes = filteredNotes.filter(note => note.isPinned);
-        const unpinnedNotes = filteredNotes.filter(note => !note.isPinned);
-
-        // Sort both lists by creation time (newest first)
-        pinnedNotes.sort((a, b) => b.id - a.id);
-        unpinnedNotes.sort((a, b) => b.id - a.id);
-            
-        if (pinnedNotes.length > 0) {
-            pinnedNotesHeader.classList.remove('hidden');
-            notesDivider.classList.remove('hidden');
-            pinnedNotes.forEach(note => {
-                const noteElement = createNoteCard(note);
-                pinnedNotesRow.appendChild(noteElement);
-            });
-        } else {
-            pinnedNotesHeader.classList.add('hidden');
-            notesDivider.classList.add('hidden');
-        }
-            
-        unpinnedNotes.forEach(note => {
-            const noteElement = createNoteCard(note);
-            notesGrid.appendChild(noteElement);
-        });
-            
-        document.querySelectorAll('.content-input').forEach(textarea => {
-            autoResize.call(textarea);
-        });
-    }
-
-    function createNoteCard(note) {
-        const noteElement = document.createElement('div');
-        noteElement.classList.add('note-card', `note-color-${note.color}`);
-        noteElement.dataset.noteId = note.id;
-        noteElement.innerHTML = `
-            <div class="title-container">
-                <input type="text" class="title-input" value="${note.title}">
-                <div class="note-actions">
-                    <i class="fas fa-thumbtack pin-note-btn ${note.isPinned ? 'pinned' : ''}"></i>
-                    <i class="fas fa-cog note-settings-btn"></i>
-                </div>
-            </div>
-            <textarea class="content-input">${note.content}</textarea>
-            <div class="settings-menu">
-                <div class="color-options-row">
-                    ${noteColors.slice(0, 4).map(color => `<div class="color-option note-color-${color}" data-color="${color}"></div>`).join('')}
-                </div>
-                <div class="color-options-row">
-                    ${noteColors.slice(4, 8).map(color => `<div class="color-option note-color-${color}" data-color="${color}"></div>`).join('')}
-                </div>
-                <button class="delete-note-btn bg-red-100 text-red-500 hover:bg-red-200 transition-colors">
-                    <i class="fas fa-trash-alt mr-2"></i>Törlés
-                </button>
-            </div>
-        `;
-
-        const titleInput = noteElement.querySelector('.title-input');
-        const contentInput = noteElement.querySelector('.content-input');
-        const settingsBtn = noteElement.querySelector('.note-settings-btn');
-        const pinBtn = noteElement.querySelector('.pin-note-btn');
-        const settingsMenu = noteElement.querySelector('.settings-menu');
-        const colorOptions = noteElement.querySelectorAll('.color-option');
-        const deleteBtn = noteElement.querySelector('.delete-note-btn');
-
-        titleInput.addEventListener('blur', (event) => {
-            event.stopPropagation();
-            saveChanges(note.id);
-        });
-        contentInput.addEventListener('blur', (event) => {
-            event.stopPropagation();
-            saveChanges(note.id);
-        });
-        contentInput.addEventListener('input', autoResize);
-        
-        settingsBtn.addEventListener('click', (event) => {
-            event.stopPropagation();
-            // Close any other open menus
-            document.querySelectorAll('.settings-menu').forEach(menu => {
-                if (menu !== settingsMenu) {
-                    menu.classList.remove('show-menu');
-                    menu.closest('.note-card').classList.remove('active-note-card');
-                }
-            });
-            
-            settingsMenu.classList.toggle('show-menu');
-            noteElement.classList.toggle('active-note-card');
-        });
-        
-        // Pin/Unpin note functionality
-        pinBtn.addEventListener('click', (event) => {
-            event.stopPropagation();
-            pinNote(note.id);
-        });
-
-        colorOptions.forEach(option => {
-            option.addEventListener('click', (event) => {
-                event.stopPropagation();
-                const noteToUpdate = patients.find(p => p.id == selectedPatientId)?.notes.find(n => n.id == note.id);
-                if (noteToUpdate) {
-                    noteToUpdate.color = option.dataset.color;
-                    renderNotes(notesSearchInput.value);
-                    savePatientsToLocalStorage();
-                }
-            });
-        });
-        
-        deleteBtn.addEventListener('click', (event) => {
-            event.stopPropagation();
-            const noteId = event.currentTarget.closest('.note-card').dataset.noteId;
-            
-            // Custom message box instead of confirm()
-            showCustomConfirm('Biztosan törölni szeretné ezt a jegyzetet?', () => {
-                deleteNote(noteId);
-            });
-        });
-        
-        return noteElement;
-    }
-    
-    function autoResize() {
-        this.style.height = 'auto';
-        this.style.height = (this.scrollHeight) + 'px';
-    }
-
-    function attachPatientEventListeners() {
-        document.querySelectorAll('.dropdown-list-item').forEach(item => {
-            item.addEventListener('click', (event) => {
-                event.stopPropagation();
-                const patientId = event.currentTarget.dataset.patientId;
-                selectedPatientId = parseInt(patientId);
-                renderNotes(notesSearchInput.value);
-                closeDropdown();
-            });
-        });
-    }
-
-    function saveChanges(noteId) {
-        const patient = patients.find(p => p.id == selectedPatientId);
-        if (!patient) return;
-
-        const noteCard = document.querySelector(`[data-note-id="${noteId}"]`);
-        if (noteCard) {
-            const note = patient.notes.find(n => n.id == noteId);
-            if (note) {
-                note.title = noteCard.querySelector('.title-input').value;
-                note.content = noteCard.querySelector('.content-input').value;
-                savePatientsToLocalStorage();
-            }
-        }
-    }
-    
-    function deleteNote(noteId) {
-        const patient = patients.find(p => p.id == selectedPatientId);
-        if (patient) {
-            patient.notes = patient.notes.filter(n => n.id != noteId);
-            renderNotes(notesSearchInput.value);
-            savePatientsToLocalStorage();
-        }
-    }
-
-    function pinNote(noteId) {
-        const patient = patients.find(p => p.id == selectedPatientId);
-        if (!patient) return;
-
-        const noteIndex = patient.notes.findIndex(n => n.id == noteId);
-        if (noteIndex > -1) {
-            const noteToPin = patient.notes[noteIndex];
-
-            if (noteToPin.isPinned) {
-                // Unpin the note and move it to the end of the array
-                noteToPin.isPinned = false;
-                patient.notes.splice(noteIndex, 1);
-                patient.notes.push(noteToPin);
-            } else {
-                // Pin the note and move it to the beginning of the array
-                noteToPin.isPinned = true;
-                patient.notes.splice(noteIndex, 1);
-                patient.notes.unshift(noteToPin);
-            }
-            
-            renderNotes(notesSearchInput.value);
-            savePatientsToLocalStorage();
-        }
-    }
-
-    function toggleDropdown() {
-        patientDropdownList.classList.toggle('open');
-        patientDropdownToggle.classList.toggle('open');
-        dropdownArrow.classList.toggle('rotate-180');
-    }
-
-    function closeDropdown() {
-        patientDropdownList.classList.remove('open');
-        patientDropdownToggle.classList.remove('open');
-        dropdownArrow.classList.remove('rotate-180');
-    }
-    
-    if (patientDropdownToggle) {
-        patientDropdownToggle.addEventListener('click', (event) => {
-            event.stopPropagation();
-            toggleDropdown();
-        });
-    }
-
-    if (notesSearchInput) {
-        notesSearchInput.addEventListener('input', (e) => {
-            renderNotes(e.target.value);
-        });
-    }
-
-    // Global click handler to close all menus and dropdowns
-    document.addEventListener('click', (event) => {
-        // Close settings menus
-        document.querySelectorAll('.settings-menu').forEach(menu => {
-            if (!menu.parentElement.contains(event.target)) {
-                menu.classList.remove('show-menu');
-                menu.closest('.note-card').classList.remove('active-note-card');
-            }
-        });
-        
-        // Close patient dropdown if clicking outside
-        if (patientDropdownToggle && patientDropdownList && !patientDropdownToggle.contains(event.target) && !patientDropdownList.contains(event.target)) {
-            closeDropdown();
-        }
-    });
-
-    if (addNoteBtn) {
-        addNoteBtn.addEventListener('click', () => {
-            if (selectedPatientId) {
-                const patient = patients.find(p => p.id == selectedPatientId);
-                const newNote = {
-                    id: Date.now(),
-                    title: 'Új jegyzet',
-                    content: '',
-                    color: getNextNoteColor(),
-                    isPinned: false // New notes are not pinned by default
-                };
-                // The unshift() method adds the new note to the beginning of the notes array.
-                // This causes the new note to appear at the top-left of the notes grid.
-                if (patient) {
-                    if (!patient.notes) {
-                        patient.notes = [];
-                    }
-                    patient.notes.unshift(newNote);
-                    renderNotes(notesSearchInput.value);
-                    savePatientsToLocalStorage();
-                }
-            } else {
-                showCustomMessage('Kérjük, válasszon ki egy pácienst a jegyzet hozzáadásához!', 'error');
-            }
-        });
-    }
-    
-    // Encapsulate the notes UI rendering logic into a single function
-    function updateNotesUI() {
-        renderPatientsDropdown();
-        // If a patient is available, render their notes. Otherwise, show an empty state.
-        if (patients.length > 0 && selectedPatientId) {
-            const patient = patients.find(p => p.id === selectedPatientId);
-            if (patient) {
-                selectedPatientNameDisplay.textContent = patient.name;
-            }
-            renderNotes();
-        } else {
-            notesGrid.innerHTML = '<div class="empty-state">Kérjük, válasszon egy pácienst a jegyzetek megtekintéséhez, vagy hozzon létre egy újat a Páciensek fülön.</div>';
-            pinnedNotesRow.innerHTML = '';
-            pinnedNotesHeader.classList.add('hidden');
-            notesDivider.classList.add('hidden');
-            selectedPatientNameDisplay.textContent = 'Nincs páciens';
-        }
-    }
-    
-    // Call the new encapsulated function instead of separate render calls
-    updateNotesUI();
+    notes.push(note);
+    localStorage.setItem('notes', JSON.stringify(notes));
+    renderNotes();
+    document.getElementById('noteForm').reset();
 }
 
-// Generic function to render grouped items (for lists and cards)
-function renderGroupedItems(items, containerId, itemRenderer, searchQuery = '', containerClass = 'card-grid') {
+function renderNotes(searchQuery = '') {
+    const container = document.getElementById('notesList');
+    if (!container) return;
+    renderGroupedCards(notes, 'notesList', createNoteCard, searchQuery);
+}
+
+function createNoteCard(note) {
+    const patient = patients.find(p => p.id === note.patientId);
+    const patientName = patient ? patient.name : 'Általános';
+    const patientColor = patient ? patient.color : '#8b5cf6';
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.style.borderLeftColor = patientColor;
+    card.innerHTML = `
+        <div class="card-header">
+            <div class="card-title">Jegyzet</div>
+            <div class="card-actions">
+                <button class="icon-btn btn-danger" onclick="deleteNote(${note.id})" title="Törlés">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </div>
+        </div>
+        <div>
+            <p class="text-sm text-gray-600">Páciens: ${patientName}</p>
+            <p class="text-xs text-gray-500">Dátum: ${note.date}</p>
+            <p class="mt-2 text-gray-700">${note.content}</p>
+        </div>
+    `;
+    return card;
+}
+
+function deleteNote(id) {
+    if (confirm('Biztosan törölni szeretné ezt a jegyzetet?')) {
+        notes = notes.filter(n => n.id !== id);
+        localStorage.setItem('notes', JSON.stringify(notes));
+        renderNotes();
+    }
+}
+
+// Generic function to render grouped cards
+function renderGroupedCards(items, containerId, cardRenderer, searchQuery = '') {
     const container = document.getElementById(containerId);
     if (!container) return;
 
@@ -1814,6 +1204,7 @@ function renderGroupedItems(items, containerId, itemRenderer, searchQuery = '', 
 
     if (items.length === 0) {
         container.innerHTML = '<div class="empty-state">Nincsenek tételek a keresési feltételeknek megfelelően.</div>';
+        return;
     }
     
     // Iterate through sorted patient groups and render
@@ -1840,65 +1231,21 @@ function renderGroupedItems(items, containerId, itemRenderer, searchQuery = '', 
         // Only render the group if there are matching items
         if (filteredGroupItems.length > 0) {
             const groupWrapper = document.createElement('div');
-            groupWrapper.className = `patient-list-group ${containerClass}`;
+            groupWrapper.className = 'patient-group';
             
             const heading = document.createElement('h3');
-            heading.className = 'patient-list-heading';
+            heading.className = 'patient-group-heading';
             heading.textContent = patientName;
             groupWrapper.appendChild(heading);
-
-            // Create a list for the items
-            const listElement = document.createElement('ul');
-            listElement.className = 'shopping-list-items';
-
+            
+            const gridContainer = document.createElement('div');
+            gridContainer.className = 'card-grid';
+            
             filteredGroupItems.forEach(item => {
-                listElement.appendChild(itemRenderer(item));
+                gridContainer.appendChild(cardRenderer(item));
             });
             
-            groupWrapper.appendChild(listElement);
-
-            // Add new item form if it's the shopping list
-            if (containerId === 'shoppingList') {
-                const addForm = document.createElement('form');
-                addForm.className = 'inline-form mt-4';
-                addForm.dataset.patientId = patientId;
-                addForm.innerHTML = `
-                    <input type="text" placeholder="Új tétel hozzáadása..." required class="form-input flex-1">
-                    <button type="submit" class="btn btn-primary">Hozzáad</button>
-                `;
-                groupWrapper.appendChild(addForm);
-
-                addForm.addEventListener('submit', (e) => {
-                    e.preventDefault();
-                    const input = e.target.querySelector('input');
-                    const newItemName = input.value.trim();
-                    const targetPatientId = parseInt(e.target.dataset.patientId);
-
-                    if (newItemName) {
-                        const existingItem = shoppingItems.find(item => item.item.toLowerCase() === newItemName.toLowerCase() && item.patientId === targetPatientId);
-                        
-                        if (existingItem) {
-                            // If item exists and is completed, uncheck it
-                            if (existingItem.completed) {
-                                existingItem.completed = false;
-                            }
-                        } else {
-                            // If item does not exist, add it
-                            const newItem = {
-                                id: Date.now() + Math.random(),
-                                item: newItemName,
-                                patientId: targetPatientId,
-                                completed: false
-                            };
-                            shoppingItems.push(newItem);
-                        }
-
-                        localStorage.setItem('shoppingItems', JSON.stringify(shoppingItems));
-                        renderShoppingList(searchQuery);
-                    }
-                });
-            }
-
+            groupWrapper.appendChild(gridContainer);
             container.appendChild(groupWrapper);
         }
     });
@@ -1907,7 +1254,6 @@ function renderGroupedItems(items, containerId, itemRenderer, searchQuery = '', 
         container.innerHTML = '<div class="empty-state">Nincsenek tételek a keresési feltételeknek megfelelően.</div>';
     }
 }
-
 
 // Data management
 function downloadAllData() {
@@ -1980,18 +1326,18 @@ function handleFileUpload(event) {
             updatePatientSelects();
             generateCalendar();
 
+            alert('Az adatok sikeresen feltöltve!');
+
         } catch (error) {
             console.error('Error uploading file:', error);
-            // Use a custom modal instead of alert
-            showCustomMessage('Hiba a fájl feldolgozásakor. Kérjük, ellenőrizze, hogy a fájl érvényes JSON formátumú.', 'error');
+            alert('Hiba a fájl feldolgozásakor. Kérjük, ellenőrizze, hogy a fájl érvényes JSON formátumú.');
         }
     };
     reader.readAsText(file);
 }
 
 function deleteAllInfo() {
-    // Use a custom confirmation modal instead of alert/confirm
-    showCustomConfirm('Biztosan törölni szeretné az ÖSSZES adatot? Ez a művelet nem vonható vissza!', () => {
+    if (confirm('Biztosan törölni szeretné az ÖSSZES adatot? Ez a művelet nem vonható vissza!')) {
         localStorage.clear();
         patients = [];
         shoppingItems = [];
@@ -2009,9 +1355,8 @@ function deleteAllInfo() {
         clearTable();
         renderSavedCalculationsList();
         
-        // Use a custom modal instead of alert
-        showCustomMessage('Az összes adat törölve!', 'success');
-    });
+        alert('Az összes adat törölve!');
+    }
 }
 
 // Enhanced Calculator functionality with daily restriction
@@ -2049,10 +1394,9 @@ function initializeCalculator() {
 
     if (clearBtn) {
         clearBtn.addEventListener('click', () => {
-            // Use a custom confirmation modal instead of alert/confirm
-            showCustomConfirm('Biztosan törölni szeretné az összes sort a táblázatból?', () => {
+            if (confirm('Biztosan törölni szeretné az összes sort a táblázatból?')) {
                 clearTable();
-            });
+            }
         });
     }
 
@@ -2086,8 +1430,7 @@ function initializeCalculator() {
                 saveModal.classList.remove('show');
                 saveNameInput.value = '';
             } else {
-                // Use a custom modal instead of alert
-                showCustomMessage('Kérjük, adja meg a számítás nevét.', 'alert');
+                alert('Kérjük, adja meg a számítás nevét.');
             }
         });
     }
@@ -2295,8 +1638,7 @@ function saveCalculation(name, dateToSave) {
 
     renderSavedCalculationsList();
     
-    // Use a custom modal instead of alert
-    showCustomMessage(`Számítás mentve! A számítás a(z) ${saveDate.toLocaleDateString()} naphoz lett hozzárendelve.`, 'success');
+    alert(`Számítás mentve! A számítás a(z) ${saveDate.toLocaleDateString()} naphoz lett hozzárendelve.`);
     
     // Clear the table after saving
     clearTable();
@@ -2336,25 +1678,13 @@ function loadCalculation(id) {
     renderSavedCalculationsList();
 }
 
-function loadTableWithData(data) {
-    const tableBody = document.getElementById('table-body');
-    if (!tableBody) return;
-    tableBody.innerHTML = '';
-    data.forEach(rowData => {
-        tableBody.appendChild(createCalculatorRow(rowData));
-    });
-    updateAllCalculations();
-}
-
-
 function deleteCalculation(id) {
-    // Use a custom confirmation modal instead of alert/confirm
-    showCustomConfirm('Biztosan törölni szeretné ezt a számítást?', () => {
+    if (confirm('Biztosan törölni szeretné ezt a számítást?')) {
         savedCalculations = savedCalculations.filter(item => item.id !== id);
         localStorage.setItem('savedCalculations', JSON.stringify(savedCalculations));
         syncCalculatorToCalendar(currentCalculationDate);
         renderSavedCalculationsList();
-    });
+    }
 }
 
 function renderSavedCalculationsList() {
@@ -2405,8 +1735,7 @@ function renderSavedCalculationsList() {
 function exportToCsv() {
     const tableRows = document.querySelectorAll('#table-body tr');
     if (tableRows.length === 0) {
-        // Use a custom modal instead of alert
-        showCustomMessage('A táblázat üres. Nincs mit exportálni.', 'alert');
+        alert('A táblázat üres. Nincs mit exportálni.');
         return;
     }
 
@@ -2445,22 +1774,13 @@ async function startCamera() {
     const video = document.getElementById('cameraFeed');
     const message = document.getElementById('cameraMessage');
     const takePhotoBtn = document.getElementById('takePhotoBtn');
-    
-    // Remove the CSS class that flips the video feed
-    video.classList.remove('hidden');
-    
+
     try {
-        const stream = await navigator.mediaDevices.getUserMedia({
-            video: {
-                facingMode: { ideal: 'environment' }
-            },
-            audio: false
-        });
+        const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
         video.srcObject = stream;
         cameraStream = stream;
         cameraModal.style.display = 'flex';
-        // Ensure the video feed is not mirrored
-        video.style.transform = 'none';
+        video.classList.remove('hidden');
         takePhotoBtn.classList.remove('hidden');
         message.classList.add('hidden');
     } catch (err) {
@@ -2491,7 +1811,9 @@ function capturePhoto() {
     canvas.height = video.videoHeight;
     const ctx = canvas.getContext('2d');
     
-    // Draw the image without mirroring
+    // Draw the image mirrored as the video feed is
+    ctx.translate(canvas.width, 0);
+    ctx.scale(-1, 1);
     ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
     
     const imageData = canvas.toDataURL('image/png');
@@ -2524,90 +1846,33 @@ async function analyzeImageWithGemini(imageData, patientId) {
 
         const result = await response.json();
         const items = result.text.split(',').map(item => item.trim());
-        openGeminiConfirmModal(items, patientId);
+        addItemsToShoppingList(items, patientId);
 
     } catch (error) {
         console.error('Hiba az elemzés során:', error);
-        // Use a custom modal instead of alert
-        showCustomMessage('Hiba történt az elemzés során. Kérjük, próbálja meg újra.', 'error');
+        alert('Hiba történt az elemzés során. Kérjük, próbálja meg újra.');
     } finally {
         loadingIndicator.classList.add('hidden');
         document.getElementById('analyzeBtn').disabled = false;
     }
 }
 
-function addConfirmedItemsToShoppingList() {
-    const listItems = document.querySelectorAll('#geminiItemsList .gemini-item-input');
-    const patientId = parseInt(document.getElementById('geminiConfirmModal').dataset.patientId);
-    
-    let newItemsAdded = 0;
-    const itemsToAdd = [];
+function addItemsToShoppingList(items, patientId) {
+    if (!items || items.length === 0) return;
 
-    listItems.forEach(input => {
-        const itemText = input.value.trim();
-        if (itemText) {
-            const existingItem = shoppingItems.find(item => item.item.toLowerCase() === itemText.toLowerCase() && item.patientId === patientId);
-
-            if (existingItem) {
-                if (existingItem.completed) {
-                    existingItem.completed = false;
-                }
-            } else {
-                itemsToAdd.push({
-                    id: Date.now() + Math.random(),
-                    item: itemText,
-                    patientId: patientId,
-                    completed: false
-                });
-                newItemsAdded++;
-            }
+    items.forEach(item => {
+        if (item) {
+            const newItem = {
+                id: Date.now() + Math.random(), // Add random for unique IDs
+                item: item,
+                patientId: parseInt(patientId),
+                completed: false
+            };
+            shoppingItems.push(newItem);
         }
     });
 
-    if (itemsToAdd.length > 0) {
-        shoppingItems.push(...itemsToAdd);
-    }
-
     localStorage.setItem('shoppingItems', JSON.stringify(shoppingItems));
     renderShoppingList();
-    
-    if (newItemsAdded > 0) {
-        showCustomMessage(`${newItemsAdded} új tétel került hozzáadásra.`, 'success');
-    }
-}
-
-// Custom Modal functions (replacing alert and confirm)
-function showCustomMessage(message, type = 'info') {
-    const modalId = type === 'success' ? 'successModal' : type === 'error' ? 'errorModal' : 'infoModal';
-    const modal = document.getElementById(modalId);
-    if (!modal) return;
-
-    modal.querySelector('.modal-message').textContent = message;
-    modal.classList.add('show');
-    
-    // Auto-close after a few seconds
-    setTimeout(() => {
-        modal.classList.remove('show');
-    }, 3000);
-}
-
-function showCustomConfirm(message, onConfirm) {
-    const modal = document.getElementById('confirmModal');
-    if (!modal) return;
-    
-    const confirmBtn = modal.querySelector('.confirm-btn');
-    const cancelBtn = modal.querySelector('.cancel-btn');
-    
-    modal.querySelector('.modal-message').textContent = message;
-    
-    confirmBtn.onclick = () => {
-        onConfirm();
-        modal.classList.remove('show');
-    };
-    
-    cancelBtn.onclick = () => {
-        modal.classList.remove('show');
-    };
-    
-    modal.classList.add('show');
+    alert('A tételek sikeresen hozzáadva a bevásárlólistához!');
 }
