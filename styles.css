@@ -197,7 +197,20 @@ body {
 
 .sidebar-title-icon {
     font-size: 2.5rem;
-    color: var(--purple-500);
+}
+
+.theme-toggle-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    line-height: 1;
+    color: inherit;
+}
+
+.theme-toggle-btn i {
+    color: var(--lilac-200); /* Even lighter lilac for light mode */
+    transition: color 0.2s ease-in-out;
 }
 
 .sidebar-nav {
@@ -1937,6 +1950,232 @@ body {
 .camera-message {
     margin-top: 1rem;
     color: #ccc;
+}
+/* --- Dark Mode --- */
+html.dark {
+    color-scheme: dark;
+
+    /* Refined Accent Purple */
+    --purple-50: #282140;
+    --purple-100: #3a305c;
+    --purple-500: #a78bfa;
+    --purple-600: #9b7aff;
+    --purple-700: #8b5cf6;
+    
+    /* Deprecated Lilac - Remapped for compatibility, but new styles should avoid them */
+    --lilac-50: var(--gray-100);
+    --lilac-100: var(--gray-200);
+    --lilac-200: var(--gray-300);
+    --lilac-300: var(--purple-500);
+    --lilac-400: var(--purple-600);
+    --lilac-500: var(--purple-500);
+    --lilac-600: var(--purple-500);
+    
+    /* Neutral Gray Palette (Tailwind Zinc) */
+    --gray-50: #18181b;   /* Body BG */
+    --gray-100: #27272a;  /* Container BG (Cards, Sidebars) */
+    --gray-200: #3f3f46;  /* Borders, Hover BG, Input BG */
+    --gray-300: #52525b;  /* Secondary Button BG, Borders */
+    --gray-400: #71717a;  /* Muted text */
+    --gray-500: #a1a1aa;  /* Placeholder text */
+    --gray-600: #d4d4d8;  /* Secondary text */
+    --gray-700: #e4e4e7;  /* Main text */
+    --gray-800: #f4f4f5;  /* Input text */
+    --gray-900: #fafafa;  /* Titles */
+    
+    --success-500: #34d399;
+    --success-600: #10b981;
+    
+    --danger-500: #f87171;
+    --danger-600: #ef4444;
+    
+    --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.2);
+    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.3), 0 2px 4px -2px rgb(0 0 0 / 0.3);
+    --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.3), 0 4px 6px -4px rgb(0 0 0 / 0.3);
+    --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.3), 0 8px 10px -6px rgb(0 0 0 / 0.3);
+}
+
+html.dark body {
+    background: var(--gray-50);
+    color: var(--gray-700);
+}
+
+html.dark .theme-toggle-btn i {
+    color: #6d28d9; /* Darker lilac for dark mode (original --purple-700) */
+}
+
+html.dark .mobile-header,
+html.dark .desktop-sidebar,
+html.dark .mobile-menu-content {
+    background: var(--gray-100);
+    border-color: var(--gray-200);
+}
+
+html.dark .mobile-title,
+html.dark .mobile-menu-header h2,
+html.dark .header-info h2,
+html.dark .card-title,
+html.dark .patient-name,
+html.dark .modal-header h3,
+html.dark .modal-body h3,
+html.dark .saved-calculations h3,
+html.dark .doc-title,
+html.dark .popup h3 {
+    color: var(--gray-900);
+}
+
+html.dark .mobile-menu-btn,
+html.dark .header-info p,
+html.dark .patient-info-value,
+html.dark .modal-body p,
+html.dark .doc-meta,
+html.dark .popup p {
+    color: var(--gray-600);
+}
+
+html.dark .mobile-menu-btn:hover,
+html.dark .mobile-menu-header button:hover,
+html.dark .nav-item:hover,
+html.dark .settings-item:hover,
+html.dark .icon-btn:hover,
+html.dark .saved-item:hover {
+    background: var(--gray-100);
+}
+
+html.dark .nav-item,
+html.dark .settings-item {
+    color: var(--gray-700);
+}
+
+html.dark .nav-item.active {
+    background: var(--gray-200);
+    color: var(--purple-500);
+    border-color: var(--gray-300);
+}
+
+html.dark .content-header,
+html.dark .form-section {
+    background: var(--gray-100);
+    border-color: var(--gray-200);
+}
+
+html.dark .search-container input,
+html.dark .form-input, 
+html.dark .form-select, 
+html.dark .form-textarea {
+    background: var(--gray-100);
+    border-color: var(--gray-300);
+    color: var(--gray-800);
+}
+
+html.dark .search-container input::placeholder,
+html.dark .form-input::placeholder,
+html.dark .form-textarea::placeholder {
+    color: var(--gray-500);
+}
+
+html.dark .search-container input:focus, 
+html.dark .form-input:focus, 
+html.dark .form-select:focus, 
+html.dark .form-textarea:focus {
+    border-color: var(--purple-500);
+    background: var(--gray-200);
+    box-shadow: 0 0 0 3px rgba(167, 139, 250, 0.2);
+}
+
+html.dark .btn-secondary {
+    background: var(--gray-200);
+    color: var(--gray-800);
+    border-color: var(--gray-300);
+}
+
+html.dark .btn-secondary:hover {
+    background: var(--gray-300);
+}
+
+html.dark .patient-card,
+html.dark .card,
+html.dark .patient-list-group,
+html.dark .note-sticky,
+html.dark .table-container,
+html.dark .saved-calculations,
+html.dark .modal-content,
+html.dark .doc-card,
+html.dark .popup {
+    background: var(--gray-100);
+    border-color: var(--gray-200);
+    box-shadow: var(--shadow-sm);
+}
+
+/* Ensure the upload container on the documents tab also has a dark background */
+html.dark #documents .bg-white {
+    background-color: var(--gray-100);
+}
+
+html.dark .patient-card:hover,
+html.dark .card:hover,
+html.dark .doc-card:hover {
+    box-shadow: var(--shadow-md);
+}
+
+html.dark .patient-info-label,
+html.dark .form-group label {
+    color: var(--gray-600);
+}
+
+html.dark .calendar-grid {
+    background: var(--gray-300);
+}
+
+html.dark .calendar-day {
+    background: var(--gray-100);
+}
+
+html.dark .calendar-day.today {
+    background: var(--purple-50);
+    border-color: var(--purple-500);
+}
+
+html.dark .calendar-day-number {
+    color: var(--gray-900);
+}
+
+html.dark .shopping-list-item,
+html.dark .saved-item,
+html.dark .calendar-mobile-visit {
+    background-color: var(--gray-200);
+}
+
+html.dark .shopping-list-item.completed .item-name {
+    color: var(--gray-500);
+}
+
+html.dark .item-name {
+    color: var(--gray-800);
+}
+
+html.dark .calculation-table .ora-perc-total {
+    background-color: var(--gray-200);
+    color: var(--gray-800);
+}
+
+html.dark .calculation-table input:focus {
+    background-color: var(--purple-50);
+}
+
+html.dark .note-sticky-title,
+html.dark .note-sticky-text {
+    color: var(--gray-800);
+}
+
+html.dark .note-settings-popup {
+    background: var(--gray-100);
+}
+
+html.dark .p-8.rounded-\[2rem\].shadow-xl.w-full.mx-auto.bg-lilac-50.border-2.border-lilac-200 {
+    background-color: var(--gray-100);
+    border-color: var(--gray-200);
+}
 }
 /* New Compact Card style for Documents */
 .doc-card {
