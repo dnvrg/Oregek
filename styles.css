@@ -1025,6 +1025,28 @@ body {
     gap: 1.5rem;
 }
 
+.notes-divider {
+    grid-column: 1 / -1;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin: 1.5rem 0;
+    color: var(--gray-400);
+}
+
+.notes-divider-line {
+    flex-grow: 1;
+    height: 1px;
+    background-color: var(--gray-300);
+}
+
+.notes-divider-text {
+    font-size: 0.875rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
 .note-sticky {
     background: #fff;
     border-radius: 1.5rem;
