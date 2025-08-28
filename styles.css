@@ -1162,12 +1162,12 @@ body {
     border-color: var(--purple-500);
 }
 
-.color-box[data-color="#fff1f2"] { background-color: #fff1f2; }
-.color-box[data-color="#e2e8f0"] { background-color: #e2e8f0; }
-.color-box[data-color="#e0c7ff"] { background-color: #e0c7ff; }
-.color-box[data-color="#fdd7e4"] { background-color: #fdd7e4; }
-.color-box[data-color="#c4f7f2"] { background-color: #c4f7f2; }
-.color-box[data-color="#d1e7dd"] { background-color: #d1e7dd; }
+.color-box[data-color="#b3ffb3"] { background-color: #b3ffb3; }
+.color-box[data-color="#ffb3e6"] { background-color: #ffb3e6; }
+.color-box[data-color="#b39b9b"] { background-color: #b39b9b; }
+.color-box[data-color="#ffcc99"] { background-color: #ffcc99; }
+.color-box[data-color="#b3e6ff"] { background-color: #b3e6ff; }
+.color-box[data-color="#66e6d6"] { background-color: #66e6d6; }
 .note-color-picker.hidden {
     display: none;
 }
