@@ -746,8 +746,9 @@ function initializeEventListeners() {
     // Note Settings Pop-up listener
     document.addEventListener('click', (e) => {
         const noteSettingsPopup = document.getElementById('noteSettingsPopup');
-        const isClickInside = noteSettingsPopup.contains(e.target) || e.target.closest('.note-sticky');
-        if (noteSettingsPopup.classList.contains('show') && !isClickInside) {
+        // Close if click is outside popup AND not on any settings button
+        const isSettingsButton = e.target.closest('.settings-btn');
+        if (noteSettingsPopup.classList.contains('show') && !noteSettingsPopup.contains(e.target) && !isSettingsButton) {
             noteSettingsPopup.classList.remove('show');
         }
     });
@@ -1438,6 +1439,7 @@ function createNewNote() {
 
     const newNote = {
         id: Date.now(),
+        title: 'Új jegyzet',
         content: '',
         patientId: parseInt(patientId),
         color: NOTE_COLORS[colorIndex],
@@ -1521,13 +1523,14 @@ function createNoteCard(note) {
     
     card.className = `note-sticky ${note.isPinned ? 'pinned' : ''}`;
     card.style.borderLeftColor = patientColor;
-    card.style.backgroundColor = note.color; // Use the saved note color
     card.style.setProperty('--rotation', `${randomRotation}deg`); // Apply rotation
     
     const contentClass = note.content.trim() ? '' : 'empty';
 
     card.innerHTML = `
+        <div class="note-sticky-background"></div>
         <div class="note-sticky-header">
+            <h4 class="note-sticky-title" contenteditable="true" data-id="${note.id}" spellcheck="false">${note.title || 'Jegyzet'}</h4>
             <div class="card-actions">
                 <button class="icon-btn pin-btn ${note.isPinned ? 'active' : ''}" data-id="${note.id}" title="Rögzítés">
                     <i class="fas fa-thumbtack"></i>
@@ -1538,9 +1541,24 @@ function createNoteCard(note) {
             </div>
         </div>
         <div class="note-sticky-content">
-            <div class="note-sticky-text ${contentClass}" contenteditable="true" data-id="${note.id}">${note.content}</div>
+            <div class="note-sticky-text ${contentClass}" contenteditable="true" data-id="${note.id}" spellcheck="false">${note.content}</div>
         </div>
     `;
+
+    // Set the background color on the dedicated background element
+    const backgroundElement = card.querySelector('.note-sticky-background');
+    if (backgroundElement) {
+        backgroundElement.style.backgroundColor = note.color;
+    }
+
+    const noteTitleElement = card.querySelector('.note-sticky-title');
+    noteTitleElement.addEventListener('blur', (e) => saveNoteTitle(e.target.dataset.id, e.target.textContent));
+    noteTitleElement.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            e.target.blur();
+        }
+    });
 
     const noteTextElement = card.querySelector('.note-sticky-text');
     noteTextElement.addEventListener('blur', (e) => saveNoteContent(e.target.dataset.id, e.target.textContent));
@@ -1556,6 +1574,13 @@ function createNoteCard(note) {
 
 function openNoteSettingsPopup(event, noteId) {
     const popup = document.getElementById('noteSettingsPopup');
+
+    // If the popup is already visible for the same note, hide it and exit.
+    if (popup.classList.contains('show') && popup.dataset.noteId === String(noteId)) {
+        popup.classList.remove('show');
+        return;
+    }
+
     const deleteBtn = document.getElementById('deleteNoteBtn');
     const palette = popup.querySelector('.note-color-picker .color-palette');
 
@@ -1586,10 +1611,23 @@ function openNoteSettingsPopup(event, noteId) {
 
     // Position the popup near the gear icon
     const rect = event.currentTarget.getBoundingClientRect();
-    popup.style.top = `${rect.bottom + 10}px`;
-    popup.style.left = `${rect.left}px`;
+    
+    // Add scroll offsets to be correct relative to the document
+    const top = rect.bottom + window.scrollY + 5; // 5px spacing below the button
+    const left = rect.right + window.scrollX; // Align to the right edge of the button
+
+    popup.style.top = `${top}px`;
+    popup.style.left = `${left}px`;
     
     popup.classList.add('show');
+}
+
+function saveNoteTitle(id, newTitle) {
+    const noteToUpdate = notes.find(note => String(note.id) === id);
+    if (noteToUpdate) {
+        noteToUpdate.title = newTitle;
+        localStorage.setItem('notes', JSON.stringify(notes));
+    }
 }
 
 function saveNoteContent(id, newContent) {
