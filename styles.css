@@ -1072,15 +1072,23 @@ body {
     display: flex;
     gap: 0.5rem;
     z-index: 10;
-    background: rgba(255, 255, 255, 0.7);
     padding: 0.25rem 0.5rem;
     border-radius: 0.5rem;
+    visibility: hidden;
+    opacity: 0;
+    transition: visibility 0s, opacity 0.2s linear;
 }
+.note-sticky:hover .card-actions {
+    visibility: visible;
+    opacity: 1;
+}
+
 .note-sticky-header .icon-btn {
     color: var(--gray-400);
     transition: color 0.2s;
 }
 .note-sticky-header .icon-btn:hover {
+    background: var(--gray-100);
     color: var(--gray-700);
 }
 .pin-btn.active {
@@ -1098,10 +1106,10 @@ body {
 }
 .note-sticky-text:focus {
     outline: none;
-    background-color: rgba(255, 255, 255, 0.5);
+    background-color: transparent;
 }
 .note-sticky-text.empty::before {
-    content: 'Kezdjen el írni...';
+    content: '';
     color: var(--gray-400);
     font-style: italic;
 }
@@ -1133,7 +1141,7 @@ body {
 }
 .note-color-picker .color-palette {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(3, 1fr);
     gap: 0.75rem;
 }
 
@@ -1155,14 +1163,11 @@ body {
 }
 
 .color-box[data-color="#fff1f2"] { background-color: #fff1f2; }
-.color-box[data-color="#fdd7e4"] { background-color: #fdd7e4; }
 .color-box[data-color="#e2e8f0"] { background-color: #e2e8f0; }
-.color-box[data-color="#d1e7dd"] { background-color: #d1e7dd; }
 .color-box[data-color="#e0c7ff"] { background-color: #e0c7ff; }
+.color-box[data-color="#fdd7e4"] { background-color: #fdd7e4; }
 .color-box[data-color="#c4f7f2"] { background-color: #c4f7f2; }
-.color-box[data-color="#bae7ff"] { background-color: #bae7ff; }
-.color-box[data-color="#fdf1c3"] { background-color: #fdf1c3; }
-.color-box[data-color="#e5e5e5"] { background-color: #e5e5e5; }
+.color-box[data-color="#d1e7dd"] { background-color: #d1e7dd; }
 .note-color-picker.hidden {
     display: none;
 }
