@@ -1636,6 +1636,7 @@ function initializeMedicalNotesApp() {
     function attachPatientEventListeners() {
         document.querySelectorAll('.dropdown-list-item').forEach(item => {
             item.addEventListener('click', (event) => {
+                event.stopPropagation();
                 const patientId = event.currentTarget.dataset.patientId;
                 selectedPatientId = parseInt(patientId);
                 renderNotes(notesSearchInput.value);
@@ -1766,6 +1767,10 @@ function initializeMedicalNotesApp() {
         renderPatientsDropdown();
         // If a patient is available, render their notes. Otherwise, show an empty state.
         if (patients.length > 0 && selectedPatientId) {
+            const patient = patients.find(p => p.id === selectedPatientId);
+            if (patient) {
+                selectedPatientNameDisplay.textContent = patient.name;
+            }
             renderNotes();
         } else {
             notesGrid.innerHTML = '<div class="empty-state">Kérjük, válasszon egy pácienst a jegyzetek megtekintéséhez, vagy hozzon létre egy újat a Páciensek fülön.</div>';
