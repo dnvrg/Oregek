@@ -14,7 +14,10 @@
 <body>
     <header class="mobile-header">
         <div class="mobile-header-content">
-            <h1 class="mobile-title">Idősgondozás</h1>
+            <div class="flex items-center gap-4">
+                <button id="theme-toggle-mobile" class="theme-toggle-btn"><i class="fas fa-users text-xl"></i></button>
+                <h1 class="mobile-title">Idősgondozás</h1>
+            </div>
             <button id="mobileMenuBtn" class="mobile-menu-btn">
                 <i class="fas fa-bars"></i>
             </button>
@@ -39,7 +42,9 @@
     <div class="app-layout">
         <aside class="desktop-sidebar">
             <div class="sidebar-header">
-                <i class="fas fa-users sidebar-title-icon"></i>
+                <button id="theme-toggle-desktop" class="theme-toggle-btn">
+                    <i class="fas fa-users sidebar-title-icon"></i>
+                </button>
             </div>
             
             <nav class="sidebar-nav">
