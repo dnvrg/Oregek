@@ -18,12 +18,15 @@ let savedCalendarData = JSON.parse(localStorage.getItem('savedCalendarData')) ||
 
 // UI element references
 let patientToEdit = null;
-let isRenameMode = false;
+let isRenameMode = null;
 let renameId = null;
 
 // New global variable to track the date of the loaded calculation
 let currentCalculationDate = null;
 let cameraStream = null;
+
+const NOTE_COLORS = ["#fff1f2", "#e2e8f0", "#e0c7ff", "#fdd7e4", "#c4f7f2", "#d1e7dd"];
+let colorIndex = 0;
 
 // Initialize app
 document.addEventListener('DOMContentLoaded', function() {
@@ -1427,8 +1430,7 @@ function deleteDocument(id) {
 function createNewNote() {
     const patientSelect = document.getElementById('notePatient');
     const patientId = patientSelect.value;
-    const defaultColor = '#fdd7e4';
-
+    
     if (!patientId) {
         showCustomMessage('Kérjük, válasszon ki egy pácienst a jegyzet létrehozásához.', 'error');
         return;
@@ -1438,13 +1440,16 @@ function createNewNote() {
         id: Date.now(),
         content: '',
         patientId: parseInt(patientId),
-        color: defaultColor,
+        color: NOTE_COLORS[colorIndex],
         isPinned: false,
     };
     
     notes.push(newNote);
     localStorage.setItem('notes', JSON.stringify(notes));
     renderNotes();
+    
+    // Cycle to the next color for the next note
+    colorIndex = (colorIndex + 1) % NOTE_COLORS.length;
 }
 
 function renderNotes(searchQuery = '') {
@@ -1548,6 +1553,13 @@ function openNoteSettingsPopup(event, noteId) {
         if (box.dataset.color === note.color) {
             box.classList.add('selected');
         }
+        
+        // Add click listener to each color box
+        box.onclick = () => {
+            updateNoteColor(noteId, box.dataset.color);
+            // Hide the popup after selection
+            popup.classList.remove('show');
+        };
     });
 
     // Position the popup near the gear icon
