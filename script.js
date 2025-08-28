@@ -1026,16 +1026,16 @@ function generateCalendar() {
     const monthSelect = document.getElementById('calendarMonth');
     const yearSelect = document.getElementById('calendarYear');
 
-    if (!monthSelect || !yearSelect) return;
+    if (monthSelect && yearSelect) {
+        const month = parseInt(monthSelect.value);
+        const year = parseInt(yearSelect.value);
 
-    const month = parseInt(monthSelect.value);
-    const year = parseInt(yearSelect.value);
+        if (isNaN(month) || isNaN(year)) return;
 
-    if (isNaN(month) || isNaN(year)) return;
-
-    // Generate both desktop and mobile calendar views
-    generateDesktopCalendar(month, year);
-    generateMobileCalendar(month, year);
+        // Generate both desktop and mobile calendar views
+        generateDesktopCalendar(month, year);
+        generateMobileCalendar(month, year);
+    }
 }
 
 function generateDesktopCalendar(month, year) {
@@ -1118,23 +1118,28 @@ function generateDesktopCalendar(month, year) {
 }
 
 function generateMobileCalendar(month, year) {
-    const mobileView = document.createElement('div');
-    mobileView.className = 'calendar-mobile-view';
-    mobileView.innerHTML = '<div class="calendar-mobile-list"></div>';
-
-    // Insert mobile view into calendar content
+    const mobileView = document.querySelector('.calendar-mobile-view');
     const calendarGrid = document.getElementById('calendarGrid');
-    if (calendarGrid && calendarGrid.parentNode) {
-        let existingMobileView = calendarGrid.parentNode.querySelector('.calendar-mobile-view');
-        if (existingMobileView) {
-            existingMobileView.remove();
+
+    if (!mobileView) {
+        // Create the mobile view container if it doesn't exist
+        const newMobileView = document.createElement('div');
+        newMobileView.className = 'calendar-mobile-view';
+        if (calendarGrid && calendarGrid.parentNode) {
+            calendarGrid.parentNode.insertBefore(newMobileView, calendarGrid.nextSibling);
         }
-        calendarGrid.parentNode.insertBefore(mobileView, calendarGrid.nextSibling);
     }
 
-    const mobileList = mobileView.querySelector('.calendar-mobile-list');
+    const mobileList = document.querySelector('.calendar-mobile-list');
+    if (!mobileList) {
+        const newMobileList = document.createElement('div');
+        newMobileList.className = 'calendar-mobile-list';
+        document.querySelector('.calendar-mobile-view').appendChild(newMobileList);
+    }
     
-    // Generate days for the current month
+    // Clear and regenerate the list
+    mobileList.innerHTML = '';
+    
     const daysInMonth = new Date(year, month + 1, 0).getDate();
     const dayNames = ['Vasárnap', 'Hétfő', 'Kedd', 'Szerda', 'Csütörtök', 'Péntek', 'Szombat'];
     
@@ -1486,8 +1491,7 @@ function initializeMedicalNotesApp() {
             patientNameHeader.textContent = `${patient.name} jegyzetei`;
             notesGrid.innerHTML = '';
             pinnedNotesRow.innerHTML = '';
-            addNoteBtn.classList.remove('hidden');
-
+            
             selectedPatientNameDisplay.textContent = patient.name;
 
             const filteredNotes = patient.notes.filter(note => 
@@ -1738,6 +1742,8 @@ function initializeMedicalNotesApp() {
                     renderNotes(notesSearchInput.value);
                     savePatientsToLocalStorage();
                 }
+            } else {
+                showCustomMessage('Kérjük, válasszon ki egy pácienst a jegyzet hozzáadásához!', 'error');
             }
         });
     }
