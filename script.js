@@ -1028,16 +1028,16 @@ function generateCalendar() {
     const monthSelect = document.getElementById('calendarMonth');
     const yearSelect = document.getElementById('calendarYear');
 
-    if (monthSelect && yearSelect) {
-        const month = parseInt(monthSelect.value);
-        const year = parseInt(yearSelect.value);
+    if (!monthSelect || !yearSelect) return;
 
-        if (isNaN(month) || isNaN(year)) return;
+    const month = parseInt(monthSelect.value);
+    const year = parseInt(yearSelect.value);
 
-        // Generate both desktop and mobile calendar views
-        generateDesktopCalendar(month, year);
-        generateMobileCalendar(month, year);
-    }
+    if (isNaN(month) || isNaN(year)) return;
+
+    // Generate both desktop and mobile calendar views
+    generateDesktopCalendar(month, year);
+    generateMobileCalendar(month, year);
 }
 
 function generateDesktopCalendar(month, year) {
@@ -1120,28 +1120,23 @@ function generateDesktopCalendar(month, year) {
 }
 
 function generateMobileCalendar(month, year) {
-    const mobileView = document.querySelector('.calendar-mobile-view');
+    const mobileView = document.createElement('div');
+    mobileView.className = 'calendar-mobile-view';
+    mobileView.innerHTML = '<div class="calendar-mobile-list"></div>';
+
+    // Insert mobile view into calendar content
     const calendarGrid = document.getElementById('calendarGrid');
-
-    if (!mobileView) {
-        // Create the mobile view container if it doesn't exist
-        const newMobileView = document.createElement('div');
-        newMobileView.className = 'calendar-mobile-view';
-        if (calendarGrid && calendarGrid.parentNode) {
-            calendarGrid.parentNode.insertBefore(newMobileView, calendarGrid.nextSibling);
+    if (calendarGrid && calendarGrid.parentNode) {
+        let existingMobileView = calendarGrid.parentNode.querySelector('.calendar-mobile-view');
+        if (existingMobileView) {
+            existingMobileView.remove();
         }
+        calendarGrid.parentNode.insertBefore(mobileView, calendarGrid.nextSibling);
     }
 
-    const mobileList = document.querySelector('.calendar-mobile-list');
-    if (!mobileList) {
-        const newMobileList = document.createElement('div');
-        newMobileList.className = 'calendar-mobile-list';
-        document.querySelector('.calendar-mobile-view').appendChild(newMobileList);
-    }
+    const mobileList = mobileView.querySelector('.calendar-mobile-list');
     
-    // Clear and regenerate the list
-    mobileList.innerHTML = '';
-    
+    // Generate days for the current month
     const daysInMonth = new Date(year, month + 1, 0).getDate();
     const dayNames = ['Vasárnap', 'Hétfő', 'Kedd', 'Szerda', 'Csütörtök', 'Péntek', 'Szombat'];
     
@@ -1766,8 +1761,23 @@ function initializeMedicalNotesApp() {
         });
     }
     
-    renderPatientsDropdown();
-    renderNotes();
+    // Encapsulate the notes UI rendering logic into a single function
+    function updateNotesUI() {
+        renderPatientsDropdown();
+        // If a patient is available, render their notes. Otherwise, show an empty state.
+        if (patients.length > 0 && selectedPatientId) {
+            renderNotes();
+        } else {
+            notesGrid.innerHTML = '<div class="empty-state">Kérjük, válasszon egy pácienst a jegyzetek megtekintéséhez, vagy hozzon létre egy újat a Páciensek fülön.</div>';
+            pinnedNotesRow.innerHTML = '';
+            pinnedNotesHeader.classList.add('hidden');
+            notesDivider.classList.add('hidden');
+            selectedPatientNameDisplay.textContent = 'Nincs páciens';
+        }
+    }
+    
+    // Call the new encapsulated function instead of separate render calls
+    updateNotesUI();
 }
 
 // Generic function to render grouped items (for lists and cards)
