@@ -25,11 +25,14 @@ let renameId = null;
 let currentCalculationDate = null;
 let cameraStream = null;
 
+const themeKey = 'app-theme';
 const NOTE_COLORS = ["#b3ffb3", "#ffb3e6", "#b39b9b", "#ffcc99", "#b3e6ff", "#66e6d6"];
 let colorIndex = 0;
 
 // Initialize app
 document.addEventListener('DOMContentLoaded', function() {
+    initializeTheme();
+
     console.log('Initializing application...');
 
     try {
@@ -517,6 +520,15 @@ function formatCustomDate(dateString) {
 
 // Event Listeners
 function initializeEventListeners() {
+    const themeToggleDesktop = document.getElementById('theme-toggle-desktop');
+    if (themeToggleDesktop) {
+        themeToggleDesktop.addEventListener('click', toggleTheme);
+    }
+    const themeToggleMobile = document.getElementById('theme-toggle-mobile');
+    if (themeToggleMobile) {
+        themeToggleMobile.addEventListener('click', toggleTheme);
+    }
+
     // Search inputs
     const patientSearchInput = document.getElementById('patientSearchInput');
     if (patientSearchInput) {
@@ -2496,4 +2508,17 @@ function showCustomConfirm(message, onConfirm) {
     };
     
     modal.classList.add('show');
+}
+
+// Theme Management
+function initializeTheme() {
+    const savedTheme = localStorage.getItem(themeKey);
+    if (savedTheme === 'dark') {
+        document.documentElement.classList.add('dark');
+    }
+}
+
+function toggleTheme() {
+    const isDark = document.documentElement.classList.toggle('dark');
+    localStorage.setItem(themeKey, isDark ? 'dark' : 'light');
 }
