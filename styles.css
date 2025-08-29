@@ -573,9 +573,7 @@ body {
     z-index: 1;
     border: none;
     color: black;
-    background: linear-gradient(270deg, #a78bfa, #f87171, #fde047, #34d399, #38bdf8, #a78bfa);
-    background-size: 600% 600%;
-    animation: rainbow-flow 16s ease infinite;
+    background: transparent;
     transition: transform 0.2s ease-out, box-shadow 0.2s ease-out;
     overflow: visible; /* Ensure the ::before pseudo-element is not clipped */
 }
@@ -586,21 +584,21 @@ body {
     z-index: -1;
     inset: -3px; /* Creates a 3px outline */
     border-radius: calc(1.5rem + 3px); /* Matches .btn-lg radius + inset */
-    background: linear-gradient(135deg, #38bdf8, #a78bfa, #f87171, #fde047, #34d399, #38bdf8);
-    background-size: 400% 400%;
-    animation: rainbow-flow 12s linear infinite;
-    animation-direction: reverse; /* Animate in the opposite direction of the button's background */
+    background: linear-gradient(135deg, #f87171, #fde047, #34d399, #38bdf8, #a78bfa, #f87171);
+    background-size: 600% 600%;
+    animation: rainbow-flow 16s linear infinite;
+    animation-direction: reverse;
 }
 
 .ai-button::after {
     content: '';
     position: absolute;
     z-index: -2; /* Behind the ::before element */
-    inset: -6px; /* Creates a second, wider outline */
-    border-radius: calc(1.5rem + 6px); /* Matches .btn-lg radius + new inset */
-    background: linear-gradient(45deg, #fde047, #34d399, #38bdf8, #a78bfa, #f87171, #fde047);
-    background-size: 400% 400%;
-    animation: rainbow-flow 8s linear infinite;
+    inset: -8px; /* Creates a second, wider outline */
+    border-radius: calc(1.5rem + 8px); /* Matches .btn-lg radius + new inset */
+    background: linear-gradient(45deg, #34d399, #38bdf8, #a78bfa, #f87171, #fde047, #34d399);
+    background-size: 600% 600%;
+    animation: rainbow-flow 10s linear infinite;
     filter: blur(5px); /* Add a soft blur for a glowing effect */
 }
 
