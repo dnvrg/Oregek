@@ -145,8 +145,10 @@
                 <div class="form-section shopping-form-section">
                     <div class="shopping-input-group">
                         <form id="shoppingForm" class="inline-form">
-                            <input type="text" id="shoppingItem" placeholder="Új tétel hozzáadása..." required class="form-input">
-                            <input type="text" id="shoppingQuantity" placeholder="Mennyiség (pl. 1 kg)" class="form-input quantity-input">
+                            <div class="flex gap-2">
+                                <input type="text" id="shoppingItem" placeholder="Új tétel hozzáadása..." required class="form-input flex-1">
+                                <input type="text" id="shoppingQuantity" placeholder="Mennyiség" class="form-input quantity-input">
+                            </div>
                             <select id="shoppingPatient" class="form-select">
                                 <option value="">Válasszon pácienst</option>
                             </select>
