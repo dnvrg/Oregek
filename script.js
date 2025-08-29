@@ -1935,8 +1935,10 @@ function renderGroupedItems(items, containerId, itemRenderer, searchQuery = '') 
                 addForm.className = 'inline-form mt-4';
                 addForm.dataset.patientId = patientId;
                 addForm.innerHTML = `
-                    <input type="text" placeholder="Új tétel hozzáadása..." required class="form-input flex-1">
-                    <input type="text" placeholder="Mennyiség" class="form-input quantity-input">
+                    <div class="flex gap-2 flex-1">
+                        <input type="text" placeholder="Új tétel hozzáadása..." required class="form-input flex-1">
+                        <input type="text" placeholder="Mennyiség" class="form-input quantity-input">
+                    </div>
                     <button type="submit" class="btn btn-primary">Hozzáad</button>
                 `;
                 groupWrapper.appendChild(addForm);
