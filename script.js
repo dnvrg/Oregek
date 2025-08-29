@@ -815,7 +815,12 @@ function handlePatientSubmit(e) {
         intercom: document.getElementById('intercom').value.trim(),
         taj: document.getElementById('taj').value.trim(),
         emergencyContact: document.getElementById('emergencyContact').value.trim(),
-        emergencyPhone: document.getElementById('emergencyPhone').value.trim(),
+        emergencyPhoneMobile: document.getElementById('emergencyPhoneMobile').value.trim(),
+        emergencyPhoneLandline: document.getElementById('emergencyPhoneLandline').value.trim(),
+        doctorName: document.getElementById('doctorName').value.trim(),
+        doctorPhone: document.getElementById('doctorPhone').value.trim(),
+        partnerCardNumber: document.getElementById('partnerCardNumber').value.trim(),
+        medications: document.getElementById('medications').value.trim(),
         tasks: document.getElementById('tasks').value.trim(),
         color: document.getElementById('patientColor').value,
         visitDays: visitDays,
@@ -873,8 +878,16 @@ function renderPatients(searchQuery = '') {
 
         const visitDaysText = getVisitDaysText(patient.visitDays || []);
 
-        const emergencyPhoneLink = patient.emergencyPhone
-            ? `<a href="tel:${patient.emergencyPhone}">${patient.emergencyPhone}</a>`
+        const emergencyPhoneMobileLink = (patient.emergencyPhoneMobile || patient.emergencyPhone)
+            ? `<a href="tel:${patient.emergencyPhoneMobile || patient.emergencyPhone}">${patient.emergencyPhoneMobile || patient.emergencyPhone}</a>`
+            : 'Nincs megadva';
+        
+        const emergencyPhoneLandlineLink = patient.emergencyPhoneLandline
+            ? `<a href="tel:${patient.emergencyPhoneLandline}">${patient.emergencyPhoneLandline}</a>`
+            : 'Nincs megadva';
+
+        const doctorPhoneLink = patient.doctorPhone
+            ? `<a href="tel:${patient.doctorPhone}">${patient.doctorPhone}</a>`
             : 'Nincs megadva';
 
         // Format birth date
@@ -923,8 +936,28 @@ function renderPatients(searchQuery = '') {
                     <span class="patient-info-value">${patient.emergencyContact || 'Nincs megadva'}</span>
                 </div>
                 <div class="patient-info-item">
-                    <span class="patient-info-label">Értesítendő tel.:</span>
-                    <span class="patient-info-value">${emergencyPhoneLink}</span>
+                    <span class="patient-info-label">Mobil:</span>
+                    <span class="patient-info-value">${emergencyPhoneMobileLink}</span>
+                </div>
+                <div class="patient-info-item">
+                    <span class="patient-info-label">Vezetékes:</span>
+                    <span class="patient-info-value">${emergencyPhoneLandlineLink}</span>
+                </div>
+                <div class="patient-info-item">
+                    <span class="patient-info-label">Orvos neve:</span>
+                    <span class="patient-info-value">${patient.doctorName || 'Nincs megadva'}</span>
+                </div>
+                <div class="patient-info-item">
+                    <span class="patient-info-label">Orvos tel.:</span>
+                    <span class="patient-info-value">${doctorPhoneLink}</span>
+                </div>
+                <div class="patient-info-item">
+                    <span class="patient-info-label">Partner Kártya:</span>
+                    <span class="patient-info-value">${patient.partnerCardNumber || 'Nincs megadva'}</span>
+                </div>
+                <div class="patient-info-item">
+                    <span class="patient-info-label">Gyógyszerek:</span>
+                    <span class="patient-info-value">${patient.medications || 'Nincs megadva'}</span>
                 </div>
                 <div class="patient-info-item">
                     <span class="patient-info-label">Feladatok:</span>
@@ -970,7 +1003,12 @@ function editPatient(id) {
     document.getElementById('intercom').value = patientToEdit.intercom || '';
     document.getElementById('taj').value = patientToEdit.taj || '';
     document.getElementById('emergencyContact').value = patientToEdit.emergencyContact || '';
-    document.getElementById('emergencyPhone').value = patientToEdit.emergencyPhone || '';
+    document.getElementById('emergencyPhoneMobile').value = patientToEdit.emergencyPhoneMobile || patientToEdit.emergencyPhone || '';
+    document.getElementById('emergencyPhoneLandline').value = patientToEdit.emergencyPhoneLandline || '';
+    document.getElementById('doctorName').value = patientToEdit.doctorName || '';
+    document.getElementById('doctorPhone').value = patientToEdit.doctorPhone || '';
+    document.getElementById('partnerCardNumber').value = patientToEdit.partnerCardNumber || '';
+    document.getElementById('medications').value = patientToEdit.medications || '';
     document.getElementById('tasks').value = patientToEdit.tasks || '';
     document.getElementById('patientColor').value = patientToEdit.color || '#8b5cf6';
 
