@@ -1991,8 +1991,8 @@ body {
 .gemini-actions {
     display: flex;
     gap: 1rem;
-    margin-bottom: 1.5rem;
     justify-content: center;
+    margin-bottom: 1.5rem;
     padding-bottom: 1.5rem;
 }
 
