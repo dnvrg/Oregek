@@ -1669,7 +1669,6 @@ body {
     gap: 1rem;
     margin-bottom: 1.5rem;
     padding-bottom: 1.5rem;
-    border-top: 1px solid var(--gray-200);
 }
 
 .modal-message {
