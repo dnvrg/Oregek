@@ -507,6 +507,14 @@ body {
     white-space: nowrap;
 }
 
+.btn-hozzaad-desktop {
+    display: none; /* Hidden by default on mobile */
+}
+
+.btn-hozzaad-mobile {
+    display: inline-flex; /* Visible by default on mobile */
+}
+
 .btn-lg {
     padding: 1rem 1.25rem;
     font-size: 1rem;
@@ -1733,17 +1741,32 @@ body {
         align-items: stretch;
     }
 
+    .shopping-actions-group {
+        display: flex;
+        width: 100%;
+        gap: 1rem;
+    }
+
+    .shopping-actions-group .btn {
+        flex: 1;
+        justify-content: center;
+    }
+
     .shopping-input-group .inline-form > * {
         width: 100%;
     }
 
-    .separator-line {
-        display: none;
-    }
-
     .ai-button {
-        width: 100%;
-        justify-content: center;
+        /* width is now controlled by flex: 1 in the group */
+    }
+}
+
+@media (min-width: 1024px) {
+    .btn-hozzaad-desktop {
+        display: inline-flex;
+    }
+    .btn-hozzaad-mobile {
+        display: none;
     }
 }
 
@@ -1768,15 +1791,15 @@ body {
         align-items: flex-end;
     }
 
+    .shopping-actions-group {
+        display: flex;
+        gap: 1rem;
+        align-items: flex-end;
+    }
+
     .shopping-input-group .form-input,
     .shopping-input-group .form-select {
         width: 15rem;
-    }
-
-    .separator-line {
-        width: 1px;
-        background-color: var(--gray-300);
-        align-self: stretch;
     }
 
     .ai-button {
@@ -1846,6 +1869,7 @@ body {
     
     .inline-form {
         flex-direction: column;
+        align-items: stretch;
     }
     
     .form-grid {
