@@ -929,18 +929,56 @@ body {
     gap: 0.75rem;
 }
 
+/* Container for the whole swipeable row */
+.shopping-list-item-swipe-container {
+    position: relative;
+    overflow: hidden;
+    border-radius: var(--radius-lg);
+    background-color: var(--danger-500); /* Background color for the delete area */
+}
+
+/* The visible, sliding part of the list item. */
 .shopping-list-item {
     display: flex;
     align-items: center;
     gap: 0.75rem;
     padding: 0.75rem 1rem;
     background-color: var(--gray-50);
-    border-radius: var(--radius-lg);
-    transition: var(--transition);
+    border-radius: var(--radius-lg); /* Match container radius to prevent corner bleed */
+    transition: transform 0.3s ease;
+    position: relative; /* To be on top of the action button */
+    z-index: 2;
+    border-left: 4px solid transparent; /* For patient color */
 }
 
 .shopping-list-item:hover {
     background-color: var(--gray-100);
+}
+
+.shopping-item-actions-desktop {
+    display: none; /* Hidden on mobile by default */
+}
+
+.shopping-item-actions-swipe {
+    position: absolute;
+    top: 0;
+    right: 0;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1;
+    padding: 0 1rem;
+}
+
+.shopping-item-actions-swipe .icon-btn {
+    color: white;
+    width: 2.5rem;
+    height: 2.5rem;
+}
+
+.shopping-item-actions-swipe .icon-btn:hover {
+    background: rgba(0,0,0,0.1);
 }
 
 .shopping-list-item.completed .item-name {
@@ -960,11 +998,6 @@ body {
     min-width: 0;
 }
 
-.item-name:focus {
-    outline: none;
-    border-bottom: 1px solid var(--purple-500);
-}
-
 .item-checkbox {
     width: 1.25rem;
     height: 1.25rem;
@@ -972,9 +1005,12 @@ body {
 }
 
 .shopping-item-actions {
-    display: flex;
-    gap: 0.5rem;
+    /* This class is no longer used for the new swipeable items */
 }
+
+
+
+
 
 
 /* Old styles, kept for other sections */
@@ -1709,6 +1745,45 @@ body {
         justify-content: center;
         margin: 0;
     }
+
+    /* --- Desktop Shopping List Item Styles --- */
+
+    /* On desktop, we revert to a non-swipeable list item */
+    .shopping-list-item-swipe-container {
+        position: static;
+        overflow: visible;
+        background-color: transparent; /* Container is just a wrapper */
+        border-radius: 0;
+    }
+
+    .shopping-list-item {
+        border-radius: var(--radius-lg);
+        transform: none !important; /* Override JS swipe styles */
+        transition: var(--transition);
+        position: static; /* Revert from relative for swipe */
+        z-index: auto;
+    }
+
+    /* Hide the swipe action UI on desktop */
+    .shopping-item-actions-swipe {
+        display: none;
+    }
+
+    /* Show the classic, always-visible delete button on desktop */
+    .shopping-item-actions-desktop {
+        display: flex;
+    }
+
+    /* Style the desktop delete button to be a simple icon button */
+    .shopping-item-actions-desktop .icon-btn.btn-danger {
+        background: none;
+        color: var(--danger-500);
+    }
+
+    .shopping-item-actions-desktop .icon-btn.btn-danger:hover {
+        background: var(--danger-50);
+        color: var(--danger-600);
+    }
 }
 
 
@@ -2152,6 +2227,34 @@ html.dark .shopping-list-item,
 html.dark .saved-item,
 html.dark .calendar-mobile-visit {
     background-color: var(--gray-200);
+}
+
+html.dark .shopping-list-item-swipe-container {
+    background-color: var(--danger-600);
+}
+
+html.dark .shopping-list-item {
+    background-color: var(--gray-200);
+}
+
+html.dark .shopping-list-item:hover {
+    background-color: var(--gray-300);
+}
+
+@media (min-width: 1024px) {
+    /* Dark mode overrides for desktop shopping list items */
+    html.dark .shopping-list-item-swipe-container {
+        /* On desktop, the swipe container should always be transparent */
+        background-color: transparent;
+    }
+
+    html.dark .shopping-item-actions-desktop .icon-btn.btn-danger {
+        color: var(--danger-500);
+    }
+    html.dark .shopping-item-actions-desktop .icon-btn.btn-danger:hover {
+        background: rgba(248, 113, 113, 0.1);
+        color: var(--danger-500);
+    }
 }
 
 html.dark .shopping-list-item.completed .item-name {
