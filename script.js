@@ -413,23 +413,26 @@ function renderDayDetails(date) {
 function openGeminiConfirmModal(items, patientId) {
     const modal = document.getElementById('geminiConfirmModal');
     const listContainer = document.getElementById('geminiItemsList');
-    const patientName = patients.find(p => p.id === parseInt(patientId))?.name || 'Általános';
+    const patient = patients.find(p => p.id === parseInt(patientId));
+    const patientName = patient ? patient.name : 'Általános';
     const patientSpan = document.getElementById('geminiPatientName');
 
     if (!modal || !listContainer) return;
 
     listContainer.innerHTML = '';
+    modal.dataset.patientId = patientId;
     
     if (patientSpan) {
         patientSpan.textContent = patientName;
         modal.dataset.patientId = patientId;
     }
 
-    items.forEach(itemText => {
+    items.forEach(itemObject => {
         const itemDiv = document.createElement('div');
         itemDiv.className = 'gemini-list-item-editable';
         itemDiv.innerHTML = `
-            <input type="text" value="${itemText}" class="gemini-item-input flex-1 p-2 border rounded-lg">
+            <input type="text" value="${itemObject.item}" class="gemini-item-input flex-1 p-2 border rounded-lg" placeholder="Tétel">
+            <input type="text" value="${itemObject.quantity || ''}" class="gemini-quantity-input p-2 border rounded-lg" placeholder="Mennyiség">
             <button class="icon-btn btn-danger remove-item-btn"><i class="fas fa-trash"></i></button>
         `;
         listContainer.appendChild(itemDiv);
@@ -1316,21 +1319,23 @@ function handleShoppingSubmit(e) {
     e.preventDefault();
 
     const shoppingItemInput = document.getElementById('shoppingItem');
+    const shoppingQuantityInput = document.getElementById('shoppingQuantity');
     const newItemName = shoppingItemInput.value.trim();
+    const newItemQuantity = shoppingQuantityInput.value.trim();
     const patientId = parseInt(document.getElementById('shoppingPatient').value);
 
     if (!newItemName || !patientId) {
         showCustomMessage('Kérjük, adjon meg egy tételt és válasszon pácienst.', 'error');
         return;
     }
-
+    
     const existingItem = shoppingItems.find(item => item.item.toLowerCase() === newItemName.toLowerCase() && item.patientId === patientId);
 
     if (existingItem) {
-        if (existingItem.completed) {
-            existingItem.completed = false;
-            existingItem.id = Date.now(); // Update timestamp to bump to top
-        }
+        // If item exists, un-complete it, update its quantity, and move to top.
+        existingItem.completed = false;
+        existingItem.id = Date.now(); 
+        existingItem.quantity = newItemQuantity;
     } else {
         const newItem = {
             id: Date.now(),
@@ -1338,6 +1343,7 @@ function handleShoppingSubmit(e) {
             patientId: patientId,
             completed: false
         };
+        newItem.quantity = newItemQuantity;
         shoppingItems.push(newItem);
     }
 
@@ -1345,6 +1351,7 @@ function handleShoppingSubmit(e) {
     renderShoppingList();
 
     // Clear and focus the input field, but leave the patient selected
+    shoppingQuantityInput.value = '';
     shoppingItemInput.value = '';
     shoppingItemInput.focus();
 }
@@ -1353,7 +1360,7 @@ function handleShoppingSubmit(e) {
 function renderShoppingList(searchQuery = '') {
     const container = document.getElementById('shoppingList');
     if (!container) return;
-    renderGroupedItems(shoppingItems, 'shoppingList', createShoppingListItem, searchQuery, 'shopping-list-container');
+    renderGroupedItems(shoppingItems, 'shoppingList', createShoppingListItem, searchQuery);
 }
 
 function createShoppingListItem(item) {
@@ -1370,7 +1377,9 @@ function createShoppingListItem(item) {
 
     contentDiv.innerHTML = `
         <input type="checkbox" class="item-checkbox" ${item.completed ? 'checked' : ''} data-id="${item.id}">
-        <input type="text" class="item-name" value="${item.item}" data-id="${item.id}">
+        <input type="text" class="item-name" value="${item.item}" data-id="${item.id}" placeholder="Tétel neve">
+        <input type="text" class="item-quantity" value="${item.quantity || ''}" data-id="${item.id}" placeholder="Menny.">
+        <div class="item-spacer"></div>
         <div class="shopping-item-actions-desktop">
             <button class="icon-btn btn-danger" onclick="deleteShoppingItem(${item.id})">
                 <i class="fas fa-trash"></i>
@@ -1395,6 +1404,10 @@ function createShoppingListItem(item) {
 
     contentDiv.querySelector('.item-name').addEventListener('blur', (e) => {
         updateShoppingItemName(item.id, e.target.value);
+    });
+
+    contentDiv.querySelector('.item-quantity').addEventListener('blur', (e) => {
+        updateShoppingItemQuantity(item.id, e.target.value);
     });
 
     // --- Swipe Logic for Mobile ---
@@ -1468,7 +1481,15 @@ function updateShoppingItemName(id, newName) {
     if (itemToUpdate) {
         itemToUpdate.item = newName.trim();
         localStorage.setItem('shoppingItems', JSON.stringify(shoppingItems));
-        renderShoppingList();
+        // No re-render to avoid losing focus if user tabs between fields
+    }
+}
+
+function updateShoppingItemQuantity(id, newQuantity) {
+    const itemToUpdate = shoppingItems.find(item => item.id === id);
+    if (itemToUpdate) {
+        itemToUpdate.quantity = newQuantity.trim();
+        localStorage.setItem('shoppingItems', JSON.stringify(shoppingItems));
     }
 }
 
@@ -1825,7 +1846,7 @@ function deleteNote(id) {
 }
 
 // Generic function to render grouped items (for lists and cards)
-function renderGroupedItems(items, containerId, itemRenderer, searchQuery = '', containerClass = 'card-grid') {
+function renderGroupedItems(items, containerId, itemRenderer, searchQuery = '') {
     const container = document.getElementById(containerId);
     if (!container) return;
 
@@ -1891,7 +1912,7 @@ function renderGroupedItems(items, containerId, itemRenderer, searchQuery = '', 
             }
 
             const groupWrapper = document.createElement('div');
-            groupWrapper.className = `patient-list-group ${containerClass}`;
+            groupWrapper.className = 'patient-list-group';
             
             const heading = document.createElement('h3');
             heading.className = 'patient-list-heading';
@@ -1915,6 +1936,7 @@ function renderGroupedItems(items, containerId, itemRenderer, searchQuery = '', 
                 addForm.dataset.patientId = patientId;
                 addForm.innerHTML = `
                     <input type="text" placeholder="Új tétel hozzáadása..." required class="form-input flex-1">
+                    <input type="text" placeholder="Mennyiség" class="form-input quantity-input">
                     <button type="submit" class="btn btn-primary">Hozzáad</button>
                 `;
                 groupWrapper.appendChild(addForm);
@@ -1923,22 +1945,23 @@ function renderGroupedItems(items, containerId, itemRenderer, searchQuery = '', 
                     e.preventDefault();
                     const input = e.target.querySelector('input');
                     const newItemName = input.value.trim();
+                    const newItemQuantity = e.target.querySelector('.quantity-input').value.trim();
                     const targetPatientId = parseInt(e.target.dataset.patientId);
 
                     if (newItemName) {
                         const existingItem = shoppingItems.find(item => item.item.toLowerCase() === newItemName.toLowerCase() && item.patientId === targetPatientId);
                         
                         if (existingItem) {
-                            // If item exists and is completed, uncheck it
-                            if (existingItem.completed) {
-                                existingItem.completed = false;
-                                existingItem.id = Date.now() + Math.random(); // Update timestamp to bump to top
-                            }
+                            // If item exists, un-complete it, update its quantity, and move to top.
+                            existingItem.completed = false;
+                            existingItem.id = Date.now() + Math.random();
+                            existingItem.quantity = newItemQuantity;
                         } else {
                             // If item does not exist, add it
                             const newItem = {
                                 id: Date.now() + Math.random(),
                                 item: newItemName,
+                                quantity: newItemQuantity,
                                 patientId: targetPatientId,
                                 completed: false
                             };
@@ -2569,7 +2592,7 @@ async function analyzeImageWithGemini(imageData, patientId) {
 
     // Convert data URL to base64 string
     const base64ImageData = imageData.split(',')[1];
-    const prompt = 'Please identify the items on this handwritten shopping list and respond with a comma-separated list of the items, in Hungarian. Example: tej,kenyér,tojás. Do not include any other text.';
+    const prompt = 'Please identify the items and their quantities on this handwritten shopping list. Respond with a JSON array of objects, where each object has "item" and "quantity" keys. Both should be in Hungarian. Example: [{"item": "tej", "quantity": "1 liter"}, {"item": "kenyér", "quantity": "1 db"}, {"item": "tojás", "quantity": "10"}]. Do not include any other text or markdown formatting.';
 
     try {
         const response = await fetch('/api/gemini-proxy', {
@@ -2584,7 +2607,15 @@ async function analyzeImageWithGemini(imageData, patientId) {
         }
 
         const result = await response.json();
-        const items = result.text.split(',').map(item => item.trim());
+        let items;
+        try {
+            // Clean up potential markdown backticks from the response
+            const cleanedText = result.text.replace(/```json\n|```/g, '').trim();
+            items = JSON.parse(cleanedText);
+        } catch (e) {
+            console.error("Failed to parse Gemini JSON response, falling back to simple list:", e);
+            items = result.text.split(',').map(item => ({ item: item.trim(), quantity: '' }));
+        }
         openGeminiConfirmModal(items, patientId);
 
     } catch (error) {
@@ -2598,26 +2629,29 @@ async function analyzeImageWithGemini(imageData, patientId) {
 }
 
 function addConfirmedItemsToShoppingList() {
-    const listItems = document.querySelectorAll('#geminiItemsList .gemini-item-input');
+    const listItems = document.querySelectorAll('#geminiItemsList .gemini-list-item-editable');
     const patientId = parseInt(document.getElementById('geminiConfirmModal').dataset.patientId);
     
     let newItemsAdded = 0;
     const itemsToAdd = [];
 
-    listItems.forEach(input => {
-        const itemText = input.value.trim();
+    listItems.forEach(itemDiv => {
+        const itemText = itemDiv.querySelector('.gemini-item-input').value.trim();
+        const quantityText = itemDiv.querySelector('.gemini-quantity-input').value.trim();
+
         if (itemText) {
             const existingItem = shoppingItems.find(item => item.item.toLowerCase() === itemText.toLowerCase() && item.patientId === patientId);
 
             if (existingItem) {
-                if (existingItem.completed) {
-                    existingItem.completed = false;
-                    existingItem.id = Date.now() + Math.random(); // Update timestamp to bump to top
-                }
+                // If item exists, un-complete it and update its quantity
+                existingItem.completed = false;
+                existingItem.id = Date.now() + Math.random();
+                existingItem.quantity = quantityText || existingItem.quantity;
             } else {
                 itemsToAdd.push({
                     id: Date.now() + Math.random(),
                     item: itemText,
+                    quantity: quantityText,
                     patientId: patientId,
                     completed: false
                 });
