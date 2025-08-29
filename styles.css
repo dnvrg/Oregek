@@ -2262,6 +2262,17 @@ html.dark .popup {
     box-shadow: var(--shadow-sm);
 }
 
+/* Fix for Gemini confirmation modal items in dark mode */
+html.dark .gemini-list-item-editable {
+    background-color: var(--gray-200);
+}
+
+html.dark .gemini-item-input {
+    background-color: var(--gray-100);
+    border-color: var(--gray-300);
+    color: var(--gray-800);
+}
+
 /* Ensure the upload container on the documents tab also has a dark background */
 html.dark #documents .bg-white {
     background-color: var(--gray-100);
