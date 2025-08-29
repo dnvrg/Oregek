@@ -1290,6 +1290,7 @@ function handleShoppingSubmit(e) {
     if (existingItem) {
         if (existingItem.completed) {
             existingItem.completed = false;
+            existingItem.id = Date.now(); // Update timestamp to bump to top
         }
     } else {
         const newItem = {
@@ -1433,6 +1434,10 @@ function toggleShoppingItemCompletion(id, isCompleted) {
     const itemToUpdate = shoppingItems.find(item => item.id === id);
     if (itemToUpdate) {
         itemToUpdate.completed = isCompleted;
+        // If unchecking, update the ID to a new timestamp to move it to the top
+        if (!isCompleted) {
+            itemToUpdate.id = Date.now();
+        }
         localStorage.setItem('shoppingItems', JSON.stringify(shoppingItems));
         renderShoppingList();
     }
@@ -1831,6 +1836,18 @@ function renderGroupedItems(items, containerId, itemRenderer, searchQuery = '', 
 
         // Only render the group if there are matching items
         if (filteredGroupItems.length > 0) {
+            // Sort shopping list items: uncompleted on top (newest first), then completed on bottom.
+            if (containerId === 'shoppingList') {
+                filteredGroupItems.sort((a, b) => {
+                    // 1. Completed items go to the bottom.
+                    if (a.completed !== b.completed) {
+                        return a.completed ? 1 : -1;
+                    }
+                    // 2. For items with the same completion status, sort by ID (timestamp) descending (newest first).
+                    return b.id - a.id;
+                });
+            }
+
             const groupWrapper = document.createElement('div');
             groupWrapper.className = `patient-list-group ${containerClass}`;
             
@@ -1873,6 +1890,7 @@ function renderGroupedItems(items, containerId, itemRenderer, searchQuery = '', 
                             // If item exists and is completed, uncheck it
                             if (existingItem.completed) {
                                 existingItem.completed = false;
+                                existingItem.id = Date.now() + Math.random(); // Update timestamp to bump to top
                             }
                         } else {
                             // If item does not exist, add it
@@ -2543,6 +2561,7 @@ function addConfirmedItemsToShoppingList() {
             if (existingItem) {
                 if (existingItem.completed) {
                     existingItem.completed = false;
+                    existingItem.id = Date.now() + Math.random(); // Update timestamp to bump to top
                 }
             } else {
                 itemsToAdd.push({
@@ -2555,7 +2574,6 @@ function addConfirmedItemsToShoppingList() {
             }
         }
     });
-
     if (itemsToAdd.length > 0) {
         shoppingItems.push(...itemsToAdd);
     }
