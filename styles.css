@@ -2201,6 +2201,7 @@ html.dark .p-8.rounded-\[2rem\].shadow-xl.w-full.mx-auto.bg-lilac-50.border-2.bo
 .doc-card {
     background: #fff;
     border-radius: 14px;
+    border: 1px solid var(--gray-200);
     padding: 1.25rem;
     box-shadow: 0 2px 8px rgba(0,0,0,0.05);
     display: flex;
