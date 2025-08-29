@@ -24,6 +24,7 @@ let renameId = null;
 // New global variable to track the date of the loaded calculation
 let currentCalculationDate = null;
 let cameraStream = null;
+let currentlyOpenSwipeItem = null;
 
 const themeKey = 'app-theme';
 const NOTE_COLORS = ["#b3ffb3", "#ffb3e6", "#b39b9b", "#ffcc99", "#b3e6ff", "#66e6d6"];
@@ -327,6 +328,20 @@ function closePatientModal() {
     clearPatientForm();
     patientToEdit = null;
 }
+
+function openSwipeItem(element) {
+    const actionWidth = element.nextElementSibling.offsetWidth;
+    element.style.transform = `translateX(-${actionWidth}px)`;
+    currentlyOpenSwipeItem = element;
+}
+
+function closeSwipeItem(element) {
+    element.style.transform = 'translateX(0)';
+    if (currentlyOpenSwipeItem === element) {
+        currentlyOpenSwipeItem = null;
+    }
+}
+
 
 // New Modal Functions
 function openDayDetailModal(date) {
@@ -762,6 +777,11 @@ function initializeEventListeners() {
         const isSettingsButton = e.target.closest('.settings-btn');
         if (noteSettingsPopup.classList.contains('show') && !noteSettingsPopup.contains(e.target) && !isSettingsButton) {
             noteSettingsPopup.classList.remove('show');
+        }
+
+        // Close open swipe item if clicking outside of it
+        if (currentlyOpenSwipeItem && !currentlyOpenSwipeItem.parentElement.contains(e.target)) {
+            closeSwipeItem(currentlyOpenSwipeItem);
         }
     });
 
@@ -1295,34 +1315,108 @@ function renderShoppingList(searchQuery = '') {
 
 function createShoppingListItem(item) {
     const listItem = document.createElement('li');
-    listItem.className = `shopping-list-item ${item.completed ? 'completed' : ''}`;
-    
-    // Find patient color for the list item border
+    listItem.className = 'shopping-list-item-swipe-container';
+
+    const contentDiv = document.createElement('div');
+    contentDiv.className = `shopping-list-item ${item.completed ? 'completed' : ''}`;
+
     const patient = patients.find(p => p.id === item.patientId);
     if (patient) {
-        listItem.style.borderLeftColor = patient.color;
+        contentDiv.style.borderLeftColor = patient.color;
     }
 
-    listItem.innerHTML = `
+    contentDiv.innerHTML = `
         <input type="checkbox" class="item-checkbox" ${item.completed ? 'checked' : ''} data-id="${item.id}">
         <input type="text" class="item-name" value="${item.item}" data-id="${item.id}">
-        <div class="shopping-item-actions">
+        <div class="shopping-item-actions-desktop">
             <button class="icon-btn btn-danger" onclick="deleteShoppingItem(${item.id})">
                 <i class="fas fa-trash"></i>
             </button>
         </div>
     `;
 
-    // Add event listener for checkbox change
-    listItem.querySelector('.item-checkbox').addEventListener('change', (e) => {
+    const actionsDiv = document.createElement('div');
+    actionsDiv.className = 'shopping-item-actions-swipe';
+    actionsDiv.innerHTML = `
+        <button class="icon-btn btn-danger" onclick="deleteShoppingItem(${item.id})">
+            <i class="fas fa-trash"></i>
+        </button>
+    `;
+
+    listItem.appendChild(contentDiv);
+    listItem.appendChild(actionsDiv);
+
+    contentDiv.querySelector('.item-checkbox').addEventListener('change', (e) => {
         toggleShoppingItemCompletion(item.id, e.target.checked);
     });
 
-    // Add event listener for input blur (when user finishes editing)
-    listItem.querySelector('.item-name').addEventListener('blur', (e) => {
+    contentDiv.querySelector('.item-name').addEventListener('blur', (e) => {
         updateShoppingItemName(item.id, e.target.value);
     });
-    
+
+    // --- Swipe Logic for Mobile ---
+    let startX = 0, startY = 0;
+    let currentX = 0;
+    let isDragging = false;
+    let isSwiping = false;
+    const threshold = -50; // Min swipe distance to trigger open
+
+    contentDiv.addEventListener('touchstart', (e) => {
+        if (currentlyOpenSwipeItem && currentlyOpenSwipeItem !== contentDiv) {
+            closeSwipeItem(currentlyOpenSwipeItem);
+        }
+        startX = e.touches[0].clientX;
+        startY = e.touches[0].clientY;
+        currentX = startX;
+        isDragging = true;
+        isSwiping = false;
+        contentDiv.style.transition = 'none';
+    }, { passive: true });
+
+    contentDiv.addEventListener('touchmove', (e) => {
+        if (!isDragging) return;
+
+        currentX = e.touches[0].clientX;
+        let diffX = currentX - startX;
+
+        if (!isSwiping) {
+            let diffY = e.touches[0].clientY - startY;
+            if (Math.abs(diffX) > 10 && Math.abs(diffX) > Math.abs(diffY)) {
+                isSwiping = true;
+            } else if (Math.abs(diffY) > 10) {
+                isDragging = false; // It's a vertical scroll
+                return;
+            }
+        }
+
+        if (isSwiping && diffX < 0) {
+            const actionWidth = 70;
+            let transX = diffX;
+            if (diffX < -actionWidth) {
+                // Add resistance for over-swiping
+                const overscroll = -actionWidth + (diffX + actionWidth) * 0.4;
+                transX = overscroll;
+            }
+            contentDiv.style.transform = `translateX(${transX}px)`;
+        }
+    });
+
+    contentDiv.addEventListener('touchend', () => {
+        if (!isDragging) return;
+        isDragging = false;
+
+        contentDiv.style.transition = 'transform 0.3s ease';
+        const diffX = currentX - startX;
+
+        if (isSwiping) {
+            if (diffX < threshold) {
+                openSwipeItem(contentDiv);
+            } else {
+                closeSwipeItem(contentDiv);
+            }
+        }
+    });
+
     return listItem;
 }
 
