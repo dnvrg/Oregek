@@ -1315,7 +1315,8 @@ function getVisitsForDate(date) {
 function handleShoppingSubmit(e) {
     e.preventDefault();
 
-    const newItemName = document.getElementById('shoppingItem').value.trim();
+    const shoppingItemInput = document.getElementById('shoppingItem');
+    const newItemName = shoppingItemInput.value.trim();
     const patientId = parseInt(document.getElementById('shoppingPatient').value);
 
     if (!newItemName || !patientId) {
@@ -1342,7 +1343,10 @@ function handleShoppingSubmit(e) {
 
     localStorage.setItem('shoppingItems', JSON.stringify(shoppingItems));
     renderShoppingList();
-    document.getElementById('shoppingForm').reset();
+
+    // Clear and focus the input field, but leave the patient selected
+    shoppingItemInput.value = '';
+    shoppingItemInput.focus();
 }
 
 
@@ -1943,6 +1947,15 @@ function renderGroupedItems(items, containerId, itemRenderer, searchQuery = '', 
 
                         localStorage.setItem('shoppingItems', JSON.stringify(shoppingItems));
                         renderShoppingList(searchQuery);
+
+                        // After re-rendering, find the new input for this patient group and focus it
+                        const newGroupForm = document.querySelector(`form[data-patient-id='${targetPatientId}']`);
+                        if (newGroupForm) {
+                            const newInput = newGroupForm.querySelector('input');
+                            if (newInput) {
+                                newInput.focus();
+                            }
+                        }
                     }
                 });
             }
