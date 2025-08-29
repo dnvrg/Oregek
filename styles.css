@@ -519,7 +519,7 @@ body {
     color: white;
 }
 
-.btn-primary:hover {
+.btn-primary:not(.ai-button):hover {
     background: var(--purple-600);
 }
 
@@ -558,6 +558,47 @@ body {
 
 .btn-purple:hover {
     background: var(--purple-600);
+}
+
+.ai-button {
+    position: relative;
+    z-index: 1;
+    border: none;
+    color: black;
+    background: linear-gradient(270deg, #a78bfa, #f87171, #fde047, #34d399, #38bdf8, #a78bfa);
+    background-size: 600% 600%;
+    animation: rainbow-flow 16s ease infinite;
+    transition: transform 0.2s ease-out, box-shadow 0.2s ease-out;
+    overflow: visible; /* Ensure the ::before pseudo-element is not clipped */
+}
+
+.ai-button::before {
+    content: '';
+    position: absolute;
+    z-index: -1;
+    inset: -3px; /* Creates a 3px outline */
+    border-radius: calc(1.5rem + 3px); /* Matches .btn-lg radius + inset */
+    background: linear-gradient(135deg, #38bdf8, #a78bfa, #f87171, #fde047, #34d399, #38bdf8);
+    background-size: 400% 400%;
+    animation: rainbow-flow 12s linear infinite;
+    animation-direction: reverse; /* Animate in the opposite direction of the button's background */
+}
+
+.ai-button::after {
+    content: '';
+    position: absolute;
+    z-index: -2; /* Behind the ::before element */
+    inset: -6px; /* Creates a second, wider outline */
+    border-radius: calc(1.5rem + 6px); /* Matches .btn-lg radius + new inset */
+    background: linear-gradient(45deg, #fde047, #34d399, #38bdf8, #a78bfa, #f87171, #fde047);
+    background-size: 400% 400%;
+    animation: rainbow-flow 8s linear infinite;
+    filter: blur(5px); /* Add a soft blur for a glowing effect */
+}
+
+.ai-button:hover {
+    transform: scale(1.03);
+    box-shadow: var(--shadow-lg);
 }
 
 /* Patients Grid */
@@ -1702,6 +1743,7 @@ body {
 
     .ai-button {
         width: 100%;
+        justify-content: center;
     }
 }
 
@@ -1954,6 +1996,12 @@ body {
 
 @keyframes spin {
     to { transform: rotate(360deg); }
+}
+
+@keyframes rainbow-flow {
+    0%{background-position:0% 50%}
+    50%{background-position:100% 50%}
+    100%{background-position:0% 50%}
 }
 
 .gemini-list-container {
