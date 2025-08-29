@@ -1127,6 +1127,8 @@ body {
     display: flex;
     gap: 0.25rem;
     flex-shrink: 0;
+    opacity: 0;
+    transition: opacity 0.2s ease-in-out;
 }
 
 .note-sticky-header .icon-btn {
@@ -1140,6 +1142,12 @@ body {
     background: transparent;
     color: var(--gray-800);
 }
+
+.note-sticky:hover .note-sticky-header .card-actions,
+.note-sticky:focus-within .note-sticky-header .card-actions {
+    opacity: 1;
+}
+
 .pin-btn.active {
     color: var(--purple-500);
 }
@@ -2165,7 +2173,12 @@ html.dark .calculation-table input:focus {
 
 html.dark .note-sticky-title,
 html.dark .note-sticky-text {
-    color: var(--gray-800);
+    color: #1f2937; /* Keep text dark on light-colored notes */
+}
+
+html.dark .note-sticky-header .icon-btn:hover {
+    background: transparent;
+    color: #1f2937; /* Use a dark color for hover on light notes */
 }
 
 html.dark .note-settings-popup {
