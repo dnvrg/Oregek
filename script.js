@@ -267,6 +267,12 @@ function initializeModals() {
 
     // Gemini confirmation modal
     const geminiConfirmModal = document.getElementById('geminiConfirmModal');
+    const closeGeminiConfirmModalBtn = document.getElementById('closeGeminiConfirmModal');
+
+    if (closeGeminiConfirmModalBtn) {
+        closeGeminiConfirmModalBtn.addEventListener('click', closeGeminiConfirmModal);
+    }
+
     if (geminiConfirmModal) {
         geminiConfirmModal.addEventListener('click', (e) => {
             if (e.target === geminiConfirmModal) {
