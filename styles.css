@@ -2153,13 +2153,13 @@ body {
     box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.2);
 }
 
-.gemini-list-item-editable .remove-item-btn {
-    background-color: var(--danger-500);
+.gemini-list-item-editable .icon-btn.btn-danger.remove-item-btn {
+    background: var(--danger-500);
     color: white;
 }
 
-.gemini-list-item-editable .remove-item-btn:hover {
-    background-color: var(--danger-600);
+.gemini-list-item-editable .icon-btn.btn-danger.remove-item-btn:hover {
+    background: var(--danger-600);
     color: white;
 }
 
@@ -2374,6 +2374,16 @@ html.dark .gemini-item-input {
     background-color: var(--gray-100);
     border-color: var(--gray-300);
     color: var(--gray-800);
+}
+
+/* Ensure Gemini remove button is red in dark mode */
+html.dark .gemini-list-item-editable .icon-btn.btn-danger.remove-item-btn {
+    background: var(--danger-500);
+    color: white;
+}
+html.dark .gemini-list-item-editable .icon-btn.btn-danger.remove-item-btn:hover {
+    background: var(--danger-600);
+    color: white;
 }
 
 html.dark .gemini-quantity-input {
