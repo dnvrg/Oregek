@@ -457,6 +457,8 @@ function closeGeminiConfirmModal() {
     if (modal) {
         modal.classList.remove('show');
     }
+    // Also close the main Gemini modal as requested
+    closeGeminiMainModal();
 }
 
 function openDocumentPopup(doc) {
