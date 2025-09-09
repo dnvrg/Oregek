@@ -539,6 +539,7 @@ body {
     background: white;
     color: var(--gray-700);
     border: 1px solid var(--gray-300);
+    justify-content: center;
 }
 
 .btn-secondary:hover {
