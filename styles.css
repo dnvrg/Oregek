@@ -2115,12 +2115,13 @@ body {
     padding: 0.5rem;
     border-radius: 0.5rem;
     border: 1px solid var(--gray-300);
-    flex: 1;
+    flex: 1 1 0;
+    min-width: 0; /* Ensures the input can shrink below its content size */
 }
 
 .gemini-quantity-input {
-    flex-basis: 120px;
-    flex-shrink: 0;
+    flex: 0 1 100px; /* Don't grow, but allow shrinking from a 100px basis */
+    min-width: 70px; /* Prevent it from becoming too small */
 }
 
 .camera-modal {
