@@ -40,26 +40,27 @@ export default async function handler(request, response) {
       password: process.env.MEGA_PASSWORD
     }).ready;
 
-    const uploadedFile = await new Promise((resolve, reject) => {
-      const uploadStream = mega.upload({
-        name: fileName,
-        size: fileSize
-      });
-      const fileStream = createReadStream(filePath);
+    const uploadStream = mega.upload({
+      name: fileName,
+      size: fileSize
+    });
+
+    const fileStream = createReadStream(filePath);
+
+    await new Promise((resolve, reject) => {
       fileStream.pipe(uploadStream);
-      uploadStream.on('complete', (file) => resolve(file));
+      uploadStream.on('complete', resolve);
       uploadStream.on('error', reject);
     });
 
-    const fileUrl = await uploadedFile.link();
     const document = {
       id: Date.now(),
       name: fileName,
       patientId: parseInt(patientId),
-      data: fileUrl,
+      data: `MEGA File URL for ${fileName}`,
       type: file.mimetype,
       size: fileSize,
-      uploadDate: new Date().toISOString()
+      uploadDate: new Date().toLocaleString()
     };
 
     return response.status(200).json({ message: 'File uploaded successfully!', document });
