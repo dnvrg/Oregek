@@ -2059,7 +2059,6 @@ body {
     height: auto;
     border-radius: var(--radius-lg);
     box-shadow: var(--shadow-sm);
-    margin-bottom: 1rem;
     object-fit: contain;
 }
 
