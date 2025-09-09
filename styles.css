@@ -2139,6 +2139,18 @@ body {
 .gemini-quantity-input {
     flex: 0 1 100px; /* Don't grow, but allow shrinking from a 100px basis */
     min-width: 70px; /* Prevent it from becoming too small */
+    background-color: var(--purple-50);
+    border-color: var(--lilac-200);
+    color: var(--purple-700);
+    text-align: center;
+    font-weight: 600;
+}
+
+.gemini-quantity-input:focus {
+    outline: none;
+    background: white;
+    border-color: var(--purple-500);
+    box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.2);
 }
 
 .camera-modal {
@@ -2352,6 +2364,18 @@ html.dark .gemini-item-input {
     background-color: var(--gray-100);
     border-color: var(--gray-300);
     color: var(--gray-800);
+}
+
+html.dark .gemini-quantity-input {
+    background-color: var(--purple-50);
+    border-color: var(--gray-300);
+    color: var(--purple-500);
+}
+
+html.dark .gemini-quantity-input:focus {
+    background: var(--gray-200);
+    border-color: var(--purple-500);
+    box-shadow: 0 0 0 2px rgba(167, 139, 250, 0.2);
 }
 
 /* Ensure the upload container on the documents tab also has a dark background */
