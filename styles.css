@@ -409,6 +409,11 @@ body {
     flex-wrap: wrap;
 }
 
+.inline-form .mb-4 {
+    display: flex;
+    justify-content: center;
+}
+
 .flex-1 {
     flex: 1;
     min-width: 200px;
