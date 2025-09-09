@@ -2108,6 +2108,13 @@ body {
     gap: 0.5rem;
 }
 
+.gemini-list-item-swipe-container {
+    position: relative;
+    overflow: hidden;
+    border-radius: var(--radius-lg);
+    background-color: var(--danger-500);
+}
+
 .gemini-list-item {
     background: var(--gray-50);
     padding: 0.75rem 1rem;
@@ -2124,6 +2131,31 @@ body {
     padding: 0.75rem 1rem;
     border-radius: var(--radius-lg);
     font-size: 0.875rem;
+    transition: transform 0.3s ease;
+    position: relative;
+    z-index: 2;
+}
+
+.gemini-item-actions-swipe {
+    position: absolute;
+    top: 0;
+    right: 0;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1;
+    padding: 0 1rem;
+}
+
+.gemini-item-actions-swipe .icon-btn {
+    color: white;
+    width: 2.5rem;
+    height: 2.5rem;
+}
+
+.gemini-item-actions-swipe .icon-btn:hover {
+    background: rgba(0,0,0,0.1);
 }
 
 .gemini-item-input {
@@ -2340,6 +2372,10 @@ html.dark .popup {
     background: var(--gray-100);
     border-color: var(--gray-200);
     box-shadow: var(--shadow-sm);
+}
+
+html.dark .gemini-list-item-swipe-container {
+    background-color: var(--danger-600);
 }
 
 /* Fix for Gemini confirmation modal items in dark mode */
