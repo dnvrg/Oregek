@@ -2207,7 +2207,7 @@ body {
     padding: 0.5rem;
     border-radius: 0.5rem;
     border: 1px solid var(--gray-300);
-    flex: 0 0 100px; /* Don't grow or shrink, fixed basis */
+    flex: 0 0 70px; /* Don't grow or shrink, fixed basis */
     text-align: center;
 }
 
