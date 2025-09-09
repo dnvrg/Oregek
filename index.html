@@ -572,13 +572,15 @@
                             <input type="file" id="uploadImageFile" accept="image/*" style="display: none;">
                             <button id="uploadImageBtn" class="btn btn-secondary"><i class="fas fa-upload"></i> Kép feltöltése</button>
                         </div>
-                        <div class="flex flex-col items-center mt-4">
-                            <img id="imagePreview" class="camera-preview hidden" alt="Kép előnézete">
-                            <button id="analyzeBtn" class="btn btn-primary mt-4 hidden"><i class="fas fa-magic"></i> Lista elemzés</button>
-                            <div id="loadingIndicator" class="loading-indicator hidden">
-                                <i class="fas fa-spinner fa-spin"></i>
-                                <span>Elemzés folyamatban...</span>
+                        <div class="flex flex-col items-center mt-4 gap-4">
+                            <div class="relative w-full">
+                                <img id="imagePreview" class="camera-preview hidden" alt="Kép előnézete">
+                                <div id="loadingIndicator" class="loading-indicator hidden">
+                                    <i class="fas fa-spinner fa-spin text-2xl"></i>
+                                    <span class="text-lg font-semibold">Elemzés folyamatban...</span>
+                                </div>
                             </div>
+                            <button id="analyzeBtn" class="btn btn-primary hidden"><i class="fas fa-magic"></i> Lista elemzés</button>
                         </div>
                     </div>
                 </div>
