@@ -442,6 +442,9 @@ function openGeminiConfirmModal(items, patientId) {
         contentDiv.innerHTML = `
             <input type="text" value="${itemObject.item}" class="gemini-item-input" placeholder="Tétel">
             <input type="text" value="${itemObject.quantity || ''}" class="gemini-quantity-input" placeholder="Mennyiség">
+            <div class="gemini-item-actions-desktop">
+                <button class="icon-btn btn-danger remove-item-btn"><i class="fas fa-trash"></i></button>
+            </div>
         `;
 
         const actionsDiv = document.createElement('div');
@@ -454,9 +457,11 @@ function openGeminiConfirmModal(items, patientId) {
         swipeContainer.appendChild(actionsDiv);
         listContainer.appendChild(swipeContainer);
 
-        // Add event listener for the remove button
-        actionsDiv.querySelector('.remove-item-btn').addEventListener('click', () => {
-            swipeContainer.remove();
+        // Add event listeners for both remove buttons (desktop and swipe)
+        swipeContainer.querySelectorAll('.remove-item-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                swipeContainer.remove();
+            });
         });
 
         // --- Swipe Logic ---
