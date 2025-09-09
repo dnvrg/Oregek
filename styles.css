@@ -1065,23 +1065,25 @@ body {
 }
 
 .item-quantity {
-    background: none;
-    border: 1px solid transparent;
-    padding: 0.25rem;
+    background: var(--purple-50);
+    border: 1px solid var(--lilac-200);
+    padding: 0.25rem 0.4rem;
     margin: 0;
-    width: 80px;
+    width: 100px;
     flex-shrink: 0;
-    text-align: right;
-    color: var(--gray-600);
-    border-radius: var(--radius-md);
+    text-align: center;
+    color: var(--purple-700);
+    border-radius: var(--radius-lg);
     transition: var(--transition);
     font-size: 0.875rem;
+    font-weight: 600;
 }
 
 .item-quantity:focus {
     outline: none;
     background: white;
     border-color: var(--purple-500);
+    box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.2);
 }
 
 .item-checkbox {
@@ -2415,18 +2417,13 @@ html.dark .item-name:focus {
 }
 
 html.dark .item-quantity {
-    color: var(--gray-500);
+    color: var(--purple-500);
+    border-color: var(--gray-300);
 }
 
 html.dark .item-quantity:focus {
     background: var(--gray-100);
-    border-color: var(--purple-500);
-    color: var(--gray-800);
-}
-
-html.dark .calculation-table .ora-perc-total {
-    background-color: var(--gray-200);
-    color: var(--gray-800);
+    color: var(--purple-500);
 }
 
 html.dark .calculation-table input:focus {
