@@ -2532,6 +2532,9 @@ async function startCamera() {
     const message = document.getElementById('cameraMessage');
     const takePhotoBtn = document.getElementById('takePhotoBtn');
     
+    // Close the main Gemini modal before opening the camera
+    closeGeminiMainModal();
+
     // Remove the CSS class that flips the video feed
     video.classList.remove('hidden');
     
@@ -2564,6 +2567,8 @@ function stopCamera() {
         cameraStream.getTracks().forEach(track => track.stop());
         cameraStream = null;
     }
+    // Re-open the main Gemini modal so the user can see the preview or try again
+    openGeminiMainModal();
     cameraModal.style.display = 'none';
 }
 
