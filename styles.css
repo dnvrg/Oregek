@@ -2064,13 +2064,19 @@ body {
 }
 
 .loading-indicator {
+    position: absolute;
+    inset: 0;
+    background-color: rgba(0, 0, 0, 0.6);
+    color: white;
     display: flex;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 0.5rem;
-    color: var(--gray-600);
-    margin-top: 1rem;
+    gap: 1rem;
+    border-radius: var(--radius-lg);
+    z-index: 10;
 }
+
 
 .loading-indicator .fas.fa-spinner {
     animation: spin 1s linear infinite;
