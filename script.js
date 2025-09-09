@@ -2594,7 +2594,7 @@ async function analyzeImageWithGemini(imageData, patientId) {
 
     // Convert data URL to base64 string
     const base64ImageData = imageData.split(',')[1];
-    const prompt = 'Analyze the handwritten shopping list in the image. Identify each item and its corresponding quantity. Respond with a JSON array of objects. Each object must have an "item" key and a "quantity" key. Both values should be in Hungarian. If a quantity is not specified for an item, the value for the "quantity" key should be an empty string. Example: [{"item": "tej", "quantity": "1 liter"}, {"item": "kenyér", "quantity": "1 db"}, {"item": "sajt", "quantity": ""}, {"item": "tojás", "quantity": "10"}]. Do not include any other text or markdown formatting in your response.';
+    const prompt = 'Analyze the handwritten shopping list in the image. Identify each item and its corresponding quantity. The list may contain medications with foreign names (e.g., Tensiomin, Tanydon, Coverex). Transcribe these names exactly as they are written, without trying to correct them. Respond with a JSON array of objects. Each object must have an "item" key and a "quantity" key. Values should be in Hungarian, but transcribe medication names as-is. If a quantity is not specified, the "quantity" value should be an empty string. Example: [{"item": "tej", "quantity": "1 liter"}, {"item": "Tensiomin", "quantity": "1 doboz"}, {"item": "sajt", "quantity": ""}, {"item": "tojás", "quantity": "10"}]. Do not include any other text or markdown formatting in your response.';
 
     try {
         const response = await fetch('/api/gemini-proxy', {
