@@ -2153,6 +2153,16 @@ body {
     box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.2);
 }
 
+.gemini-list-item-editable .remove-item-btn {
+    background-color: var(--danger-500);
+    color: white;
+}
+
+.gemini-list-item-editable .remove-item-btn:hover {
+    background-color: var(--danger-600);
+    color: white;
+}
+
 .camera-modal {
     display: none;
     position: fixed;
