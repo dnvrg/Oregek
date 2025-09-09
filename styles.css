@@ -1900,37 +1900,6 @@ body {
         background: var(--danger-50);
         color: var(--danger-600);
     }
-
-    /* --- Desktop Gemini List Item Styles --- */
-    .gemini-list-item-swipe-container {
-        position: static;
-        overflow: visible;
-        background-color: transparent;
-        border-radius: 0;
-    }
-
-    .gemini-list-item-editable {
-        border-radius: var(--radius-lg);
-        transform: none !important;
-        transition: var(--transition);
-        position: static;
-        z-index: auto;
-        background-color: var(--gray-50);
-        border: 1px solid var(--gray-200);
-    }
-
-    .gemini-item-actions-swipe {
-        display: none;
-    }
-
-    .gemini-item-actions-desktop {
-        display: flex;
-    }
-
-    .gemini-item-actions-desktop .icon-btn.btn-danger {
-        background: none;
-        color: var(--danger-500);
-    }
 }
 
 @media (min-width: 1280px) {
@@ -2139,13 +2108,6 @@ body {
     gap: 0.5rem;
 }
 
-.gemini-list-item-swipe-container {
-    position: relative;
-    overflow: hidden;
-    border-radius: var(--radius-lg);
-    background-color: var(--danger-500);
-}
-
 .gemini-list-item {
     background: var(--gray-50);
     padding: 0.75rem 1rem;
@@ -2162,35 +2124,6 @@ body {
     padding: 0.75rem 1rem;
     border-radius: var(--radius-lg);
     font-size: 0.875rem;
-    transition: transform 0.3s ease;
-    position: relative;
-    z-index: 2;
-}
-
-.gemini-item-actions-desktop {
-    display: none; /* Hidden on mobile by default */
-}
-
-.gemini-item-actions-swipe {
-    position: absolute;
-    top: 0;
-    right: 0;
-    height: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 1;
-    padding: 0 1rem;
-}
-
-.gemini-item-actions-swipe .icon-btn {
-    color: white;
-    width: 2.5rem;
-    height: 2.5rem;
-}
-
-.gemini-item-actions-swipe .icon-btn:hover {
-    background: rgba(0,0,0,0.1);
 }
 
 .gemini-item-input {
@@ -2203,12 +2136,8 @@ body {
 }
 
 .gemini-quantity-input {
-    background-color: white;
-    padding: 0.5rem;
-    border-radius: 0.5rem;
-    border: 1px solid var(--gray-300);
-    flex: 0 0 70px; /* Don't grow or shrink, fixed basis */
-    text-align: center;
+    flex: 0 1 100px; /* Don't grow, but allow shrinking from a 100px basis */
+    min-width: 70px; /* Prevent it from becoming too small */
 }
 
 .camera-modal {
@@ -2413,22 +2342,12 @@ html.dark .popup {
     box-shadow: var(--shadow-sm);
 }
 
-html.dark .gemini-list-item-swipe-container {
-    background-color: var(--danger-600);
-}
-
 /* Fix for Gemini confirmation modal items in dark mode */
 html.dark .gemini-list-item-editable {
     background-color: var(--gray-200);
 }
 
 html.dark .gemini-item-input {
-    background-color: var(--gray-100);
-    border-color: var(--gray-300);
-    color: var(--gray-800);
-}
-
-html.dark .gemini-quantity-input {
     background-color: var(--gray-100);
     border-color: var(--gray-300);
     color: var(--gray-800);
@@ -2498,15 +2417,6 @@ html.dark .shopping-list-item:hover {
     html.dark .shopping-item-actions-desktop .icon-btn.btn-danger:hover {
         background: rgba(248, 113, 113, 0.1);
         color: var(--danger-500);
-    }
-
-    html.dark .gemini-list-item-editable {
-        background-color: var(--gray-200);
-        border-color: var(--gray-300);
-    }
-
-    html.dark .gemini-item-actions-desktop .icon-btn.btn-danger:hover {
-        background: rgba(248, 113, 113, 0.1);
     }
 }
 
