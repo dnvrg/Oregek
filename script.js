@@ -434,21 +434,93 @@ function openGeminiConfirmModal(items, patientId) {
     }
 
     items.forEach(itemObject => {
-        const itemDiv = document.createElement('div');
-        itemDiv.className = 'gemini-list-item-editable';
-        itemDiv.innerHTML = `
-            <input type="text" value="${itemObject.item}" class="gemini-item-input flex-1 p-2 border rounded-lg" placeholder="Tétel">
-            <input type="text" value="${itemObject.quantity || ''}" class="gemini-quantity-input p-2 border rounded-lg" placeholder="Mennyiség">
+        const swipeContainer = document.createElement('div');
+        swipeContainer.className = 'gemini-list-item-swipe-container';
+
+        const contentDiv = document.createElement('div');
+        contentDiv.className = 'gemini-list-item-editable';
+        contentDiv.innerHTML = `
+            <input type="text" value="${itemObject.item}" class="gemini-item-input" placeholder="Tétel">
+            <input type="text" value="${itemObject.quantity || ''}" class="gemini-quantity-input" placeholder="Mennyiség">
+        `;
+
+        const actionsDiv = document.createElement('div');
+        actionsDiv.className = 'gemini-item-actions-swipe';
+        actionsDiv.innerHTML = `
             <button class="icon-btn btn-danger remove-item-btn"><i class="fas fa-trash"></i></button>
         `;
-        listContainer.appendChild(itemDiv);
+
+        swipeContainer.appendChild(contentDiv);
+        swipeContainer.appendChild(actionsDiv);
+        listContainer.appendChild(swipeContainer);
 
         // Add event listener for the remove button
-        itemDiv.querySelector('.remove-item-btn').addEventListener('click', () => {
-            itemDiv.remove();
+        actionsDiv.querySelector('.remove-item-btn').addEventListener('click', () => {
+            swipeContainer.remove();
+        });
+
+        // --- Swipe Logic ---
+        let startX = 0, startY = 0;
+        let currentX = 0;
+        let isDragging = false;
+        let isSwiping = false;
+        const threshold = -50;
+
+        contentDiv.addEventListener('touchstart', (e) => {
+            if (currentlyOpenSwipeItem && currentlyOpenSwipeItem !== contentDiv) {
+                closeSwipeItem(currentlyOpenSwipeItem);
+            }
+            startX = e.touches[0].clientX;
+            startY = e.touches[0].clientY;
+            currentX = startX;
+            isDragging = true;
+            isSwiping = false;
+            contentDiv.style.transition = 'none';
+        }, { passive: true });
+
+        contentDiv.addEventListener('touchmove', (e) => {
+            if (!isDragging) return;
+
+            currentX = e.touches[0].clientX;
+            let diffX = currentX - startX;
+
+            if (!isSwiping) {
+                let diffY = e.touches[0].clientY - startY;
+                if (Math.abs(diffX) > 10 && Math.abs(diffX) > Math.abs(diffY)) {
+                    isSwiping = true;
+                } else if (Math.abs(diffY) > 10) {
+                    isDragging = false; // It's a vertical scroll
+                    return;
+                }
+            }
+
+            if (isSwiping && diffX < 0) {
+                const actionWidth = 70; // Approximate width of the delete button area
+                let transX = diffX;
+                if (diffX < -actionWidth) {
+                    const overscroll = -actionWidth + (diffX + actionWidth) * 0.4;
+                    transX = overscroll;
+                }
+                contentDiv.style.transform = `translateX(${transX}px)`;
+            }
+        });
+
+        contentDiv.addEventListener('touchend', () => {
+            if (!isDragging) return;
+            isDragging = false;
+
+            contentDiv.style.transition = 'transform 0.3s ease';
+            const diffX = currentX - startX;
+
+            if (isSwiping) {
+                if (diffX < threshold) {
+                    openSwipeItem(contentDiv);
+                } else {
+                    closeSwipeItem(contentDiv);
+                }
+            }
         });
     });
-
     modal.classList.add('show');
 }
 
