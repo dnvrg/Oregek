@@ -1570,6 +1570,7 @@ body {
 .modal-xs {
     max-width: 20rem;
     text-align: center;
+    padding-top: 2rem;
 }
 
 /* New modal size for the Gemini feature */
