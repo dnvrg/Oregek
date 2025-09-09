@@ -445,7 +445,10 @@ function openGeminiConfirmModal(items, patientId) {
 
         // Add event listener for the remove button
         itemDiv.querySelector('.remove-item-btn').addEventListener('click', () => {
-            itemDiv.remove();
+            const itemText = itemDiv.querySelector('.gemini-item-input').value;
+            showCustomConfirm(`Biztosan törölni szeretné a(z) "${itemText}" tételt?`, () => {
+                itemDiv.remove();
+            });
         });
     });
 
