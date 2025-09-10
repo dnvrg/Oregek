@@ -1751,6 +1751,15 @@ body {
     font-style: italic;
 }
 
+/* New class to center the empty state message within its container */
+.content-body-empty {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-grow: 1; /* Allows the container to fill the available space */
+    padding-bottom: 15vh; /* Pushes the text up a bit from the absolute center */
+}
+
 /* Responsive Design */
 @media (max-width: 1024px) {
     .desktop-sidebar {
