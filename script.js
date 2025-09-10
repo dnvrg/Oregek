@@ -2664,7 +2664,7 @@ function addConfirmedItemsToShoppingList() {
                 // If item exists, un-complete it and update its quantity
                 existingItem.completed = false;
                 existingItem.id = Date.now() + Math.random();
-                existingItem.quantity = quantityText || existingItem.quantity;
+                existingItem.quantity = quantityText;
             } else {
                 itemsToAdd.push({
                     id: Date.now() + Math.random(),
