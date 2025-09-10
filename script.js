@@ -1651,10 +1651,12 @@ function renderNotes(searchQuery = '') {
     container.innerHTML = '';
     
     if (!selectedPatientId) {
+        container.className = 'content-body-empty'; // Use the new centering class
         container.innerHTML = '<div class="empty-state">Kérjük, válasszon ki egy pácienst a jegyzetek megtekintéséhez.</div>';
         return;
     }
 
+    container.className = 'notes-grid'; // Restore the grid class for displaying notes
     const patientNotes = notes.filter(note => 
         String(note.patientId) === selectedPatientId && note.content.toLowerCase().includes(query)
     );
@@ -1670,6 +1672,7 @@ function renderNotes(searchQuery = '') {
     unpinnedNotes.sort((a, b) => b.id - a.id);
 
     if (patientNotes.length === 0) {
+        container.className = 'content-body-empty';
         container.innerHTML = '<div class="empty-state">Nincsenek jegyzetek ehhez a pácienshez. Kattintson a "+" gombra egy új hozzáadásához.</div>';
     } else {
         // Render pinned notes
